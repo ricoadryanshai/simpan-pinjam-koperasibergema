@@ -1,15 +1,25 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useState } from "react";
+import "../styles/header.css";
 
 function Header() {
   const [activePage, setActivePage] = useState("nasabah");
+  const [simpananDropdown, setSimpananDropdown] = useState(false);
 
   const handlePageChange = (page) => {
     setActivePage(page);
+    setSimpananDropdown(false);
+  };
+
+  const toggleSimpananDropdown = () => {
+    setSimpananDropdown(!simpananDropdown);
   };
 
   return (
-    <header>
+    <header className="nav-header">
+      <div className="logo">
+        <img src="/koperasi-indonesia.svg" alt="Logo Koperasi Indonesia" />
+      </div>
       <nav>
         <ul>
           <li className={activePage === "nasabah" ? "active" : ""}>
@@ -21,9 +31,25 @@ function Header() {
             </button>
           </li>
           <li className={activePage === "simpanan" ? "active" : ""}>
-            <button onClick={() => handlePageChange("simpanan")}>
-              Simpanan
-            </button>
+            <div className="dropdown">
+              <button onClick={toggleSimpananDropdown}>Simpanan</button>
+              {simpananDropdown && (
+                <ul className="dropdown-content">
+                  <li className={activePage === "setor-tunai" ? "active" : ""}>
+                    <button onClick={() => handlePageChange("setor-tunai")}>
+                      Setor Tunai
+                    </button>
+                  </li>
+                  <li
+                    className={activePage === "penarikan-tunai" ? "active" : ""}
+                  >
+                    <button onClick={() => handlePageChange("penarikan-tunai")}>
+                      Penarikan Tunai
+                    </button>
+                  </li>
+                </ul>
+              )}
+            </div>
           </li>
           <li className={activePage === "laporan" ? "active" : ""}>
             <button onClick={() => handlePageChange("laporan")}>Laporan</button>

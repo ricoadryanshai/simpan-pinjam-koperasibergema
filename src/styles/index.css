@@ -1,18 +1,5 @@
-nav ul li button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 10px 20px;
-  font-size: 16px;
-  margin: 0 10px;
-}
-
-nav ul li.active button {
-  background-color: #0077cc;
-  color: #fff;
-  border-radius: 5px;
-}
-
-nav ul li button:hover {
-  background-color: #ddd;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }

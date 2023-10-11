@@ -1,0 +1,95 @@
+.nav-header {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-around;
+  height: 6rem;
+  background-color: #da251c;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+  background-color: #fff;
+  border-radius: 100%;
+  padding: 5px;
+}
+
+.logo img {
+  height: 100%;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+nav ul li {
+  margin: 0;
+  padding: 0;
+}
+
+nav ul li button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  padding: 10px 20px;
+  font-size: 16px;
+  margin: 0 10px;
+}
+
+nav ul li.active button {
+  background-color: #fff;
+  color: #292026;
+  border-radius: 5px;
+}
+
+nav ul li button:hover {
+  background-color: #ddd;
+  border-radius: 5px;
+}
+
+/* Style the dropdown */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-content {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  background-color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-end-start-radius: 5px;
+  border-end-end-radius: 5px;
+}
+
+.dropdown-content button {
+  padding: 0.5rem;
+  font-size: 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #292026;
+  text-align: left;
+}
+
+/* Style the active dropdown item */
+.dropdown-content li.active button {
+  background-color: #0077cc;
+  color: #fff;
+  border-radius: 0;
+}
+
+.dropdown-content button:hover {
+  background-color: #ddd;
+  border-radius: 0;
+}
