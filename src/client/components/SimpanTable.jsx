@@ -1,12 +1,11 @@
 // eslint-disable-next-line no-unused-vars
 import React from "react";
+import { Table } from "react-bootstrap";
 
-function Pinjaman() {
+export default function SimpanTable() {
   return (
     <>
-      <h1>Pinjam Uang</h1>
+      <Table></Table>
     </>
   );
 }
-
-export default Pinjaman;

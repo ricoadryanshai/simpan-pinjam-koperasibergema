@@ -1,10 +1,32 @@
+// eslint-disable-next-line no-unused-vars
 import React from "react";
-import Header from "./components/Header";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Header from "./client/components/Header";
+import Footer from "./client/components/Footer";
+import {
+  Beranda,
+  Anggota,
+  Simpanan,
+  Pinjaman,
+  Laporan,
+  Transaksi,
+} from "./pages/index";
 
 function App() {
   return (
     <>
-      <Header />
+      <Router>
+        <Header />
+        <Routes>
+          <Route path="/" element={<Beranda />} />
+          <Route path="/anggota" element={<Anggota />} />
+          <Route path="/simpanan" element={<Simpanan />} />
+          <Route path="/pinjaman" element={<Pinjaman />} />
+          <Route path="/transaksi" element={<Transaksi />} />
+          <Route path="/laporan" element={<Laporan />} />
+        </Routes>
+        <Footer />
+      </Router>
     </>
   );
 }

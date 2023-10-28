@@ -1,0 +1,10 @@
+.custom-red {
+  background-color: #a11010;
+  margin-bottom: 1rem;
+}
+.bold-700 {
+  font-weight: 700;
+}
+.upcase {
+  text-transform: uppercase;
+}
