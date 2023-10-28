@@ -42,6 +42,18 @@ app.get("/get/anggota", (req, res) => {
   });
 });
 
+// API endpoint to GET tbl_anggota & tbl_simpan
+app.get("/get/simpan", (req, res) => {
+  db.query("SELECT * FROM [table name]", (err, results) => {
+    if (err) {
+      console.error("Error fetching data: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
 // API endpoint to GET tbl_anggota data by id
 app.get("/get/anggota/:id", (req, res) => {
   const id = req.params.id;
