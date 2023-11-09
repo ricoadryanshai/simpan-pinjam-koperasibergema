@@ -7,7 +7,12 @@ import { Tab, Tabs } from "react-bootstrap";
 export default function Anggota() {
   return (
     <>
-      <Tabs defaultActiveKey="key-1" className="mb-3" fill>
+      <Tabs
+        defaultActiveKey="key-1"
+        className="mb-3"
+        fill
+        style={{ marginTop: "6rem" }}
+      >
         <Tab eventKey="key-1" title="Data Anggota">
           <AnggotaTable />
         </Tab>

@@ -1,17 +1,33 @@
 /* eslint-disable no-unused-vars */
 import React from "react";
-import { Navbar, Container, Nav, Offcanvas } from "react-bootstrap";
+import {
+  Navbar,
+  Container,
+  Nav,
+  Offcanvas,
+  NavDropdown,
+} from "react-bootstrap";
 import { NavLink } from "react-router-dom";
-import "../styles/header.modules.css";
 
 export default function Header() {
   return (
     <>
-      <Navbar expand="lg" variant="dark" className="custom-red">
+      <Navbar
+        expand="lg"
+        variant="dark"
+        fixed="top"
+        style={{ backgroundColor: "#a11010" }}
+      >
         <Container fluid>
           <Navbar.Brand href="/">
-            <img alt="" src="/koperasi-indonesia.png" width="30" height="30" />{" "}
-            <span className="bold-700 upcase">Koperasi Bergema</span>
+            <img
+              alt="Logo Gandaria Selatan"
+              src="/logo-gansel.png"
+              width="50"
+            />{" "}
+            <span style={{ fontWeight: "700", textTransform: "uppercase" }}>
+              Gandaria Selatan
+            </span>
           </Navbar.Brand>
 
           <Navbar.Toggle aria-controls="offcanvasNavbar-expand-lg" />
@@ -24,12 +40,13 @@ export default function Header() {
             <Offcanvas.Header closeButton>
               <Offcanvas.Title id="offcanvasNavbarLabel-expand-lg">
                 <img
-                  alt=""
-                  src="/koperasi-indonesia.png"
-                  width="30"
-                  height="30"
+                  alt="Logo Gandaria Selatan"
+                  src="/logo-gansel.png"
+                  width="50"
                 />{" "}
-                <span className="bold-700 upcase">Koperasi Bergema</span>
+                <span style={{ fontWeight: "700", textTransform: "uppercase" }}>
+                  Gandaria Selatan
+                </span>
               </Offcanvas.Title>
             </Offcanvas.Header>
             <Offcanvas.Body>
@@ -52,6 +69,12 @@ export default function Header() {
                 <Nav.Link as={NavLink} to="/laporan">
                   Laporan
                 </Nav.Link>
+                <NavDropdown
+                  title="Pengaturan"
+                  id="offcanvasNavbarDropdown-expand-lg"
+                >
+                  <NavDropdown.Item>Action</NavDropdown.Item>
+                </NavDropdown>
               </Nav>
             </Offcanvas.Body>
           </Navbar.Offcanvas>
