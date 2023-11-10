@@ -12,6 +12,8 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@fortawesome/free-solid-svg-icons": "^6.4.2",
+    "@fortawesome/react-fontawesome": "^0.2.0",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@mui/icons-material": "^5.14.15",
@@ -23,10 +25,7 @@
     "react": "^18.2.0",
     "react-bootstrap": "^2.9.0",
     "react-dom": "^18.2.0",
-<<<<<<< HEAD
     "react-icons": "^4.11.0",
-=======
->>>>>>> e47bfd6e5d5eef1500f420bd60898beb3ff9bad9
     "react-query": "^3.39.3",
     "react-router-dom": "^6.17.0"
   },
@@ -38,10 +37,6 @@
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
-<<<<<<< HEAD
     "vite": "^4.5.0"
-=======
-    "vite": "^4.4.5"
->>>>>>> e47bfd6e5d5eef1500f420bd60898beb3ff9bad9
   }
 }

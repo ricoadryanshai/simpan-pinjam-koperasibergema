@@ -36,7 +36,7 @@ function AnggotaTable() {
       console.error("Error deleting data:", error);
     }
   };
- 
+
   //Search //
   // eslint-disable-next-line no-unused-vars
   const [error, setError] = useState(null);
@@ -73,21 +73,17 @@ function AnggotaTable() {
   }, []);
 
   // Pagination //
- const [activePage, setActivePage] = useState(1);
- const itemsPerPage = 10; // Ganti dengan jumlah item per halaman
+  const [activePage, setActivePage] = useState(1);
+  const itemsPerPage = 10; // Ganti dengan jumlah item per halaman
 
- const handlePageChange = (pageNumber) => {
-  setActivePage(pageNumber);
-};
+  const handlePageChange = (pageNumber) => {
+    setActivePage(pageNumber);
+  };
 
-const startIndex = (activePage - 1) * itemsPerPage;
-const endIndex = startIndex + itemsPerPage;
+  const startIndex = (activePage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
 
-const anggotaHalaman = anggotaData.slice(startIndex, endIndex);
-
-
-
-
+  const anggotaHalaman = anggotaData.slice(startIndex, endIndex);
 
   return (
     <>
@@ -159,7 +155,7 @@ const anggotaHalaman = anggotaData.slice(startIndex, endIndex);
                         anggota.tanggalDaftar.includes(inputString))
                     );
                   })
-                  {anggotaHalaman .map((anggota, index) => (
+                  .map((anggota, index) => (
                     <tr
                       style={{ borderBlockStart: "solid 1px lightgray" }}
                       key={anggota.id}
@@ -203,40 +199,44 @@ const anggotaHalaman = anggotaData.slice(startIndex, endIndex);
                         </Button>
                       </td>
                     </tr>
-                  ))}}
+                  ))}
               </tbody>
             </Table>
             <Pagination className="justify-content-center">
-  <Pagination.First
-    onClick={() => handlePageChange(1)}
-    disabled={activePage === 1}
-  />
-  <Pagination.Prev
-    onClick={() => handlePageChange(activePage - 1)}
-    disabled={activePage === 1}
-  />
-  {Array.from({ length: Math.ceil(anggotaData.length / itemsPerPage) }).map(
-    (item, index) => (
-      <Pagination.Item
-        key={index}
-        active={index + 1 === activePage}
-        onClick={() => handlePageChange(index + 1)}
-      >
-        {index + 1}
-      </Pagination.Item>
-    )
-  )}
-  <Pagination.Next
-    onClick={() => handlePageChange(activePage + 1)}
-    disabled={activePage === Math.ceil(anggotaData.length / itemsPerPage)}
-  />
-  <Pagination.Last
-    onClick={() =>
-      handlePageChange(Math.ceil(anggotaData.length / itemsPerPage))
-    }
-    disabled={activePage === Math.ceil(anggotaData.length / itemsPerPage)}
-  />
-</Pagination>
+              <Pagination.First
+                onClick={() => handlePageChange(1)}
+                disabled={activePage === 1}
+              />
+              <Pagination.Prev
+                onClick={() => handlePageChange(activePage - 1)}
+                disabled={activePage === 1}
+              />
+              {Array.from({
+                length: Math.ceil(anggotaData.length / itemsPerPage),
+              }).map((item, index) => (
+                <Pagination.Item
+                  key={index}
+                  active={index + 1 === activePage}
+                  onClick={() => handlePageChange(index + 1)}
+                >
+                  {index + 1}
+                </Pagination.Item>
+              ))}
+              <Pagination.Next
+                onClick={() => handlePageChange(activePage + 1)}
+                disabled={
+                  activePage === Math.ceil(anggotaData.length / itemsPerPage)
+                }
+              />
+              <Pagination.Last
+                onClick={() =>
+                  handlePageChange(Math.ceil(anggotaData.length / itemsPerPage))
+                }
+                disabled={
+                  activePage === Math.ceil(anggotaData.length / itemsPerPage)
+                }
+              />
+            </Pagination>
           </Card.Body>
         </Card>
       </Container>

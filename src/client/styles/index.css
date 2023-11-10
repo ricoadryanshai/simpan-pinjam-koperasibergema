@@ -5,3 +5,17 @@
   padding: 0;
   font-family: "Inter", sans-serif;
 }
+@media print {
+  .no-print {
+    display: none;
+  }
+  .print-only {
+    display: block;
+  }
+  .body {
+    font-size: 12px;
+  }
+  .margin-top {
+    margin-top: 6rem;
+  }
+}

@@ -4,7 +4,6 @@ import { Card, Col, Container, Row, Table } from "react-bootstrap";
 import { getLapSimpanan } from "../utils/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrint } from "@fortawesome/free-solid-svg-icons";
-import "../styles/index.css";
 
 export const LaporanSimpanan = () => {
   const [lapSimpanan, setLapSimpanan] = useState([]);

@@ -9,7 +9,7 @@ export default function Laporan() {
     <>
       <Tabs
         defaultActiveKey="key-1"
-        className="mb-3"
+        className="mb-3 no-print"
         fill
         style={{ marginTop: "6rem" }}
       >
