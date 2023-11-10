@@ -18,4 +18,9 @@
   .margin-top {
     margin-top: 6rem;
   }
+  .no-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: text;
+  }
 }

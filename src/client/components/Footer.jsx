@@ -6,7 +6,7 @@ export default function Footer() {
   return (
     <>
       <Navbar bg="dark" variant="dark" fixed="bottom">
-        <NavbarText className="flex-grow-1 text-center">
+        <NavbarText className="flex-grow-1 text-center no-print">
           © {new Date().getFullYear()} Copyright: Koperasi Bergema
         </NavbarText>
       </Navbar>
