@@ -35,6 +35,17 @@ export const getPinjamAnggota = async () => {
   }
 };
 
+// API endpoint to GET tbl_simpan for lap_simpan
+export const getLapSimpanan = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/lap_simpan`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
 // API endpoint to GET tbl_pengaturan
 export const getPengaturan = async () => {
   try {
