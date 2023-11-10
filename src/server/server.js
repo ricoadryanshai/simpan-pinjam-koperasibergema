@@ -135,6 +135,48 @@ app.get("/get/pinjam", (req, res) => {
   });
 });
 
+<<<<<<< HEAD
+=======
+// API endpoint to GET tbl_simpan for lap_simpan
+app.get("/get/lap_simpan", (req, res) => {
+  const currentYear = new Date().getFullYear();
+
+  const sqlQuery = `
+    SELECT
+    tbl_anggota.kodeAnggota,
+    tbl_anggota.nama,
+    CASE
+      WHEN SUM(CASE 
+        WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' AND YEAR(tbl_simpan.tanggalSimpan) = ${currentYear} THEN -tbl_simpan.saldo 
+        WHEN YEAR(tbl_simpan.tanggalSimpan) = ${currentYear} THEN tbl_simpan.saldo 
+        ELSE 0
+      END) = 0 THEN 0
+      ELSE SUM(CASE 
+        WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' AND YEAR(tbl_simpan.tanggalSimpan) = ${currentYear} THEN -tbl_simpan.saldo 
+        WHEN YEAR(tbl_simpan.tanggalSimpan) = ${currentYear} THEN tbl_simpan.saldo 
+        ELSE 0
+      END)
+    END AS totalSaldo
+  FROM tbl_anggota
+  LEFT JOIN tbl_simpan ON tbl_anggota.kodeAnggota = tbl_simpan.kodeAnggota
+  WHERE YEAR(tbl_simpan.tanggalSimpan) = ${currentYear}
+  GROUP BY tbl_anggota.kodeAnggota, tbl_anggota.nama
+  ORDER BY kodeAnggota ASC;
+  `;
+
+  db.query(sqlQuery, (err, results) => {
+    if (err) {
+      console.error("Error fetching data: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else if (results.length === 0) {
+      res.status(404).json({ error: "Record not found" });
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
+>>>>>>> e47bfd6e5d5eef1500f420bd60898beb3ff9bad9
 // API endpoint to GET tbl_pengaturan
 app.get("/get/pengaturan", (req, res) => {
   const id = 3;
