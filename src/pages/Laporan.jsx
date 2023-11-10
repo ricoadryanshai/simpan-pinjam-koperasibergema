@@ -1,11 +1,8 @@
 // eslint-disable-next-line no-unused-vars
 import React from "react";
-<<<<<<< HEAD
-=======
 import { Tab, Tabs } from "react-bootstrap";
 import { LaporanSHU } from "../client/components/LaporanSHU";
 import { LaporanSimpanan } from "../client/components/LaporanSimpanan";
->>>>>>> e47bfd6e5d5eef1500f420bd60898beb3ff9bad9
 
 export default function Laporan() {
   return (

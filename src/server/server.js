@@ -135,8 +135,6 @@ app.get("/get/pinjam", (req, res) => {
   });
 });
 
-<<<<<<< HEAD
-=======
 // API endpoint to GET tbl_simpan for lap_simpan
 app.get("/get/lap_simpan", (req, res) => {
   const currentYear = new Date().getFullYear();
@@ -176,7 +174,6 @@ app.get("/get/lap_simpan", (req, res) => {
   });
 });
 
->>>>>>> e47bfd6e5d5eef1500f420bd60898beb3ff9bad9
 // API endpoint to GET tbl_pengaturan
 app.get("/get/pengaturan", (req, res) => {
   const id = 3;
