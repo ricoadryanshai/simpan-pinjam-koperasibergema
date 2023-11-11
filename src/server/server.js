@@ -44,6 +44,7 @@ const upload = multer({
 app.use(cors());
 app.use(bodyParser.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // MySQL Configuration
 const db = mysql.createConnection({
   host: "localhost",
@@ -61,7 +62,8 @@ db.connect((err) => {
   }
 });
 
-// API endpoint to GET tbl_anggota data
+// START >>> API ENDPOINT ANGGOTA
+
 app.get("/get/anggota", (req, res) => {
   db.query(
     "SELECT * FROM tbl_anggota ORDER BY kodeAnggota ASC",
@@ -72,13 +74,105 @@ app.get("/get/anggota", (req, res) => {
       } else if (results.length === 0) {
         res.status(404).json({ error: "Record not found" });
       } else {
-        res.status(200).json(results); // Send the data as a JSON response
+        res.status(200).json(results);
       }
     }
   );
 });
 
-// API endpoint to GET tbl_anggota & tbl_simpan
+app.get("/get/anggota/:id", (req, res) => {
+  const id = req.params.id;
+
+  db.query("SELECT * FROM tbl_anggota WHERE id = ?", [id], (err, results) => {
+    if (err) {
+      console.error("Error fetching data: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else if (results.length === 0) {
+      res.status(404).json({ error: "Record not found" });
+    } else {
+      res.status(200).json(results[0]);
+    }
+  });
+});
+
+app.put("/put/anggota/:id", (req, res) => {
+  const id = req.params.id;
+
+  const { kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP } =
+    req.body;
+
+  const updateQuery = `UPDATE tbl_anggota
+    SET kodeAnggota = ?, nama = ?, jenKel = ?, tempatLahir = ?, tanggalLahir = ?, alamat = ?, noHP = ?
+    WHERE id = ?`;
+
+  db.query(
+    updateQuery,
+    [kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP, id],
+    (err, result) => {
+      if (err) {
+        console.error("Error updating record:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        console.log("Record updated:", result);
+        res.status(200).json({ message: "Record updated successfully" });
+      }
+    }
+  );
+});
+
+app.delete("/delete/anggota/:id", (req, res) => {
+  const id = req.params.id;
+
+  const deleteQuery = `DELETE FROM tbl_anggota WHERE id = ?`;
+
+  db.query(deleteQuery, [id], (err, result) => {
+    if (err) {
+      console.error("Error deleting record:", err);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      console.log("Record deleted:", result);
+      res.status(200).json({ message: "Record deleted successfully" });
+    }
+  });
+});
+
+app.post("/post/anggota", (req, res) => {
+  const { kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP } =
+    req.body;
+
+  const currentDate = new Date();
+  const tanggalDaftar = `${currentDate.getFullYear()}/${
+    currentDate.getMonth() + 1
+  }/${currentDate.getDate()}`;
+
+  const insertQuery = `INSERT INTO tbl_anggota (kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP, tanggalDaftar) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+
+  const values = [
+    kodeAnggota,
+    nama,
+    jenKel,
+    tempatLahir,
+    tanggalLahir,
+    alamat,
+    noHP,
+    tanggalDaftar,
+  ];
+
+  db.query(insertQuery, values, (err, result) => {
+    if (err) {
+      console.error("Error inserting data: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      console.log("Data inserted successfully", result);
+      res.status(200).json({ message: "Data inserted successfully" });
+    }
+  });
+});
+
+// API ENDPOINT ANGGOTA <<< END
+
+// START >>> API ENDPOINT SIMPANAN
+
 app.get("/get/simpan", (req, res) => {
   const sqlQuery = `
     SELECT
@@ -106,7 +200,102 @@ app.get("/get/simpan", (req, res) => {
   });
 });
 
-// API endpoint to GET tbl_anggota & tbl_pinjam
+app.get("/get/simpan/:kodeAnggota", (req, res) => {
+  const kodeAnggota = req.params.kodeAnggota;
+
+  const selectQuery = `
+    SELECT id, tanggalSimpan, jenisSimpan, saldo, uploadFile
+    FROM tbl_simpan
+    WHERE kodeAnggota = ?
+    ORDER BY tanggalSimpan DESC;
+  `;
+
+  db.query(selectQuery, [kodeAnggota], (err, results) => {
+    if (err) {
+      console.error("Error fetching data:", err);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
+app.post("/post/simpan", upload.single("uploadFile"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+
+  const { kodeAnggota, tanggalSimpan, jenisSimpan, saldo } = req.body;
+  const uploadFile = req.file.filename;
+
+  const insertQuery = `
+    INSERT INTO tbl_simpan (kodeAnggota, tanggalSimpan, jenisSimpan, saldo, uploadFile)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    insertQuery,
+    [kodeAnggota, tanggalSimpan, jenisSimpan, saldo, uploadFile],
+    (err, result) => {
+      if (err) {
+        console.error("Error inserting data:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        console.log("Record inserted:", result);
+        res.status(200).json({ message: "Record inserted successfully" });
+      }
+    }
+  );
+});
+
+app.delete("/delete/simpan/:kodeAnggota/:id", (req, res) => {
+  const kodeAnggota = req.params.kodeAnggota;
+  const id = req.params.id;
+
+  const selectQuery = `
+    SELECT uploadFile
+    FROM tbl_simpan
+    WHERE kodeAnggota = ? AND id = ?
+  `;
+
+  db.query(selectQuery, [kodeAnggota, id], (err, results) => {
+    if (err) {
+      console.error("Error fetching data:", err);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else if (results.length === 0) {
+      res.status(404).json({ error: "Record not found" });
+    } else {
+      const uploadFile = results[0].uploadFile;
+
+      const filePath = path.join(__dirname, "uploads", "simpanan", uploadFile);
+      fs.unlink(filePath, (unlinkErr) => {
+        if (unlinkErr) {
+          console.error("Error deleting file:", unlinkErr);
+        }
+      });
+
+      const deleteQuery = `
+        DELETE FROM tbl_simpan
+        WHERE kodeAnggota = ? AND id = ?
+      `;
+
+      db.query(deleteQuery, [kodeAnggota, id], (deleteErr, result) => {
+        if (deleteErr) {
+          console.error("Error deleting data:", deleteErr);
+          res.status(500).json({ error: "Internal Server Error" });
+        } else {
+          console.log("Record deleted:", result);
+          res.status(200).json({ message: "Record deleted successfully" });
+        }
+      });
+    }
+  });
+});
+
+// API ENDPOINT SIMPANAN <<< END
+
+// START >>> API ENDPOINT PINJAMAN
+
 app.get("/get/pinjam", (req, res) => {
   const sqlQuery = `
     SELECT
@@ -135,7 +324,36 @@ app.get("/get/pinjam", (req, res) => {
   });
 });
 
-// API endpoint to GET tbl_simpan for lap_simpan
+app.get("/get/pinjam/:kodeAnggota", (req, res) => {
+  const kodeAnggota = req.params.kodeAnggota;
+
+  const selectQuery = `
+    SELECT id, kodeAnggota, jenisTransaksi, nominalTransaksi, angsuran, tanggalTransaksi
+    FROM tbl_pinjam
+    WHERE kodeAnggota = ?
+    ORDER BY tanggalTransaksi DESC;
+  `;
+
+  db.query(selectQuery, [kodeAnggota], (err, results) => {
+    if (err) {
+      console.error("Error fetching data:", err);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
+// API ENDPOINT PINJAMAN <<< END
+
+// START >>> API ENDPOINT TRANSAKSI
+
+// {CONTENT}
+
+// API ENDPOINT TRANSAKSI <<< END
+
+// START >>> API ENDPOINT LAPORAN
+
 app.get("/get/lap_simpan", (req, res) => {
   const currentYear = new Date().getFullYear();
 
@@ -174,7 +392,10 @@ app.get("/get/lap_simpan", (req, res) => {
   });
 });
 
-// API endpoint to GET tbl_pengaturan
+// API ENDPOINT LAPORAN <<< END
+
+// START >>> API ENDPOINT PENGATURAN
+
 app.get("/get/pengaturan", (req, res) => {
   const id = 3;
 
@@ -192,218 +413,6 @@ app.get("/get/pengaturan", (req, res) => {
   });
 });
 
-// API endpoint to GET tbl_simpan by kodeAnggota
-app.get("/get/simpan/:kodeAnggota", (req, res) => {
-  const kodeAnggota = req.params.kodeAnggota;
-
-  const selectQuery = `
-    SELECT id, tanggalSimpan, jenisSimpan, saldo, uploadFile
-    FROM tbl_simpan
-    WHERE kodeAnggota = ?
-    ORDER BY tanggalSimpan DESC;
-  `;
-
-  db.query(selectQuery, [kodeAnggota], (err, results) => {
-    if (err) {
-      console.error("Error fetching data:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
-  });
-});
-
-// API endpoint to GET tbl_pinjam by kodeAnggota
-app.get("/get/pinjam/:kodeAnggota", (req, res) => {
-  const kodeAnggota = req.params.kodeAnggota;
-
-  const selectQuery = `
-    SELECT id, kodeAnggota, jenisTransaksi, nominalTransaksi, angsuran, tanggalTransaksi
-    FROM tbl_pinjam
-    WHERE kodeAnggota = ?
-    ORDER BY tanggalTransaksi DESC;
-  `;
-
-  db.query(selectQuery, [kodeAnggota], (err, results) => {
-    if (err) {
-      console.error("Error fetching data:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
-  });
-});
-
-// API endpoint to GET tbl_anggota data by id
-app.get("/get/anggota/:id", (req, res) => {
-  const id = req.params.id;
-
-  db.query("SELECT * FROM tbl_anggota WHERE id = ?", [id], (err, results) => {
-    if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: "Record not found" });
-    } else {
-      res.status(200).json(results[0]); // Send the data as a JSON response (assuming only one record is expected)
-    }
-  });
-});
-
-// API endpoint to POST tbl_anggota
-app.post("/post/anggota", (req, res) => {
-  const { kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP } =
-    req.body;
-
-  const currentDate = new Date();
-  const tanggalDaftar = `${currentDate.getFullYear()}/${
-    currentDate.getMonth() + 1
-  }/${currentDate.getDate()}`;
-
-  const insertQuery = `INSERT INTO tbl_anggota (kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP, tanggalDaftar) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-
-  const values = [
-    kodeAnggota,
-    nama,
-    jenKel,
-    tempatLahir,
-    tanggalLahir,
-    alamat,
-    noHP,
-    tanggalDaftar,
-  ];
-
-  db.query(insertQuery, values, (err, result) => {
-    if (err) {
-      console.error("Error inserting data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      console.log("Data inserted successfully", result);
-      res.status(200).json({ message: "Data inserted successfully" });
-    }
-  });
-});
-
-// API endpoint to POST tbl_simpan
-app.post("/post/simpan", upload.single("uploadFile"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No file uploaded" });
-  }
-
-  const { kodeAnggota, tanggalSimpan, jenisSimpan, saldo } = req.body;
-  const uploadFile = req.file.filename;
-
-  const insertQuery = `
-    INSERT INTO tbl_simpan (kodeAnggota, tanggalSimpan, jenisSimpan, saldo, uploadFile)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-
-  db.query(
-    insertQuery,
-    [kodeAnggota, tanggalSimpan, jenisSimpan, saldo, uploadFile],
-    (err, result) => {
-      if (err) {
-        console.error("Error inserting data:", err);
-        res.status(500).json({ error: "Internal Server Error" });
-      } else {
-        console.log("Record inserted:", result);
-        res.status(200).json({ message: "Record inserted successfully" });
-      }
-    }
-  );
-});
-
-// API endpoint to DELETE tbl_anggota data by id
-app.delete("/delete/anggota/:id", (req, res) => {
-  const id = req.params.id;
-
-  const deleteQuery = `DELETE FROM tbl_anggota WHERE id = ?`;
-
-  db.query(deleteQuery, [id], (err, result) => {
-    if (err) {
-      console.error("Error deleting record:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      console.log("Record deleted:", result);
-      res.status(200).json({ message: "Record deleted successfully" });
-    }
-  });
-});
-
-// API endpoint to DELETE tbl_simpan by kodeAnggota and id
-app.delete("/delete/simpan/:kodeAnggota/:id", (req, res) => {
-  const kodeAnggota = req.params.kodeAnggota;
-  const id = req.params.id;
-
-  const selectQuery = `
-    SELECT uploadFile
-    FROM tbl_simpan
-    WHERE kodeAnggota = ? AND id = ?
-  `;
-
-  db.query(selectQuery, [kodeAnggota, id], (err, results) => {
-    if (err) {
-      console.error("Error fetching data:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: "Record not found" });
-    } else {
-      const uploadFile = results[0].uploadFile;
-
-      // Hapus file terkait dari folder "uploads/simpanan"
-      const filePath = path.join(__dirname, "uploads", "simpanan", uploadFile);
-      fs.unlink(filePath, (unlinkErr) => {
-        if (unlinkErr) {
-          console.error("Error deleting file:", unlinkErr);
-        }
-      });
-
-      // Hapus data dari tabel
-      const deleteQuery = `
-        DELETE FROM tbl_simpan
-        WHERE kodeAnggota = ? AND id = ?
-      `;
-
-      db.query(deleteQuery, [kodeAnggota, id], (deleteErr, result) => {
-        if (deleteErr) {
-          console.error("Error deleting data:", deleteErr);
-          res.status(500).json({ error: "Internal Server Error" });
-        } else {
-          console.log("Record deleted:", result);
-          res.status(200).json({ message: "Record deleted successfully" });
-        }
-      });
-    }
-  });
-});
-
-// API endpoint to UPDATE tbl_anggota data by id
-app.put("/put/anggota/:id", (req, res) => {
-  const id = req.params.id;
-
-  const { kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP } =
-    req.body;
-
-  const updateQuery = `UPDATE tbl_anggota
-    SET kodeAnggota = ?, nama = ?, jenKel = ?, tempatLahir = ?, tanggalLahir = ?, alamat = ?, noHP = ?
-    WHERE id = ?`;
-
-  db.query(
-    updateQuery,
-    [kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP, id],
-    (err, result) => {
-      if (err) {
-        console.error("Error updating record:", err);
-        res.status(500).json({ error: "Internal Server Error" });
-      } else {
-        console.log("Record updated:", result);
-        res.status(200).json({ message: "Record updated successfully" });
-      }
-    }
-  );
-});
-
-// API endpoint to UPDATE tbl_pengaturan data by id
 app.put("/put/pengaturan/:id", (req, res) => {
   const id = req.params.id;
   const { simpananPokok, simpananWajib, bungaAngsuran } = req.body;
@@ -428,6 +437,8 @@ app.put("/put/pengaturan/:id", (req, res) => {
     }
   );
 });
+
+// API ENDPOINT PENGATURAN <<< END
 
 // Start the server
 app.listen(port, () => {
