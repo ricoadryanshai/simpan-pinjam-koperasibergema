@@ -4,7 +4,15 @@ const API_ENDPOINT = "http://localhost:3002";
 
 // START >>> API ENDPOINT BERANDA
 
-// {CONTENT}
+export const getBeranda = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/beranda`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
 
 // API ENDPOINT BERANDA <<< END
 

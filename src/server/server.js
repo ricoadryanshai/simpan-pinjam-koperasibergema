@@ -62,6 +62,89 @@ db.connect((err) => {
   }
 });
 
+// START >>> API ENDPOINT BERANDA
+
+app.get("/get/beranda", (req, res) => {
+  const sqlQuery = "SELECT COUNT(*) AS jumlahAnggota FROM tbl_anggota";
+
+  const sumSaldoQuery = `
+    SELECT
+      SUM(CASE WHEN tbl_simpan.jenisSimpan <> 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS jumlahSimpanan
+    FROM
+      tbl_simpan
+    WHERE
+      MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
+      AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`;
+
+  const sqlQuerySaldo = `
+    SELECT
+      SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS penarikanSimpanan
+    FROM
+      tbl_simpan
+    WHERE
+      MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
+      AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`;
+
+  const sqlQueryTotalSaldo = `
+    SELECT
+      SUM(CASE WHEN tbl_simpan.jenisSimpan <> 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) -
+      SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS jumlahSaldo
+    FROM
+      tbl_simpan
+    WHERE
+      MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
+      AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`;
+
+  db.query(sqlQuery, (err, results) => {
+    if (err) {
+      console.error("Error fetching data: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      const jumlahAnggota = results[0].jumlahAnggota;
+
+      db.query(sumSaldoQuery, (errSum, resultsSum) => {
+        if (errSum) {
+          console.error("Error fetching simpanan data: " + errSum.sqlMessage);
+          res.status(500).json({ error: "Internal Server Error" });
+        } else {
+          const jumlahSimpanan = resultsSum[0].jumlahSimpanan;
+
+          db.query(sqlQuerySaldo, (errSaldo, resultsSaldo) => {
+            if (errSaldo) {
+              console.error(
+                "Error fetching saldo data: " + errSaldo.sqlMessage
+              );
+              res.status(500).json({ error: "Internal Server Error" });
+            } else {
+              const penarikanSimpanan = resultsSaldo[0].penarikanSimpanan;
+
+              db.query(sqlQueryTotalSaldo, (errSaldo, resultsSaldo) => {
+                if (errSaldo) {
+                  console.error(
+                    "Error fetching saldo data: " + errSaldo.sqlMessage
+                  );
+                  res.status(500).json({ error: "Internal Server Error" });
+                } else {
+                  const jumlahSaldo = resultsSaldo[0].jumlahSaldo;
+
+                  res.status(200).json({
+                    jumlahAnggota,
+                    jumlahSimpanan,
+                    penarikanSimpanan,
+                    jumlahSaldo,
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+  });
+});
+
+// API ENDPOINT BERANDA <<< END
+
 // START >>> API ENDPOINT ANGGOTA
 
 app.get("/get/anggota", (req, res) => {
