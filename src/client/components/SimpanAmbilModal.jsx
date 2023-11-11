@@ -194,7 +194,7 @@ export default function SimpanAmbilModal(props) {
   );
   function formatRupiah(angka) {
     if (typeof angka !== "number") {
-      return "Rp. 0,00";
+      return "Rp 0,00";
     }
 
     // Format angka dengan koma sebagai pemisah ribuan dan dua digit desimal

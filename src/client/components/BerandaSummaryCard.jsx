@@ -14,9 +14,9 @@ export const BerandaSummaryCard = () => {
       id: 1,
       bg: "warning",
       cardTitle: "Pinjaman",
-      data1: 0,
-      data2: 0,
-      data3: 0,
+      data1: `Transaksi Bulan Ini: `,
+      data2: `Jumlah Tagihan Tahun Ini: `,
+      data3: `Sisa Tagihan Tahun Ini`,
     },
     {
       id: 2,
@@ -37,11 +37,9 @@ export const BerandaSummaryCard = () => {
   ];
 
   useEffect(() => {
-    const fetchData = async () => {
-      const fetchedData = await getBeranda();
-      setBeranda(fetchedData);
-    };
-    fetchData();
+    getBeranda().then((result) => {
+      setBeranda(result);
+    });
   }, []);
   return (
     <>

@@ -181,7 +181,7 @@ export default function SimpanDetailModal(props) {
 
   function formatRupiah(angka) {
     if (typeof angka !== "number") {
-      return "Rp. 0,00";
+      return "Rp 0,00";
     }
 
     const formattedAngka = angka.toLocaleString("id-ID", {
