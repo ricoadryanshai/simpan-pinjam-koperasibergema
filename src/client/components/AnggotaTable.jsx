@@ -38,31 +38,7 @@ function AnggotaTable() {
   };
 
   //Search //
-  // eslint-disable-next-line no-unused-vars
-  const [error, setError] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  const [isLoaded, setIsLoaded] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [items, setItems] = useState([]);
   const [input, setInput] = useState("");
-
-  //     set search query to empty string
-  // eslint-disable-next-line no-unused-vars
-  const [q, setQ] = useState("");
-  //     set search parameters
-  //     we only what to search countries by capital and name
-  //     this list can be longer if you want
-  // just add it to this array
-  // eslint-disable-next-line no-unused-vars
-  const [searchParam] = useState([
-    "kodeAnggota",
-    "nama",
-    "tempatLahir",
-    "tanggalLahir",
-    "alamat",
-    "noHP",
-    "tanggalDaftar",
-  ]);
 
   const fetchData = async () => {
     setAnggotaData(await getAnggota());
@@ -71,6 +47,27 @@ function AnggotaTable() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const highlightSearchText = (text, search) => {
+    if (text && search) {
+      const lowerText = text.toLowerCase();
+      const lowerSearch = search.toLowerCase();
+      const startIndex = lowerText.indexOf(lowerSearch);
+
+      if (startIndex !== -1) {
+        const endIndex = startIndex + lowerSearch.length;
+        return (
+          <span>
+            {text.substring(0, startIndex)}
+            <mark>{text.substring(startIndex, endIndex)}</mark>
+            {text.substring(endIndex)}
+          </span>
+        );
+      }
+    }
+
+    return text;
+  };
 
   // Pagination //
   const [activePage, setActivePage] = useState(1);
@@ -139,20 +136,25 @@ function AnggotaTable() {
               <tbody>
                 {anggotaData
                   .filter((anggota) => {
-                    // Convert the input to a string, as the properties may not be strings
-                    const inputString = input.toString();
+                    const inputString = input.toString().toLowerCase(); // Konversi input ke huruf kecil
 
                     return (
-                      anggota.kodeAnggota.includes(inputString) ||
-                      anggota.nama.includes(inputString) ||
+                      anggota.kodeAnggota.toLowerCase().includes(inputString) ||
+                      anggota.nama.toLowerCase().includes(inputString) ||
                       (anggota.tempatLahir &&
-                        anggota.tempatLahir.includes(inputString)) ||
+                        anggota.tempatLahir
+                          .toLowerCase()
+                          .includes(inputString)) ||
                       (anggota.tanggalLahir &&
-                        anggota.tanggalLahir.includes(inputString)) ||
-                      anggota.alamat.includes(inputString) ||
-                      anggota.noHP.includes(inputString) ||
+                        anggota.tanggalLahir
+                          .toLowerCase()
+                          .includes(inputString)) ||
+                      anggota.alamat.toLowerCase().includes(inputString) ||
+                      anggota.noHP.toLowerCase().includes(inputString) ||
                       (anggota.tanggalDaftar &&
-                        anggota.tanggalDaftar.includes(inputString))
+                        anggota.tanggalDaftar
+                          .toLowerCase()
+                          .includes(inputString))
                     );
                   })
                   .map((anggota, index) => (
@@ -163,19 +165,19 @@ function AnggotaTable() {
                     >
                       <td className="text-center align-middle">{index + 1}</td>
                       <td style={{ borderInline: "solid 1px lightgray" }}>
-                        {anggota.kodeAnggota}
+                        {highlightSearchText(anggota.kodeAnggota)}
                       </td>
-                      <td>{anggota.nama}</td>
+                      <td>{highlightSearchText(anggota.nama)}</td>
                       <td style={{ borderInline: "solid 1px lightgray" }}>
                         {anggota.jenKel}
                       </td>
-                      <td>{anggota.tempatLahir}</td>
+                      <td>{highlightSearchText(anggota.tempatLahir)}</td>
                       <td style={{ borderInline: "solid 1px lightgray" }}>
                         {formatDate(anggota.tanggalLahir)}
                       </td>
-                      <td>{anggota.alamat}</td>
+                      <td>{highlightSearchText(anggota.alamat)}</td>
                       <td style={{ borderInline: "solid 1px lightgray" }}>
-                        {anggota.noHP}
+                        {highlightSearchText(anggota.noHP)}
                       </td>
                       <td>{formatDate(anggota.tanggalDaftar)}</td>
                       <td style={{ borderInlineStart: "solid 1px lightgray" }}>
@@ -202,43 +204,43 @@ function AnggotaTable() {
                   ))}
               </tbody>
             </Table>
-            <Pagination className="justify-content-center">
-              <Pagination.First
-                onClick={() => handlePageChange(1)}
-                disabled={activePage === 1}
-              />
-              <Pagination.Prev
-                onClick={() => handlePageChange(activePage - 1)}
-                disabled={activePage === 1}
-              />
-              {Array.from({
-                length: Math.ceil(anggotaData.length / itemsPerPage),
-              }).map((item, index) => (
-                <Pagination.Item
-                  key={index}
-                  active={index + 1 === activePage}
-                  onClick={() => handlePageChange(index + 1)}
-                >
-                  {index + 1}
-                </Pagination.Item>
-              ))}
-              <Pagination.Next
-                onClick={() => handlePageChange(activePage + 1)}
-                disabled={
-                  activePage === Math.ceil(anggotaData.length / itemsPerPage)
-                }
-              />
-              <Pagination.Last
-                onClick={() =>
-                  handlePageChange(Math.ceil(anggotaData.length / itemsPerPage))
-                }
-                disabled={
-                  activePage === Math.ceil(anggotaData.length / itemsPerPage)
-                }
-              />
-            </Pagination>
           </Card.Body>
         </Card>
+        <Pagination className="justify-content-center">
+          <Pagination.First
+            onClick={() => handlePageChange(1)}
+            disabled={activePage === 1}
+          />
+          <Pagination.Prev
+            onClick={() => handlePageChange(activePage - 1)}
+            disabled={activePage === 1}
+          />
+          {Array.from({
+            length: Math.ceil(anggotaData.length / itemsPerPage),
+          }).map((item, index) => (
+            <Pagination.Item
+              key={index}
+              active={index + 1 === activePage}
+              onClick={() => handlePageChange(index + 1)}
+            >
+              {index + 1}
+            </Pagination.Item>
+          ))}
+          <Pagination.Next
+            onClick={() => handlePageChange(activePage + 1)}
+            disabled={
+              activePage === Math.ceil(anggotaData.length / itemsPerPage)
+            }
+          />
+          <Pagination.Last
+            onClick={() =>
+              handlePageChange(Math.ceil(anggotaData.length / itemsPerPage))
+            }
+            disabled={
+              activePage === Math.ceil(anggotaData.length / itemsPerPage)
+            }
+          />
+        </Pagination>
       </Container>
 
       <Modal

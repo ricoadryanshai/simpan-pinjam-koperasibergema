@@ -111,10 +111,12 @@ export default function SimpanTable() {
                   <tbody>
                     {simpananData
                       .filter((simpan) => {
-                        const inputString = input.toString();
+                        const inputString = input.toString().toLowerCase();
                         return (
-                          simpan.kodeAnggota.includes(inputString) ||
-                          simpan.nama.includes(inputString)
+                          simpan.kodeAnggota
+                            .toLowerCase()
+                            .includes(inputString) ||
+                          simpan.nama.toLowerCase().includes(inputString)
                         );
                       })
                       .map((simpan, index) => (

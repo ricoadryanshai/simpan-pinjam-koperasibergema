@@ -17,23 +17,8 @@ export default function PinjamTable() {
   const handleDetailClick = () => {
     setShowDetail(true);
   };
-  // eslint-disable-next-line no-unused-vars
-  const [error, setError] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  const [isLoaded, setIsLoaded] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [items, setItems] = useState([]);
-  const [input, setInput] = useState("");
 
-  //     set search query to empty string
-  // eslint-disable-next-line no-unused-vars
-  const [q, setQ] = useState("");
-  //     set search parameters
-  //     we only what to search countries by capital and name
-  //     this list can be longer if you want
-  // just add it to this array
-  // eslint-disable-next-line no-unused-vars
-  const [searchParam] = useState(["kodeAnggota", "nama"]);
+  const [input, setInput] = useState("");
 
   useEffect(() => {
     const getPinjam = async () => {
@@ -87,10 +72,12 @@ export default function PinjamTable() {
                   <tbody>
                     {pinjamData
                       .filter((pinjam) => {
-                        const inputString = input.toString();
+                        const inputString = input.toString().toLowerCase();
                         return (
-                          pinjam.kodeAnggota.includes(inputString) ||
-                          pinjam.nama.includes(inputString)
+                          pinjam.kodeAnggota
+                            .toLowerCase()
+                            .includes(inputString) ||
+                          pinjam.nama.toLowerCase().includes(inputString)
                         );
                       })
                       .map((pinjam, index) => (
