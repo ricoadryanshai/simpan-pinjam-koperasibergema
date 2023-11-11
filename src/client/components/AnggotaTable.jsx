@@ -80,10 +80,10 @@ function AnggotaTable() {
     setActivePage(pageNumber);
   };
 
-  const startIndex = (activePage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
+  // const startIndex = (activePage - 1) * itemsPerPage;
+  // const endIndex = startIndex + itemsPerPage;
 
-  const anggotaHalaman = anggotaData.slice(startIndex, endIndex);
+  // const anggotaHalaman = anggotaData.slice(startIndex, endIndex);
 
   return (
     <>
