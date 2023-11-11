@@ -8,13 +8,6 @@ import Anggota from "./Anggota";
 
 export const SearchBar = (setInput) => {
   // Anda perlu mendefinisikan atau mengimpor anggotaData
-  // eslint-disable-next-line no-unused-vars
-  const [searchTerm, setSearchTerm] = useState(""); // State untuk menyimpan kata kunci pencarian
-
-  // eslint-disable-next-line no-unused-vars
-  const handleSearch = (value) => {
-    setSearchTerm(value); // Simpan kata kunci pencarian dalam state
-  };
 
   return (
     <div className="input-wrapper">
