@@ -153,12 +153,14 @@ export default function SimpanDetailModal(props) {
                     {formatRupiah(transaction.saldo)}
                   </td>
                   <td style={{ textAlign: "center" }}>
-                    {transaction.uploadFile && (
+                    {transaction.uploadFile ? (
                       <img
                         src={`src/server/uploads/simpanan/${transaction.uploadFile}`}
                         alt="Bukti Transfer"
                         style={{ maxWidth: "50px", cursor: "pointer" }}
                       />
+                    ) : (
+                      <span>Tidak ada bukti transfer</span>
                     )}
                   </td>
                   <td style={{ borderInlineStart: "solid 1px lightgray" }}>
