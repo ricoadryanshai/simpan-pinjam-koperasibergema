@@ -167,6 +167,20 @@ export const getTransaksi = async () => {
   }
 };
 
+export const addTransaction = async (transactionData) => {
+  try {
+    const response = await axios.post("/post/transaksi", transactionData);
+
+    if (response.status === 200) {
+      console.log("Transaction added successfully");
+    } else {
+      console.error("Failed to add transaction");
+    }
+  } catch (error) {
+    console.error("Error:", error.message);
+  }
+};
+
 // API ENDPOINT TRANSAKSI <<< END
 
 // START >>> API ENDPOINT LAPORAN

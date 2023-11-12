@@ -425,6 +425,36 @@ app.get("/get/transaksi", (req, res) => {
   });
 });
 
+app.post("/post/transaksi", (req, res) => {
+  const { jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan } =
+    req.body;
+
+  if (!jenisTransaksi || !tanggalTransaksi || !nominalTransaksi) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const sqlQuery =
+    "INSERT INTO tbl_transaksi (jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan) VALUES (?, ?, ?, ?)";
+  const values = [
+    jenisTransaksi,
+    tanggalTransaksi,
+    nominalTransaksi,
+    keterangan,
+  ];
+
+  db.query(sqlQuery, values, (err, results) => {
+    if (err) {
+      console.error("Error adding transaction: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      res.status(200).json({
+        message: "Transaction added successfully",
+        transactionId: results.insertId,
+      });
+    }
+  });
+});
+
 // API ENDPOINT TRANSAKSI <<< END
 
 // START >>> API ENDPOINT LAPORAN
