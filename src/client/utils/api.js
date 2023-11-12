@@ -157,7 +157,15 @@ export const getPinjamAnggota = async () => {
 
 // START >>> API ENDPOINT TRANSAKSI
 
-// {CONTENT}
+export const getTransaksi = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/transaksi`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
 
 // API ENDPOINT TRANSAKSI <<< END
 

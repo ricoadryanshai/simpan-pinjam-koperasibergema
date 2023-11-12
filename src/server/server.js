@@ -62,85 +62,64 @@ db.connect((err) => {
   }
 });
 
+// Function to execute a query and return the result
+function getQueryResult(query) {
+  return new Promise((resolve, reject) => {
+    db.query(query, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results[0]);
+      }
+    });
+  });
+}
+
 // START >>> API ENDPOINT BERANDA
 
-app.get("/get/beranda", (req, res) => {
-  const queryAnggota = "SELECT COUNT(*) AS jumlahAnggota FROM tbl_anggota";
+app.get("/get/beranda", async (req, res) => {
+  try {
+    const jumlahAnggota = await getQueryResult(
+      "SELECT COUNT(*) AS jumlahAnggota FROM tbl_anggota"
+    );
+    const jumlahSimpanan = await getQueryResult(`
+      SELECT
+        SUM(CASE WHEN tbl_simpan.jenisSimpan <> 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS jumlahSimpanan
+      FROM
+        tbl_simpan
+      WHERE
+        MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
+        AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`);
 
-  const querySumSimpan = `
-    SELECT
-      SUM(CASE WHEN tbl_simpan.jenisSimpan <> 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS jumlahSimpanan
-    FROM
-      tbl_simpan
-    WHERE
-      MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
-      AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`;
+    const penarikanSimpanan = await getQueryResult(`
+      SELECT
+        SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS penarikanSimpanan
+      FROM
+        tbl_simpan
+      WHERE
+        MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
+        AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`);
 
-  const queryPenarikan = `
-    SELECT
-      SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS penarikanSimpanan
-    FROM
-      tbl_simpan
-    WHERE
-      MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
-      AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`;
+    const jumlahSaldo = await getQueryResult(`
+      SELECT
+        SUM(CASE WHEN tbl_simpan.jenisSimpan <> 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) -
+        SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS jumlahSaldo
+      FROM
+        tbl_simpan
+      WHERE
+        MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
+        AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`);
 
-  const queryTotalSaldo = `
-    SELECT
-      SUM(CASE WHEN tbl_simpan.jenisSimpan <> 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) -
-      SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS jumlahSaldo
-    FROM
-      tbl_simpan
-    WHERE
-      MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
-      AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`;
-
-  db.query(queryAnggota, (err, results) => {
-    if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      const jumlahAnggota = results[0].jumlahAnggota;
-
-      db.query(querySumSimpan, (errSum, resultsSum) => {
-        if (errSum) {
-          console.error("Error fetching simpanan data: " + errSum.sqlMessage);
-          res.status(500).json({ error: "Internal Server Error" });
-        } else {
-          const jumlahSimpanan = resultsSum[0].jumlahSimpanan;
-
-          db.query(queryPenarikan, (errSaldo, resultsSaldo) => {
-            if (errSaldo) {
-              console.error(
-                "Error fetching saldo data: " + errSaldo.sqlMessage
-              );
-              res.status(500).json({ error: "Internal Server Error" });
-            } else {
-              const penarikanSimpanan = resultsSaldo[0].penarikanSimpanan;
-
-              db.query(queryTotalSaldo, (errSaldo, resultsSaldo) => {
-                if (errSaldo) {
-                  console.error(
-                    "Error fetching saldo data: " + errSaldo.sqlMessage
-                  );
-                  res.status(500).json({ error: "Internal Server Error" });
-                } else {
-                  const jumlahSaldo = resultsSaldo[0].jumlahSaldo;
-
-                  res.status(200).json({
-                    jumlahAnggota,
-                    jumlahSimpanan,
-                    penarikanSimpanan,
-                    jumlahSaldo,
-                  });
-                }
-              });
-            }
-          });
-        }
-      });
-    }
-  });
+    res.status(200).json({
+      jumlahAnggota: jumlahAnggota.jumlahAnggota,
+      jumlahSimpanan: jumlahSimpanan.jumlahSimpanan,
+      penarikanSimpanan: penarikanSimpanan.penarikanSimpanan,
+      jumlahSaldo: jumlahSaldo.jumlahSaldo,
+    });
+  } catch (error) {
+    console.error("Error fetching data: " + error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // API ENDPOINT BERANDA <<< END
@@ -431,7 +410,20 @@ app.get("/get/pinjam/:kodeAnggota", (req, res) => {
 
 // START >>> API ENDPOINT TRANSAKSI
 
-// {CONTENT}
+app.get("/get/transaksi", (req, res) => {
+  sqlQuery = `SELECT * FROM tbl_transaksi ORDER BY tanggalTransaksi DESC`;
+
+  db.query(sqlQuery, (err, results) => {
+    if (err) {
+      console.error("Error fetching data: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else if (results.length === 0) {
+      res.status(404).json({ error: "Record not found" });
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
 
 // API ENDPOINT TRANSAKSI <<< END
 
