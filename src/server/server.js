@@ -455,6 +455,36 @@ app.post("/post/transaksi", (req, res) => {
   });
 });
 
+app.delete("/delete/transaksi/:id", async (req, res) => {
+  const transaksiId = req.params.id;
+
+  try {
+    // Pastikan bahwa transaksiId adalah angka
+    if (!/^\d+$/.test(transaksiId)) {
+      return res.status(400).json({ error: "Invalid parameter" });
+    }
+
+    // Periksa apakah data dengan ID yang diberikan ada di database
+    const checkQuery = `SELECT * FROM tbl_transaksi WHERE id = ${transaksiId}`;
+    const existingData = await getQueryResult(checkQuery);
+
+    if (existingData.length === 0) {
+      return res.status(404).json({ error: "Data not found" });
+    }
+
+    // Jika data ada, lakukan penghapusan
+    const deleteQuery = `DELETE FROM tbl_transaksi WHERE id = ${transaksiId}`;
+    await getQueryResult(deleteQuery);
+
+    res.status(200).json({ message: "Data deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    res
+      .status(500)
+      .json({ error: "Error deleting data", message: error.message });
+  }
+});
+
 // API ENDPOINT TRANSAKSI <<< END
 
 // START >>> API ENDPOINT LAPORAN

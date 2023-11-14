@@ -165,9 +165,6 @@ export default function FormTambahAnggota() {
                       onChange={handleInputChange}
                       required
                     />
-                    <InputGroup.Text id="basic-addon1">
-                      dd/mm/yyyy
-                    </InputGroup.Text>
                   </InputGroup>
                   <Form.Control.Feedback type="invalid">
                     Silahkan masukkan tanggal lahir anggota terlebih dahulu.

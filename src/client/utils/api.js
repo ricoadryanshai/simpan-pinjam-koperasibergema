@@ -167,9 +167,12 @@ export const getTransaksi = async () => {
   }
 };
 
-export const addTransaction = async (transactionData) => {
+export const tambahTransaction = async (transactionData) => {
   try {
-    const response = await axios.post("/post/transaksi", transactionData);
+    const response = await axios.post(
+      `${API_ENDPOINT}/post/transaksi`,
+      transactionData
+    );
 
     if (response.status === 200) {
       console.log("Transaction added successfully");
@@ -178,6 +181,24 @@ export const addTransaction = async (transactionData) => {
     }
   } catch (error) {
     console.error("Error:", error.message);
+  }
+};
+
+export const deleteTransaksi = async (transaksiId) => {
+  try {
+    const deleteResponse = await axios.delete(
+      `${API_ENDPOINT}/delete/transaksi/${transaksiId}`
+    );
+
+    if (deleteResponse.status === 200) {
+      console.log("Data deleted successfully");
+      return deleteResponse.data;
+    } else {
+      throw new Error("Failed to delete data");
+    }
+  } catch (error) {
+    console.error("Error deleting data:", error.message);
+    throw new Error("Internal Server Error");
   }
 };
 
