@@ -167,20 +167,22 @@ export const getTransaksi = async () => {
   }
 };
 
-export const tambahTransaction = async (transactionData) => {
+export const tambahTransaksi = async (transaksiData) => {
   try {
     const response = await axios.post(
       `${API_ENDPOINT}/post/transaksi`,
-      transactionData
+      transaksiData
     );
 
-    if (response.status === 200) {
-      console.log("Transaction added successfully");
+    if (response.status === 201) {
+      console.log("Data added successfully");
+      return response.data;
     } else {
-      console.error("Failed to add transaction");
+      throw new Error("Failed to add data");
     }
   } catch (error) {
-    console.error("Error:", error.message);
+    console.error("Error adding data:", error.message);
+    throw new Error("Internal Server Error");
   }
 };
 

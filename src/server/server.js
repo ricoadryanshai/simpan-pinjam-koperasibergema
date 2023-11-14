@@ -425,34 +425,40 @@ app.get("/get/transaksi", (req, res) => {
   });
 });
 
-app.post("/post/transaksi", (req, res) => {
-  const { jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan } =
-    req.body;
+app.post("/post/transaksi", async (req, res) => {
+  try {
+    const { jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan } =
+      req.body;
 
-  if (!jenisTransaksi || !tanggalTransaksi || !nominalTransaksi) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
-
-  const sqlQuery =
-    "INSERT INTO tbl_transaksi (jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan) VALUES (?, ?, ?, ?)";
-  const values = [
-    jenisTransaksi,
-    tanggalTransaksi,
-    nominalTransaksi,
-    keterangan,
-  ];
-
-  db.query(sqlQuery, values, (err, results) => {
-    if (err) {
-      console.error("Error adding transaction: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json({
-        message: "Transaction added successfully",
-        transactionId: results.insertId,
-      });
+    // Pastikan data yang dibutuhkan ada
+    if (!jenisTransaksi || !tanggalTransaksi || !nominalTransaksi) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
-  });
+
+    // Query untuk menambahkan data ke tbl_transaksi
+    const insertQuery = `
+      INSERT INTO tbl_transaksi (jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan)
+      VALUES (?, ?, ?, ?)
+    `;
+
+    // Eksekusi query dengan menggunakan prepared statement untuk menghindari SQL injection
+    const result = await getQueryResult(insertQuery, [
+      jenisTransaksi,
+      tanggalTransaksi,
+      nominalTransaksi,
+      keterangan,
+    ]);
+
+    res
+      .status(201)
+      .json({
+        message: "Data added successfully",
+        insertedId: result.insertId,
+      });
+  } catch (error) {
+    console.error("Error adding data:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 app.delete("/delete/transaksi/:id", async (req, res) => {
