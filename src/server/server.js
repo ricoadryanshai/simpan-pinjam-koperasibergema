@@ -489,6 +489,30 @@ app.delete("/delete/transaksi/:id", async (req, res) => {
   }
 });
 
+app.put("/put/transaksi/:id", async (req, res) => {
+  const { id } = req.params;
+  const { jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan } =
+    req.body;
+
+  const updateQuery = `
+    UPDATE tbl_transaksi
+    SET
+      jenisTransaksi = '${jenisTransaksi}',
+      tanggalTransaksi = '${tanggalTransaksi}',
+      nominalTransaksi = ${nominalTransaksi},
+      keterangan = '${keterangan}'
+    WHERE id = ${id};
+  `;
+
+  try {
+    await getQueryResult(updateQuery);
+    res.status(200).json({ message: "Data updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 // API ENDPOINT TRANSAKSI <<< END
 
 // START >>> API ENDPOINT LAPORAN

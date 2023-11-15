@@ -206,6 +206,19 @@ export const deleteTransaksi = async (transaksiId) => {
   }
 };
 
+export const editTransaksi = async (id, data) => {
+  try {
+    const response = await axios.put(
+      `${API_ENDPOINT}/put/transaksi/${id}`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to update transaction");
+  }
+};
+
 // API ENDPOINT TRANSAKSI <<< END
 
 // START >>> API ENDPOINT LAPORAN
