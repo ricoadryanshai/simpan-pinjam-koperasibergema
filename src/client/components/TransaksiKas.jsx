@@ -8,10 +8,12 @@ import {
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 import { deleteTransaksi, getTransaksi } from "../utils/api";
+import { TransaksiEditModal } from "./TransaksiEditModal";
 
 export default function TransaksiKas() {
   const [transaksi, setTransaksi] = React.useState([]);
   const [showTambah, setShowTambah] = React.useState(false);
+  const [showEdit, setShowEdit] = React.useState(false);
 
   function formatDate(inputDate) {
     if (!inputDate || inputDate.trim() === "") {
@@ -67,7 +69,7 @@ export default function TransaksiKas() {
     getTransaksi().then((res) => {
       setTransaksi(res);
     });
-  }, []);
+  }, [showTambah, showEdit]);
 
   return (
     <>
@@ -107,7 +109,7 @@ export default function TransaksiKas() {
                     {formatRupiah(parseFloat(transaksi.nominalTransaksi))}
                   </td>
                   <td className="no-print">
-                    <Button variant="warning">
+                    <Button variant="warning" onClick={() => setShowEdit(true)}>
                       <FontAwesomeIcon
                         icon={faPenToSquare}
                         style={{ marginInlineEnd: "0.2rem" }}
@@ -138,6 +140,8 @@ export default function TransaksiKas() {
         show={showTambah}
         onHide={() => setShowTambah(false)}
       />
+
+      <TransaksiEditModal show={showEdit} onHide={() => setShowEdit(false)} />
     </>
   );
 }

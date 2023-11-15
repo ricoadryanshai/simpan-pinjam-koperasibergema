@@ -1,9 +1,8 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import { Button, Form, Modal } from "react-bootstrap";
-import { tambahTransaksi } from "../utils/api";
 
-export const TransaksiTambahModal = (props) => {
+export const TransaksiEditModal = (props) => {
   const { show, onHide } = props;
 
   const [formValues, setFormValues] = React.useState({
@@ -46,57 +45,19 @@ export const TransaksiTambahModal = (props) => {
     return new Intl.NumberFormat("id-ID").format(number);
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    try {
-      // Validasi formulir sebelum mengirim permintaan ke server
-      if (
-        formValues.jenisTransaksi === "Pilih Jenis Transaksi" ||
-        formValues.tanggalTransaksi === "" ||
-        formValues.nominal === ""
-      ) {
-        console.error("Harap lengkapi semua field yang diperlukan");
-        return;
-      }
-
-      // Ubah format tanggal menjadi "yyyy/mm/dd"
-      const formattedDate = formValues.tanggalTransaksi.split("-").join("/");
-
-      // Kirim permintaan untuk menambahkan transaksi
-      const response = await tambahTransaksi({
-        jenisTransaksi: formValues.jenisTransaksi,
-        tanggalTransaksi: formattedDate,
-        nominalTransaksi: parseFloat(
-          formValues.nominal.replace(/[^0-9.-]/g, "")
-        ), // Hilangkan karakter selain angka, titik, dan minus
-        keterangan: formValues.keterangan,
-      });
-
-      console.log(response); // Output respons dari server
-
-      // Reset formulir setelah berhasil menambahkan data
-      resetForm();
-      onHide(); // Sembunyikan modal setelah berhasil menambahkan data
-    } catch (error) {
-      console.error("Error submitting data:", error.message);
-    }
-  };
-
   return (
     <Modal
       show={show}
       onHide={() => {
         onHide();
-        resetForm();
       }}
     >
       <Modal.Header closeButton>
         <Modal.Title className="text-uppercase fw-bold">
-          Transaksi Kas
+          Ubah Transaksi
         </Modal.Title>
       </Modal.Header>
-      <Form onSubmit={handleSubmit}>
+      <Form>
         <Modal.Body>
           <Form.Group className="mb-2">
             <Form.Label>Tanggal Transaksi</Form.Label>

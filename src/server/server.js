@@ -449,12 +449,10 @@ app.post("/post/transaksi", async (req, res) => {
       keterangan,
     ]);
 
-    res
-      .status(201)
-      .json({
-        message: "Data added successfully",
-        insertedId: result.insertId,
-      });
+    res.status(200).json({
+      message: "Data added successfully",
+      insertedId: result.insertId,
+    });
   } catch (error) {
     console.error("Error adding data:", error);
     res.status(500).json({ error: "Internal Server Error" });

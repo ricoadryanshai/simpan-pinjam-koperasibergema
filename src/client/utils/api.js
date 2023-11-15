@@ -174,7 +174,9 @@ export const tambahTransaksi = async (transaksiData) => {
       transaksiData
     );
 
-    if (response.status === 201) {
+    console.log(response);
+
+    if (response.status === 200) {
       console.log("Data added successfully");
       return response.data;
     } else {
