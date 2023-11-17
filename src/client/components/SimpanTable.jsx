@@ -1,20 +1,20 @@
-// eslint-disable-next-line no-unused-vars
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Button, Card, Col, Container, Row, Table } from "react-bootstrap";
-import { getSimpanAnggota, getSimpanAnggotaById } from "../utils/api";
+import { getSimpanAnggotaById } from "../utils/api";
 import SimpanDetailModal from "./SimpanDetailModal";
 import SimpanTambahModal from "./SimpanTambahModal";
 import SimpanAmbilModal from "./SimpanAmbilModal";
 import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
+import { fetchSimpanan } from "../utils/fetch";
 
 export default function SimpanTable() {
-  const [simpananData, setSimpananData] = useState([]);
-  const [selectedRowData, setSelectedRowData] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showTambahModal, setShowTambahModal] = useState(false);
-  const [showAmbilModal, setShowAmbilModal] = useState(false);
-  const [modalData, setModalData] = useState([]);
+  const [simpananData, setSimpananData] = React.useState([]);
+  const [selectedRowData, setSelectedRowData] = React.useState(null);
+  const [showDetailModal, setShowDetailModal] = React.useState(false);
+  const [showTambahModal, setShowTambahModal] = React.useState(false);
+  const [showAmbilModal, setShowAmbilModal] = React.useState(false);
+  const [modalData, setModalData] = React.useState([]);
 
   const handleTambahClick = (rowData) => {
     setSelectedRowData(rowData);
@@ -40,29 +40,28 @@ export default function SimpanTable() {
   };
 
   const fetchData = async () => {
-    const fetchedData = await getSimpanAnggota();
-    setSimpananData(fetchedData);
+    await fetchSimpanan(setSimpananData);
   };
 
   // eslint-disable-next-line no-unused-vars
-  const [error, setError] = useState(null);
+  const [error, setError] = React.useState(null);
   // eslint-disable-next-line no-unused-vars
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = React.useState(false);
   // eslint-disable-next-line no-unused-vars
-  const [items, setItems] = useState([]);
-  const [input, setInput] = useState("");
+  const [items, setItems] = React.useState([]);
+  const [input, setInput] = React.useState("");
 
   //     set search query to empty string
   // eslint-disable-next-line no-unused-vars
-  const [q, setQ] = useState("");
+  const [q, setQ] = React.useState("");
   //     set search parameters
   //     we only what to search countries by capital and name
   //     this list can be longer if you want
   // just add it to this array
   // eslint-disable-next-line no-unused-vars
-  const [searchParam] = useState(["kodeAnggota", "nama"]);
+  const [searchParam] = React.useState(["kodeAnggota", "nama"]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchData();
   }, []);
 

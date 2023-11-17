@@ -1,50 +1,40 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useEffect, useState } from "react";
 import Table from "react-bootstrap/Table";
-import { deleteAnggota, getAnggota } from "../utils/api";
 import { Button, Card, Container, Modal, Row, Col } from "react-bootstrap";
 import AnggotaEditModal from "./AnggotaEditModal";
 import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
 import { Pagination } from "react-bootstrap";
+import { formatDate } from "../utils/format";
+import { fetchAnggota } from "../utils/fetch";
+import { handleEditFunction } from "../utils/handleEdit";
+import { handleDeleteFunction } from "../utils/handleDelete";
 
 function AnggotaTable() {
   const [anggotaData, setAnggotaData] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "2-digit", day: "2-digit" };
-    const formattedDate = new Date(dateString).toLocaleDateString(
-      "en-GB",
-      options
-    );
-    return formattedDate;
-  };
-
   const handleEditClick = (anggota) => {
-    setSelectedItem(anggota);
-    setShowEditModal(true);
+    handleEditFunction(anggota, setSelectedItem, setShowEditModal);
   };
 
   const handlerDelete = async (id) => {
-    try {
-      await deleteAnggota(id);
-
-      setAnggotaData(await getAnggota());
-    } catch (error) {
-      console.error("Error deleting data:", error);
-    }
+    await handleDeleteFunction(id, setAnggotaData);
   };
 
   //Search //
   const [input, setInput] = useState("");
 
-  const fetchData = async () => {
-    setAnggotaData(await getAnggota());
-  };
-
   useEffect(() => {
+    const fetchData = async () => {
+      const members = await fetchAnggota();
+      if (members) {
+        setAnggotaData(members);
+      }
+    };
+
     fetchData();
   }, []);
 
@@ -76,11 +66,6 @@ function AnggotaTable() {
   const handlePageChange = (pageNumber) => {
     setActivePage(pageNumber);
   };
-
-  // const startIndex = (activePage - 1) * itemsPerPage;
-  // const endIndex = startIndex + itemsPerPage;
-
-  // const anggotaHalaman = anggotaData.slice(startIndex, endIndex);
 
   return (
     <>
@@ -257,7 +242,7 @@ function AnggotaTable() {
           <AnggotaEditModal
             item={selectedItem}
             closeModal={() => setShowEditModal(false)}
-            fetchData={fetchData}
+            fetchData={fetchAnggota}
           />
         )}
       </Modal>

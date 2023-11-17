@@ -7,37 +7,16 @@ import {
   faSquarePlus,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
-import { deleteTransaksi, getTransaksi } from "../utils/api";
+import { deleteTransaksi } from "../utils/api";
 import { TransaksiEditModal } from "./TransaksiEditModal";
+import { fetchTransaksi } from "../utils/fetch";
+import { formatDate } from "../utils/format";
 
 export default function TransaksiKas() {
   const [transaksi, setTransaksi] = React.useState([]);
   const [showTambah, setShowTambah] = React.useState(false);
   const [showEdit, setShowEdit] = React.useState(false);
-
-  function formatDate(inputDate) {
-    if (!inputDate || inputDate.trim() === "") {
-      return "";
-    }
-
-    // Memisahkan tahun, bulan, dan tanggal dari string input
-    const [year, month, day] = inputDate.split("/");
-
-    // Membuat objek Date dengan format yang diterima oleh Date constructor (YYYY, MM, DD)
-    const formattedDate = new Date(year, month - 1, day);
-
-    // Mendapatkan tanggal, bulan, dan tahun dengan metode Date
-    const dayFormatted = formattedDate.getDate();
-    const monthFormatted = formattedDate.getMonth() + 1; // Ingat: bulan dimulai dari 0
-    const yearFormatted = formattedDate.getFullYear();
-
-    // Menggabungkan kembali dalam format "dd-mm-yyyy"
-    const result = `${dayFormatted < 10 ? "0" : ""}${dayFormatted}/${
-      monthFormatted < 10 ? "0" : ""
-    }${monthFormatted}/${yearFormatted}`;
-
-    return result;
-  }
+  const [selectedTransaction, setSelectedTransaction] = React.useState(null);
 
   const formatRupiah = (angka) => {
     if (typeof angka !== "number") {
@@ -65,11 +44,21 @@ export default function TransaksiKas() {
     }
   };
 
+  const handleEditClick = (transaksi) => {
+    setSelectedTransaction(transaksi);
+    setShowEdit(true);
+  };
+
   React.useEffect(() => {
-    getTransaksi().then((res) => {
-      setTransaksi(res);
-    });
-  }, [showTambah, showEdit]);
+    const fetchData = async () => {
+      const transactions = await fetchTransaksi();
+      if (transactions) {
+        setTransaksi(transactions);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <>
@@ -109,7 +98,10 @@ export default function TransaksiKas() {
                     {formatRupiah(parseFloat(transaksi.nominalTransaksi))}
                   </td>
                   <td className="no-print">
-                    <Button variant="warning" onClick={() => setShowEdit(true)}>
+                    <Button
+                      variant="warning"
+                      onClick={() => handleEditClick(transaksi)}
+                    >
                       <FontAwesomeIcon
                         icon={faPenToSquare}
                         style={{ marginInlineEnd: "0.2rem" }}
@@ -141,7 +133,13 @@ export default function TransaksiKas() {
         onHide={() => setShowTambah(false)}
       />
 
-      <TransaksiEditModal show={showEdit} onHide={() => setShowEdit(false)} />
+      {selectedTransaction && (
+        <TransaksiEditModal
+          show={showEdit}
+          onHide={() => setShowEdit(false)}
+          selectedTransaction={selectedTransaction}
+        />
+      )}
     </>
   );
 }

@@ -1,16 +1,12 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import { Button, Form, Modal } from "react-bootstrap";
+import { editTransaksi } from "../utils/api";
 
 export const TransaksiEditModal = (props) => {
-  const { show, onHide } = props;
+  const { show, onHide, selectedTransaction } = props;
 
-  const [formValues, setFormValues] = React.useState({
-    tanggalTransaksi: "",
-    jenisTransaksi: "Pilih Jenis Transaksi",
-    nominal: "",
-    keterangan: "",
-  });
+  const [formValues, setFormValues] = React.useState(selectedTransaction);
 
   const resetForm = () => {
     setFormValues({
@@ -40,6 +36,18 @@ export const TransaksiEditModal = (props) => {
     }));
   };
 
+  const handleSubmitChange = async () => {
+    try {
+      const response = await editTransaksi(selectedTransaction.id, formValues);
+      // Reset formulir setelah berhasil mengubah data
+      console.log("Record updated successfully:", response.data);
+      resetForm();
+      onHide(); // Sembunyikan modal setelah berhasil mengubah data
+    } catch (error) {
+      console.error("Error updating data:", error.message);
+    }
+  };
+
   const formatNumber = (number) => {
     // Memformat angka dengan pemisahan desimal setiap 3 digit
     return new Intl.NumberFormat("id-ID").format(number);
@@ -57,7 +65,7 @@ export const TransaksiEditModal = (props) => {
           Ubah Transaksi
         </Modal.Title>
       </Modal.Header>
-      <Form>
+      <Form onClick={handleSubmitChange}>
         <Modal.Body>
           <Form.Group className="mb-2">
             <Form.Label>Tanggal Transaksi</Form.Label>
