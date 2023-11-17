@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React from "react";
 import { Button, Card, Col, Container, Row, Table } from "react-bootstrap";
 import { getSimpanAnggotaById } from "../utils/api";
@@ -7,6 +8,7 @@ import SimpanAmbilModal from "./SimpanAmbilModal";
 import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
 import { fetchSimpanan } from "../utils/fetch";
+import { formatRupiah } from "../utils/format";
 
 export default function SimpanTable() {
   const [simpananData, setSimpananData] = React.useState([]);
@@ -15,15 +17,23 @@ export default function SimpanTable() {
   const [showTambahModal, setShowTambahModal] = React.useState(false);
   const [showAmbilModal, setShowAmbilModal] = React.useState(false);
   const [modalData, setModalData] = React.useState([]);
+  const [error, setError] = React.useState(null);
+  const [isLoaded, setIsLoaded] = React.useState(false);
+  const [items, setItems] = React.useState([]);
+  const [input, setInput] = React.useState("");
+  const [q, setQ] = React.useState("");
+  const [searchParam] = React.useState(["kodeAnggota", "nama"]);
 
-  const handleTambahClick = (rowData) => {
-    setSelectedRowData(rowData);
-    setShowTambahModal(true);
+  const fetchData = async () => {
+    await fetchSimpanan(setSimpananData);
   };
 
-  const handleDetailClick = (rowData) => {
+  const handleModal = (rowData, setShowModal) => {
     setSelectedRowData(rowData);
-    setShowDetailModal(true);
+    setShowModal(true);
+  };
+  const handleDetailClick = (rowData) => {
+    handleModal(rowData, setShowDetailModal);
 
     getSimpanAnggotaById(rowData.kodeAnggota)
       .then((data) => {
@@ -33,38 +43,17 @@ export default function SimpanTable() {
         console.error("Error fetching detailed data:", error);
       });
   };
+  const handleTambahClick = (rowData) => {
+    handleModal(rowData, setShowTambahModal);
+  };
 
   const handleAmbilClick = (rowData) => {
-    setSelectedRowData(rowData);
-    setShowAmbilModal(true);
+    handleModal(rowData, setShowAmbilModal);
   };
-
-  const fetchData = async () => {
-    await fetchSimpanan(setSimpananData);
-  };
-
-  // eslint-disable-next-line no-unused-vars
-  const [error, setError] = React.useState(null);
-  // eslint-disable-next-line no-unused-vars
-  const [isLoaded, setIsLoaded] = React.useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [items, setItems] = React.useState([]);
-  const [input, setInput] = React.useState("");
-
-  //     set search query to empty string
-  // eslint-disable-next-line no-unused-vars
-  const [q, setQ] = React.useState("");
-  //     set search parameters
-  //     we only what to search countries by capital and name
-  //     this list can be longer if you want
-  // just add it to this array
-  // eslint-disable-next-line no-unused-vars
-  const [searchParam] = React.useState(["kodeAnggota", "nama"]);
 
   React.useEffect(() => {
     fetchData();
   }, []);
-
   return (
     <>
       <Container fluid style={{ marginTop: "6rem", marginBottom: "6rem" }}>
@@ -112,10 +101,12 @@ export default function SimpanTable() {
                       .filter((simpan) => {
                         const inputString = input.toString().toLowerCase();
                         return (
-                          simpan.kodeAnggota
-                            .toLowerCase()
-                            .includes(inputString) ||
-                          simpan.nama.toLowerCase().includes(inputString)
+                          (simpan.kodeAnggota &&
+                            simpan.kodeAnggota
+                              .toLowerCase()
+                              .includes(inputString)) ||
+                          (simpan.nama &&
+                            simpan.nama.toLowerCase().includes(inputString))
                         );
                       })
                       .map((simpan, index) => (
@@ -202,19 +193,4 @@ export default function SimpanTable() {
       />
     </>
   );
-
-  function formatRupiah(angka) {
-    if (typeof angka !== "number") {
-      return "Rp 0,00";
-    }
-
-    // Format angka dengan koma sebagai pemisah ribuan dan dua digit desimal
-    const formattedAngka = angka.toLocaleString("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 2,
-    });
-
-    return formattedAngka;
-  }
 }

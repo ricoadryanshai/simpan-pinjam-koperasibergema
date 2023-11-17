@@ -1,31 +1,55 @@
-// eslint-disable-next-line no-unused-vars
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Button, Card, Col, Container, Row, Table } from "react-bootstrap";
-import { getPinjamAnggota } from "../utils/api";
 import { PinjamDetailModal } from "./PinjamDetailModal";
 import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
-// import { PinjamTambahModal } from "./PinjamTambahModal";
-// import { PinjamBayarModal } from "./PinjamBayarModal";
+import { formatRupiah } from "../utils/format";
+import { fetchPinjaman } from "../utils/fetch";
+import { PinjamTambahModal } from "./PinjamTambahModal";
+import { PinjamBayarModal } from "./PinjamBayarModal";
 
 export default function PinjamTable() {
-  const [pinjamData, setPinjamData] = useState([]);
-  const [showDetail, setShowDetail] = useState(false);
-  // const [showPinjam, setShowPinjam] = useState(false);
-  // const [showBayar, setShowBayar] = useState(false);
+  const [pinjamData, setPinjamData] = React.useState([]);
+  const [showDetail, setShowDetail] = React.useState(false);
+  const [showPinjam, setShowPinjam] = React.useState(false);
+  const [showBayar, setShowBayar] = React.useState(false);
+  const [selectedRow, setSelectedRow] = React.useState(null);
+  const [input, setInput] = React.useState("");
 
-  const handleDetailClick = () => {
+  const handleDetailClick = (pinjam) => {
+    setSelectedRow(pinjam);
     setShowDetail(true);
   };
 
-  const [input, setInput] = useState("");
+  const handlePinjamClick = (pinjam) => {
+    setSelectedRow(pinjam);
+    setShowPinjam(true);
+  };
 
-  useEffect(() => {
-    const getPinjam = async () => {
-      const respon = await getPinjamAnggota();
-      setPinjamData(respon);
-    };
-    getPinjam();
+  const handleBayarClick = (pinjam) => {
+    setSelectedRow(pinjam);
+    setShowBayar(true);
+  };
+
+  const handleModalClose = (modalType) => {
+    setSelectedRow(null);
+    switch (modalType) {
+      case "detail":
+        setShowDetail(false);
+        break;
+      case "pinjam":
+        setShowPinjam(false);
+        break;
+      case "bayar":
+        setShowBayar(false);
+        break;
+      default:
+        break;
+    }
+  };
+
+  React.useEffect(() => {
+    fetchPinjaman(setPinjamData);
   }, []);
   return (
     <>
@@ -74,10 +98,12 @@ export default function PinjamTable() {
                       .filter((pinjam) => {
                         const inputString = input.toString().toLowerCase();
                         return (
-                          pinjam.kodeAnggota
-                            .toLowerCase()
-                            .includes(inputString) ||
-                          pinjam.nama.toLowerCase().includes(inputString)
+                          (pinjam.kodeAnggota &&
+                            pinjam.kodeAnggota
+                              .toLowerCase()
+                              .includes(inputString)) ||
+                          (pinjam.nama &&
+                            pinjam.nama.toLowerCase().includes(inputString))
                         );
                       })
                       .map((pinjam, index) => (
@@ -104,17 +130,27 @@ export default function PinjamTable() {
                           <td>
                             <Button
                               variant="secondary"
-                              onClick={handleDetailClick}
+                              onClick={() => handleDetailClick(pinjam)}
                             >
                               Detail
                             </Button>
                           </td>
                           <td>
-                            <Button variant="warning">Pinjam</Button>
+                            <Button
+                              variant="warning"
+                              onClick={() => handlePinjamClick(pinjam)}
+                            >
+                              Pinjam
+                            </Button>
                           </td>
                           <td>
                             {pinjam.sisaHutang > 0 ? (
-                              <Button variant="success">Bayar</Button>
+                              <Button
+                                variant="success"
+                                onClick={() => handleBayarClick(pinjam)}
+                              >
+                                Bayar
+                              </Button>
                             ) : null}
                           </td>
                         </tr>
@@ -130,25 +166,19 @@ export default function PinjamTable() {
 
       <PinjamDetailModal
         show={showDetail}
-        onHide={() => setShowDetail(false)}
+        onHide={() => handleModalClose("detail")}
+        selectedRow={selectedRow}
       />
-      {/* <PinjamTambahModal /> */}
-      {/* <PinjamBayarModal /> */}
+      <PinjamTambahModal
+        show={showPinjam}
+        onHide={() => handleModalClose("pinjam")}
+        selectedRow={selectedRow}
+      />
+      <PinjamBayarModal
+        show={showBayar}
+        onHide={() => handleModalClose("bayar")}
+        selectedRow={selectedRow}
+      />
     </>
   );
-
-  function formatRupiah(angka) {
-    if (typeof angka !== "number") {
-      return "Rp 0,00";
-    }
-
-    // Format angka dengan koma sebagai pemisah ribuan dan dua digit desimal
-    const formattedAngka = angka.toLocaleString("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 2,
-    });
-
-    return formattedAngka;
-  }
 }

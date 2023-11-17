@@ -7,46 +7,23 @@ import {
   faSquarePlus,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
-import { deleteTransaksi } from "../utils/api";
 import { TransaksiEditModal } from "./TransaksiEditModal";
 import { fetchTransaksi } from "../utils/fetch";
-import { formatDate } from "../utils/format";
+import { formatDate, formatRupiah } from "../utils/format";
+import { deleteTransaction } from "../utils/handle";
 
 export default function TransaksiKas() {
   const [transaksi, setTransaksi] = React.useState([]);
   const [showTambah, setShowTambah] = React.useState(false);
   const [showEdit, setShowEdit] = React.useState(false);
-  const [selectedTransaction, setSelectedTransaction] = React.useState(null);
+  const [selectedItem, setSelectedItem] = React.useState(null);
 
-  const formatRupiah = (angka) => {
-    if (typeof angka !== "number") {
-      return "Rp 0,00";
-    }
-
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 2,
-    }).format(angka);
+  const handleDeleteWrapper = async (id) => {
+    await deleteTransaction(id, setTransaksi);
   };
 
-  const handleDelete = async (transaksiId) => {
-    try {
-      await deleteTransaksi(transaksiId);
-      // Update state to reflect the changes
-      setTransaksi((prevTransaksi) =>
-        prevTransaksi.filter((item) => item.id !== transaksiId)
-      );
-      console.log("Data deleted successfully");
-    } catch (error) {
-      console.error("Error deleting data:", error.message);
-      // Handle error, e.g., show a notification to the user
-    }
-  };
-
-  const handleEditClick = (transaksi) => {
-    setSelectedTransaction(transaksi);
-    setShowEdit(true);
+  const handleEdit = (transaksi) => {
+    handleEdit(transaksi, setSelectedItem, setShowEdit);
   };
 
   React.useEffect(() => {
@@ -100,7 +77,7 @@ export default function TransaksiKas() {
                   <td className="no-print">
                     <Button
                       variant="warning"
-                      onClick={() => handleEditClick(transaksi)}
+                      onClick={() => handleEdit(transaksi)}
                     >
                       <FontAwesomeIcon
                         icon={faPenToSquare}
@@ -112,7 +89,7 @@ export default function TransaksiKas() {
                   <td className="no-print">
                     <Button
                       variant="danger"
-                      onClick={() => handleDelete(transaksi.id)}
+                      onClick={() => handleDeleteWrapper(transaksi.id)}
                     >
                       <FontAwesomeIcon
                         icon={faTrashCan}
@@ -133,11 +110,11 @@ export default function TransaksiKas() {
         onHide={() => setShowTambah(false)}
       />
 
-      {selectedTransaction && (
+      {selectedItem && (
         <TransaksiEditModal
           show={showEdit}
           onHide={() => setShowEdit(false)}
-          selectedTransaction={selectedTransaction}
+          selectedTransaction={selectedItem}
         />
       )}
     </>

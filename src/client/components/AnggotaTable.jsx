@@ -1,5 +1,4 @@
-// eslint-disable-next-line no-unused-vars
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Table from "react-bootstrap/Table";
 import { Button, Card, Container, Modal, Row, Col } from "react-bootstrap";
 import AnggotaEditModal from "./AnggotaEditModal";
@@ -8,26 +7,25 @@ import "../styles/SearchBar.css";
 import { Pagination } from "react-bootstrap";
 import { formatDate } from "../utils/format";
 import { fetchAnggota } from "../utils/fetch";
-import { handleEditFunction } from "../utils/handleEdit";
-import { handleDeleteFunction } from "../utils/handleDelete";
+import { deleteMembers, handleEdit } from "../utils/handle";
 
 function AnggotaTable() {
-  const [anggotaData, setAnggotaData] = useState([]);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [anggotaData, setAnggotaData] = React.useState([]);
+  const [showEditModal, setShowEditModal] = React.useState(false);
+  const [selectedItem, setSelectedItem] = React.useState(null);
 
   const handleEditClick = (anggota) => {
-    handleEditFunction(anggota, setSelectedItem, setShowEditModal);
+    handleEdit(anggota, setSelectedItem, setShowEditModal);
   };
 
-  const handlerDelete = async (id) => {
-    await handleDeleteFunction(id, setAnggotaData);
+  const handleDeleteWrapper = async (id) => {
+    await deleteMembers(id, setAnggotaData);
   };
 
   //Search //
-  const [input, setInput] = useState("");
+  const [input, setInput] = React.useState("");
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchData = async () => {
       const members = await fetchAnggota();
       if (members) {
@@ -60,7 +58,7 @@ function AnggotaTable() {
   };
 
   // Pagination //
-  const [activePage, setActivePage] = useState(1);
+  const [activePage, setActivePage] = React.useState(1);
   const itemsPerPage = 10; // Ganti dengan jumlah item per halaman
 
   const handlePageChange = (pageNumber) => {
@@ -124,8 +122,12 @@ function AnggotaTable() {
                     const inputString = input.toString().toLowerCase(); // Konversi input ke huruf kecil
 
                     return (
-                      anggota.kodeAnggota.toLowerCase().includes(inputString) ||
-                      anggota.nama.toLowerCase().includes(inputString) ||
+                      (anggota.kodeAnggota &&
+                        anggota.kodeAnggota
+                          .toLowerCase()
+                          .includes(inputString)) ||
+                      (anggota.nama &&
+                        anggota.nama.toLowerCase().includes(inputString)) ||
                       (anggota.tempatLahir &&
                         anggota.tempatLahir
                           .toLowerCase()
@@ -134,8 +136,10 @@ function AnggotaTable() {
                         anggota.tanggalLahir
                           .toLowerCase()
                           .includes(inputString)) ||
-                      anggota.alamat.toLowerCase().includes(inputString) ||
-                      anggota.noHP.toLowerCase().includes(inputString) ||
+                      (anggota.alamat &&
+                        anggota.alamat.toLowerCase().includes(inputString)) ||
+                      (anggota.noHP &&
+                        anggota.noHP.toLowerCase().includes(inputString)) ||
                       (anggota.tanggalDaftar &&
                         anggota.tanggalDaftar
                           .toLowerCase()
@@ -180,7 +184,7 @@ function AnggotaTable() {
                         <Button
                           variant="danger"
                           size="md"
-                          onClick={() => handlerDelete(anggota.id)}
+                          onClick={() => handleDeleteWrapper(anggota.id)}
                         >
                           Delete
                         </Button>

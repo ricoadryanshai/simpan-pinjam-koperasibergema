@@ -1,15 +1,15 @@
 /* eslint-disable react/prop-types */
-// eslint-disable-next-line no-unused-vars
-import React, { useEffect, useState } from "react";
-import { Button, Col, Modal, Table } from "react-bootstrap";
-import { deleteSimpan } from "../utils/api";
+import React from "react";
+import { Button, Col, Container, Modal, Row, Table } from "react-bootstrap";
+import { formatDate, formatRupiah } from "../utils/format";
+import { deleteSimpanan } from "../utils/handle";
 
 export default function SimpanDetailModal(props) {
   const { show, onClose, rowData, modalData, updateModalData, clearModalData } =
     props;
 
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [headerData, setHeaderData] = useState({
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [headerData, setHeaderData] = React.useState({
     kodeAnggota: "",
     nama: "",
     tanggalDaftar: "",
@@ -22,61 +22,26 @@ export default function SimpanDetailModal(props) {
   };
 
   const handleDelete = (transactionToDelete) => {
-    if (isDeleting) {
-      return;
-    }
-
-    setIsDeleting(true);
-
-    deleteSimpan(rowData.kodeAnggota, transactionToDelete.id)
-      .then(() => {
-        const updatedData = modalData.filter(
-          (transaction) => transaction !== transactionToDelete
-        );
-
-        // Hitung total saldo yang baru setelah penghapusan
-        const newTotalSaldo = updatedData.reduce((total, transaction) => {
-          return (
-            total +
-            (transaction.jenisSimpan === "Ambil Simpanan"
-              ? -transaction.saldo
-              : transaction.saldo)
-          );
-        }, 0);
-
-        // Perbarui data header
-        setHeaderData({
-          ...headerData,
-          totalSaldo: formatRupiah(newTotalSaldo),
-        });
-
-        updateModalData(updatedData);
-
-        setIsDeleting(false);
-      })
-      .catch((error) => {
-        console.error("Error deleting data:", error);
-        setIsDeleting(false);
-      });
-  };
-
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "2-digit", day: "2-digit" };
-    const formattedDate = new Date(dateString).toLocaleDateString(
-      "en-GB",
-      options
+    deleteSimpanan(
+      rowData.kodeAnggota,
+      transactionToDelete.id,
+      modalData,
+      setHeaderData,
+      updateModalData,
+      setIsDeleting,
+      formatRupiah,
+      headerData
     );
-    return formattedDate;
   };
 
-  useEffect(() => {
-    // Set data header saat modal ditampilkan atau rowData berubah
+  React.useEffect(() => {
     if (rowData) {
+      const { kodeAnggota, nama, tanggalDaftar, totalSaldo } = rowData;
       setHeaderData({
-        kodeAnggota: rowData.kodeAnggota,
-        nama: rowData.nama,
-        tanggalDaftar: formatDate(rowData.tanggalDaftar),
-        totalSaldo: formatRupiah(rowData.totalSaldo),
+        kodeAnggota,
+        nama,
+        tanggalDaftar: formatDate(tanggalDaftar),
+        totalSaldo: formatRupiah(totalSaldo),
       });
     }
   }, [rowData]);
@@ -91,28 +56,28 @@ export default function SimpanDetailModal(props) {
         size="lg"
       >
         <Modal.Header closeButton>
-          <Col>
-            <Table responsive size="sm">
-              <tr>
-                <th>Kode Anggota</th>
-                <td>{rowData ? rowData.kodeAnggota : ""}</td>
-              </tr>
-              <tr>
-                <th>Nama Anggota</th>
-                <td>{rowData ? rowData.nama : ""}</td>
-              </tr>
-              <tr>
-                <th>Tanggal Daftar</th>
-                <td>{formatDate(rowData ? rowData.tanggalDaftar : "")}</td>
-              </tr>
-              <tr>
-                <th>Total Saldo</th>
-                <td>{rowData ? formatRupiah(rowData.totalSaldo) : ""}</td>
-              </tr>
-            </Table>
-          </Col>
+          <Modal.Title className="text-uppercase fw-bold">
+            Detail Simpanan {rowData ? rowData.nama : ""}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <Container className="mb-3">
+            <Row>
+              <Col sm={3}>
+                <Row>Kode Anggota</Row>
+                <Row>Nama Anggota</Row>
+                <Row>Tanggal Daftar</Row>
+                <Row>Total Saldo</Row>
+              </Col>
+              <Col>
+                <Row>{rowData ? rowData.kodeAnggota : ""}</Row>
+                <Row>{rowData ? rowData.nama : ""}</Row>
+                <Row>{formatDate(rowData ? rowData.tanggalDaftar : "")}</Row>
+                <Row>{rowData ? formatRupiah(rowData.totalSaldo) : ""}</Row>
+              </Col>
+              <Col />
+            </Row>
+          </Container>
           <Table hover borderless responsive size="sm">
             <thead>
               <tr className="text-center align-middle fs-7">
@@ -180,18 +145,4 @@ export default function SimpanDetailModal(props) {
       </Modal>
     </>
   );
-
-  function formatRupiah(angka) {
-    if (typeof angka !== "number") {
-      return "Rp 0,00";
-    }
-
-    const formattedAngka = angka.toLocaleString("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 2,
-    });
-
-    return formattedAngka;
-  }
 }

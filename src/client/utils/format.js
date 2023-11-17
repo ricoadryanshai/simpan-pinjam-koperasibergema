@@ -6,3 +6,21 @@ export const formatDate = (dateString) => {
   );
   return formattedDate;
 };
+
+export const formatRupiah = (angka) => {
+  if (typeof angka !== "number") {
+    return "Rp 0,00";
+  }
+
+  const formattedAngka = angka.toLocaleString("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 2,
+  });
+
+  return formattedAngka;
+};
+
+export const formatNumber = (number) => {
+  return new Intl.NumberFormat("id-ID").format(number);
+};

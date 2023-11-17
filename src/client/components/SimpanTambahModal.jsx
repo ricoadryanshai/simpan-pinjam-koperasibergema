@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { tambahSimpan } from "../utils/api";
+import { formatNumber } from "../utils/format";
 
 export default function SimpanTambahModal(props) {
   const { show, onClose, rowData, clearModalData, fetchData } = props;
@@ -70,11 +71,6 @@ export default function SimpanTambahModal(props) {
         setInputNominal("");
         break;
     }
-  };
-
-  // Fungsi untuk memformat angka dengan pemisahan desimal setiap 3 digit
-  const formatNumber = (number) => {
-    return new Intl.NumberFormat("id-ID").format(number);
   };
 
   const isInputNominalReadOnly =

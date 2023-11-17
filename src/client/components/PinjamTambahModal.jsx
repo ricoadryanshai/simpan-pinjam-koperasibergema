@@ -3,9 +3,13 @@ import React from "react";
 import { Modal } from "react-bootstrap";
 
 export const PinjamTambahModal = (props) => {
+  const { show, onHide, selectedRow } = props;
+
   return (
     <>
-      <Modal></Modal>
+      <Modal show={show} onHide={onHide}>
+        <Modal.Header closeButton></Modal.Header>
+      </Modal>
     </>
   );
 };

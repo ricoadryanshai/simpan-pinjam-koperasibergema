@@ -3,17 +3,13 @@
 import React, { useState } from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { tambahSimpan } from "../utils/api";
+import { formatNumber } from "../utils/format";
 
 export default function SimpanAmbilModal(props) {
   const { show, onClose, rowData, clearModalData, fetchData } = props;
 
   const [inputNominal, setInputNominal] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-
-  // Fungsi untuk memformat angka dengan pemisahan desimal setiap 3 digit
-  const formatNumber = (number) => {
-    return new Intl.NumberFormat("id-ID").format(number);
-  };
 
   const handleInputChange = (event) => {
     // Hapus karakter selain angka dan tanda minus (untuk nilai negatif)

@@ -77,11 +77,12 @@ function getQueryResult(query) {
 
 // START >>> API ENDPOINT BERANDA
 
-app.get("/get/beranda", async (req, res) => {
+app.get("/get/statistik", async (req, res) => {
   try {
     const jumlahAnggota = await getQueryResult(
       "SELECT COUNT(*) AS jumlahAnggota FROM tbl_anggota"
     );
+
     const jumlahSimpanan = await getQueryResult(`
       SELECT
         SUM(CASE WHEN tbl_simpan.jenisSimpan <> 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS jumlahSimpanan
@@ -240,6 +241,7 @@ app.get("/get/simpan", (req, res) => {
     SELECT
     tbl_anggota.kodeAnggota,
     tbl_anggota.nama,
+    tbl_anggota.tanggalDaftar,
     CASE
       WHEN SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN -tbl_simpan.saldo ELSE tbl_simpan.saldo END) = 0 THEN 0
       ELSE SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN -tbl_simpan.saldo ELSE tbl_simpan.saldo END)
@@ -283,12 +285,12 @@ app.get("/get/simpan/:kodeAnggota", (req, res) => {
 });
 
 app.post("/post/simpan", upload.single("uploadFile"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No file uploaded" });
-  }
-
   const { kodeAnggota, tanggalSimpan, jenisSimpan, saldo } = req.body;
-  const uploadFile = req.file.filename;
+  let uploadFile = null;
+
+  if (req.file) {
+    uploadFile = req.file.filename;
+  }
 
   const insertQuery = `
     INSERT INTO tbl_simpan (kodeAnggota, tanggalSimpan, jenisSimpan, saldo, uploadFile)
@@ -328,13 +330,22 @@ app.delete("/delete/simpan/:kodeAnggota/:id", (req, res) => {
       res.status(404).json({ error: "Record not found" });
     } else {
       const uploadFile = results[0].uploadFile;
+      let fileDeleted = true;
 
-      const filePath = path.join(__dirname, "uploads", "simpanan", uploadFile);
-      fs.unlink(filePath, (unlinkErr) => {
-        if (unlinkErr) {
-          console.error("Error deleting file:", unlinkErr);
-        }
-      });
+      if (uploadFile) {
+        const filePath = path.join(
+          __dirname,
+          "uploads",
+          "simpanan",
+          uploadFile
+        );
+        fs.unlink(filePath, (unlinkErr) => {
+          if (unlinkErr) {
+            console.error("Error deleting file:", unlinkErr);
+            fileDeleted = false; // Set fileDeleted to false if there's an error
+          }
+        });
+      }
 
       const deleteQuery = `
         DELETE FROM tbl_simpan
@@ -346,7 +357,11 @@ app.delete("/delete/simpan/:kodeAnggota/:id", (req, res) => {
           console.error("Error deleting data:", deleteErr);
           res.status(500).json({ error: "Internal Server Error" });
         } else {
-          console.log("Record deleted:", result);
+          if (fileDeleted) {
+            console.log("Record deleted along with file, if any:", result);
+          } else {
+            console.log("Record deleted but file deletion failed:", result);
+          }
           res.status(200).json({ message: "Record deleted successfully" });
         }
       });
@@ -560,9 +575,9 @@ app.get("/get/lap_simpan", (req, res) => {
 // START >>> API ENDPOINT PENGATURAN
 
 app.get("/get/pengaturan", (req, res) => {
-  const id = 3;
+  const id = 1;
 
-  const sqlQuery = `SELECT * FROM tbl_pengaturan WHERE id = ?`;
+  const sqlQuery = `SELECT * FROM tbl_pengaturan WHERE idPengaturan = ?`;
 
   db.query(sqlQuery, [id], (err, results) => {
     if (err) {
@@ -576,14 +591,14 @@ app.get("/get/pengaturan", (req, res) => {
   });
 });
 
-app.put("/put/pengaturan/:id", (req, res) => {
-  const id = req.params.id;
+app.put("/put/pengaturan", (req, res) => {
+  const id = 1;
   const { simpananPokok, simpananWajib, bungaAngsuran } = req.body;
 
   const updateQuery = `
     UPDATE tbl_pengaturan
     SET simpananPokok = ?, simpananWajib = ?, bungaAngsuran = ?
-    WHERE id = ?
+    WHERE idPengaturan = ?
   `;
 
   db.query(
@@ -602,6 +617,41 @@ app.put("/put/pengaturan/:id", (req, res) => {
 });
 
 // API ENDPOINT PENGATURAN <<< END
+
+// Fungsi untuk menghapus gambar berdasarkan tahun
+const deleteImagesForPreviousYear = (yearToDelete) => {
+  const deleteQuery = `
+    DELETE FROM tbl_simpan
+    WHERE SUBSTRING(tanggalSimpan, 1, 4) = ?
+  `;
+
+  db.query(deleteQuery, [yearToDelete.toString()], (deleteErr, result) => {
+    if (deleteErr) {
+      console.error("Error deleting images:", deleteErr);
+    } else {
+      const affectedRows = result.affectedRows;
+      console.log(`${affectedRows} images deleted for year ${yearToDelete}`);
+      // Handle success message or further logic
+    }
+  });
+};
+
+// Fungsi untuk mendapatkan tahun saat ini
+const getCurrentYear = () => {
+  return new Date().getFullYear();
+};
+
+// Fungsi untuk memulai logika penghapusan pada awal tahun baru
+const startYearlyImageDeletion = () => {
+  const currentYear = getCurrentYear();
+  const yearToDelete = currentYear - 1; // Tahun sebelumnya
+
+  // Jalankan penghapusan gambar untuk tahun sebelumnya saat aplikasi dimulai
+  deleteImagesForPreviousYear(yearToDelete);
+};
+
+// Panggil fungsi untuk memulai logika penghapusan pada awal aplikasi atau saat awal tahun baru
+startYearlyImageDeletion();
 
 // Start the server
 app.listen(port, () => {

@@ -1,4 +1,9 @@
-import { getAnggota, getSimpanAnggota, getTransaksi } from "./api";
+import {
+  getAnggota,
+  getPinjamAnggota,
+  getSimpanAnggota,
+  getTransaksi,
+} from "./api";
 
 // Anggota >>>
 
@@ -37,4 +42,12 @@ export const fetchSimpanan = async (setSimpananData) => {
   }
 };
 
-export const fetchPinjaman = async () => {};
+export const fetchPinjaman = async (setPinjamData) => {
+  try {
+    const response = await getPinjamAnggota();
+    setPinjamData(response);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    // Handle error, if needed
+  }
+};

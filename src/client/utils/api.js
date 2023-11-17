@@ -6,7 +6,7 @@ const API_ENDPOINT = "http://localhost:3002";
 
 export const getBeranda = async () => {
   try {
-    const response = await axios.get(`${API_ENDPOINT}/get/beranda`);
+    const response = await axios.get(`${API_ENDPOINT}/get/statistik`);
     return response.data;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -247,10 +247,10 @@ export const getPengaturan = async () => {
   }
 };
 
-export const editPengaturan = async (id, updatedData) => {
+export const editPengaturan = async (updatedData) => {
   try {
     const response = await axios.put(
-      `${API_ENDPOINT}/put/pengaturan/${id}`,
+      `${API_ENDPOINT}/put/pengaturan`,
       updatedData
     );
     return response.data;
