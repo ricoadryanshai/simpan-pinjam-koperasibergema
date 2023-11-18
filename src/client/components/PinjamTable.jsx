@@ -32,7 +32,6 @@ export default function PinjamTable() {
   };
 
   const handleModalClose = (modalType) => {
-    setSelectedRow(null);
     switch (modalType) {
       case "detail":
         setShowDetail(false);
@@ -48,8 +47,11 @@ export default function PinjamTable() {
     }
   };
 
-  React.useEffect(() => {
+  const fungsiLoad = () => {
     fetchPinjaman(setPinjamData);
+  };
+  React.useEffect(() => {
+    fungsiLoad();
   }, []);
   return (
     <>
@@ -88,7 +90,7 @@ export default function PinjamTable() {
                         Nama
                       </th>
                       <th style={{ borderInline: "solid 1px lightgray" }}>
-                        Pinjaman Perlu Dibayar
+                        Sisa Tagihan
                       </th>
                       <th colSpan={3}>Aksi</th>
                     </tr>
@@ -127,7 +129,7 @@ export default function PinjamTable() {
                           >
                             {formatRupiah(pinjam.sisaHutang)}
                           </td>
-                          <td>
+                          <td className="text-center">
                             <Button
                               variant="secondary"
                               onClick={() => handleDetailClick(pinjam)}
@@ -135,24 +137,28 @@ export default function PinjamTable() {
                               Detail
                             </Button>
                           </td>
-                          <td>
-                            <Button
-                              variant="warning"
-                              onClick={() => handlePinjamClick(pinjam)}
-                            >
-                              Pinjam
-                            </Button>
-                          </td>
-                          <td>
-                            {pinjam.sisaHutang > 0 ? (
+                          <td className="text-center">
+                            {pinjam.sisaHutang <= 0 ? (
+                              <Button
+                                variant="warning"
+                                onClick={() => handlePinjamClick(pinjam)}
+                              >
+                                Pinjam
+                              </Button>
+                            ) : (
                               <Button
                                 variant="success"
                                 onClick={() => handleBayarClick(pinjam)}
                               >
                                 Bayar
                               </Button>
-                            ) : null}
+                            )}
                           </td>
+                          {/* <td className="text-center">
+                            {pinjam.sisaHutang > 0 ? (
+                              
+                            ) : null}
+                          </td> */}
                         </tr>
                       ))}
                   </tbody>
@@ -173,6 +179,9 @@ export default function PinjamTable() {
         show={showPinjam}
         onHide={() => handleModalClose("pinjam")}
         selectedRow={selectedRow}
+        setShowPinjam={setShowPinjam}
+        setSelectedRow={setSelectedRow}
+        fungsiLoad={fungsiLoad}
       />
       <PinjamBayarModal
         show={showBayar}

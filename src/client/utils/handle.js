@@ -66,3 +66,11 @@ export const deleteSimpanan = async (
     setIsDeleting(false);
   }
 };
+
+export const handleInputChange = (event, setInputValue) => {
+  const { value } = event.target;
+  const formattedValue = value.replace(/[^0-9-]/g, "");
+
+  // Update state dengan angka yang telah diformat
+  setInputValue(formattedValue);
+};

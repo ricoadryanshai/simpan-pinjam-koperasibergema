@@ -2,6 +2,7 @@
 import React from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { tambahTransaksi } from "../utils/api";
+import { formatNumber } from "../utils/format";
 
 export const TransaksiTambahModal = (props) => {
   const { show, onHide } = props;
@@ -39,11 +40,6 @@ export const TransaksiTambahModal = (props) => {
       ...prevValues,
       nominal: formattedValue,
     }));
-  };
-
-  const formatNumber = (number) => {
-    // Memformat angka dengan pemisahan desimal setiap 3 digit
-    return new Intl.NumberFormat("id-ID").format(number);
   };
 
   const handleSubmit = async (event) => {

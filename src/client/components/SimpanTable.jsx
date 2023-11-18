@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React from "react";
 import { Button, Card, Col, Container, Row, Table } from "react-bootstrap";
 import { getSimpanAnggotaById } from "../utils/api";
@@ -17,12 +16,7 @@ export default function SimpanTable() {
   const [showTambahModal, setShowTambahModal] = React.useState(false);
   const [showAmbilModal, setShowAmbilModal] = React.useState(false);
   const [modalData, setModalData] = React.useState([]);
-  const [error, setError] = React.useState(null);
-  const [isLoaded, setIsLoaded] = React.useState(false);
-  const [items, setItems] = React.useState([]);
   const [input, setInput] = React.useState("");
-  const [q, setQ] = React.useState("");
-  const [searchParam] = React.useState(["kodeAnggota", "nama"]);
 
   const fetchData = async () => {
     await fetchSimpanan(setSimpananData);

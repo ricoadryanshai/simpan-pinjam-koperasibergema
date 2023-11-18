@@ -3,6 +3,8 @@ import React from "react";
 import { Button, Col, Container, Modal, Row, Table } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
 import { deleteSimpanan } from "../utils/handle";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
 
 export default function SimpanDetailModal(props) {
   const { show, onClose, rowData, modalData, updateModalData, clearModalData } =
@@ -120,7 +122,7 @@ export default function SimpanDetailModal(props) {
                   <td style={{ textAlign: "center" }}>
                     {transaction.uploadFile ? (
                       <img
-                        src={`src/server/uploads/simpanan/${transaction.uploadFile}`}
+                        src={`src/server/uploads/image/${transaction.uploadFile}`}
                         alt="Bukti Transfer"
                         style={{ maxWidth: "50px", cursor: "pointer" }}
                       />
@@ -128,14 +130,18 @@ export default function SimpanDetailModal(props) {
                       <span>Tidak ada bukti transfer</span>
                     )}
                   </td>
-                  <td style={{ borderInlineStart: "solid 1px lightgray" }}>
-                    <Button
-                      variant="link"
-                      disabled={isDeleting}
+                  <td
+                    style={{
+                      borderInlineStart: "solid 1px lightgray",
+                      textAlign: "center",
+                    }}
+                  >
+                    <FontAwesomeIcon
                       onClick={() => handleDelete(transaction)}
-                    >
-                      Delete
-                    </Button>
+                      disabled={isDeleting}
+                      icon={faTrashCan}
+                      style={{ cursor: "pointer" }}
+                    />
                   </td>
                 </tr>
               ))}

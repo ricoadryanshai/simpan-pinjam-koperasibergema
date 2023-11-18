@@ -153,6 +153,25 @@ export const getPinjamAnggota = async () => {
   }
 };
 
+export const getPinjamByKodeAnggota = async (kodeAnggota) => {
+  try {
+    const res = await axios.get(`${API_ENDPOINT}/get/pinjam/${kodeAnggota}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const postPinjam = async (data) => {
+  try {
+    const response = await axios.post(`${API_ENDPOINT}/post/pinjam`, data);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error.message;
+  }
+};
+
 // API ENDPOINT PINJAMAN <<< END
 
 // START >>> API ENDPOINT TRANSAKSI

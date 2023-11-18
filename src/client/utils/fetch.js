@@ -1,13 +1,12 @@
 import {
   getAnggota,
   getPinjamAnggota,
+  getPinjamByKodeAnggota,
   getSimpanAnggota,
   getTransaksi,
 } from "./api";
 
 // Anggota >>>
-
-// Fungsi untuk mengambil data anggota
 export const fetchAnggota = async () => {
   try {
     const res = await getAnggota();
@@ -20,8 +19,6 @@ export const fetchAnggota = async () => {
 };
 
 // Transaksi >>>
-
-// Fungsi untuk mengambil data transaksi
 export const fetchTransaksi = async () => {
   try {
     const res = await getTransaksi();

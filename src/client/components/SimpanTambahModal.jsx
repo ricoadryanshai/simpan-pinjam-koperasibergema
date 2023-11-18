@@ -1,23 +1,19 @@
 /* eslint-disable react/prop-types */
-// eslint-disable-next-line no-unused-vars
-import React, { useState } from "react";
+import React from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { tambahSimpan } from "../utils/api";
 import { formatNumber } from "../utils/format";
+import { handleInputChange } from "../utils/handle";
 
 export default function SimpanTambahModal(props) {
   const { show, onClose, rowData, clearModalData, fetchData } = props;
 
-  const [Dropdown, setDropdown] = useState("");
-  const [inputNominal, setInputNominal] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [Dropdown, setDropdown] = React.useState("");
+  const [inputNominal, setInputNominal] = React.useState("");
+  const [selectedFile, setSelectedFile] = React.useState(null);
 
-  const handleInputChange = (event) => {
-    // Hapus karakter selain angka dan tanda minus (untuk nilai negatif)
-    const formattedValue = event.target.value.replace(/[^0-9-]/g, "");
-
-    // Update state dengan angka yang telah diformat
-    setInputNominal(formattedValue);
+  const handleInput = (event) => {
+    handleInputChange(event, setInputNominal);
   };
 
   const handleFileChange = (event) => {
@@ -147,7 +143,7 @@ export default function SimpanTambahModal(props) {
                 <Form.Control
                   type="text"
                   value={formatNumber(inputNominal)}
-                  onChange={handleInputChange}
+                  onChange={handleInput}
                   disabled={isInputNominalReadOnly}
                 />
               </Col>

@@ -14,7 +14,7 @@ const port = process.env.PORT || 3002;
 // Multer Configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/simpanan/");
+    cb(null, "uploads/image/");
   },
   filename: function (req, file, cb) {
     const hash = crypto.createHash("md5");
@@ -333,12 +333,7 @@ app.delete("/delete/simpan/:kodeAnggota/:id", (req, res) => {
       let fileDeleted = true;
 
       if (uploadFile) {
-        const filePath = path.join(
-          __dirname,
-          "uploads",
-          "simpanan",
-          uploadFile
-        );
+        const filePath = path.join(__dirname, "uploads", "image", uploadFile);
         fs.unlink(filePath, (unlinkErr) => {
           if (unlinkErr) {
             console.error("Error deleting file:", unlinkErr);
@@ -417,6 +412,35 @@ app.get("/get/pinjam/:kodeAnggota", (req, res) => {
       res.status(500).json({ error: "Internal Server Error" });
     } else {
       res.status(200).json(results);
+    }
+  });
+});
+
+app.post("/post/pinjam", async (req, res) => {
+  const {
+    kodeAnggota,
+    jenisTransaksi,
+    nominalTransaksi,
+    angsuran,
+    tanggalTransaksi,
+  } = req.body;
+
+  const query = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, nominalTransaksi, angsuran, tanggalTransaksi) VALUES (?, ?, ?, ?, ?)`;
+  const values = [
+    kodeAnggota,
+    jenisTransaksi,
+    nominalTransaksi,
+    angsuran,
+    tanggalTransaksi,
+  ];
+
+  db.query(query, values, (err, result) => {
+    if (err) {
+      console.error("Error inserting data: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      console.log("Data inserted successfully", result);
+      res.status(200).json({ message: "Data inserted successfully" });
     }
   });
 });

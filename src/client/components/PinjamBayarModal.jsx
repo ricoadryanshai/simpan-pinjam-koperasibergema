@@ -7,7 +7,7 @@ export const PinjamBayarModal = (props) => {
 
   return (
     <>
-      <Modal show={show} onHide={onHide}>
+      <Modal show={show} onHide={onHide} backdrop="static" keyboard={false}>
         <Modal.Header closeButton></Modal.Header>
       </Modal>
     </>

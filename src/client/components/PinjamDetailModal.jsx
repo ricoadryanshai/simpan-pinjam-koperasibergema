@@ -2,12 +2,36 @@
 import React from "react";
 import { Col, Container, Modal, Row, Table } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
+import { getPinjamByKodeAnggota } from "../utils/api";
 
 export const PinjamDetailModal = (props) => {
   const { show, onHide, selectedRow } = props;
 
+  const [pinjamDetail, setPinjamDetail] = React.useState([]);
+
+  const kodeAnggota =
+    selectedRow && selectedRow.kodeAnggota ? selectedRow.kodeAnggota : "";
+
+  React.useEffect(() => {
+    const fetchPinjamData = async (kodeAnggota) => {
+      try {
+        const data = await getPinjamByKodeAnggota(kodeAnggota);
+        setPinjamDetail(data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setPinjamDetail([]);
+      }
+    };
+    fetchPinjamData(kodeAnggota);
+  }, [kodeAnggota]);
   return (
-    <Modal show={show} onHide={onHide}>
+    <Modal
+      show={show}
+      onHide={onHide}
+      size="lg"
+      backdrop="static"
+      keyboard={false}
+    >
       <Modal.Header closeButton className="text-uppercase fw-bold">
         Detail Pinjaman dan Pembayaran {selectedRow ? selectedRow.nama : ""}
       </Modal.Header>
@@ -33,9 +57,9 @@ export const PinjamDetailModal = (props) => {
             <Col />
           </Row>
         </Container>
-        <Table>
-          <thead>
-            <tr>
+        <Table hover responsive size="sm">
+          <thead className="table-light">
+            <tr className="text-center table-info">
               <td>No.</td>
               <td>Tanggal Transaksi</td>
               <td>Jenis Transaksi</td>
@@ -43,7 +67,25 @@ export const PinjamDetailModal = (props) => {
               <td>Nominal</td>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            {pinjamDetail.map((detail, index) => (
+              <tr key={index} className="text-center">
+                <td>{index + 1}</td>
+                <td>
+                  {formatDate(
+                    detail.tanggalTransaksi ? detail.tanggalTransaksi : ""
+                  )}
+                </td>
+                <td>{detail.jenisTransaksi ? detail.jenisTransaksi : ""}</td>
+                <td>{detail.angsuran ? detail.angsuran : ""}</td>
+                <td className="text-end">
+                  {formatRupiah(
+                    detail.nominalTransaksi ? detail.nominalTransaksi : ""
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </Table>
       </Modal.Body>
     </Modal>

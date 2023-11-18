@@ -1,15 +1,22 @@
 export const formatDate = (dateString) => {
+  const inputDate = new Date(dateString);
+  const isInvalidDate = isNaN(inputDate.getTime());
+
+  if (isInvalidDate) {
+    return "dd/mm/yyyy";
+  }
+
   const options = { year: "numeric", month: "2-digit", day: "2-digit" };
-  const formattedDate = new Date(dateString).toLocaleDateString(
-    "en-GB",
-    options
-  );
+  const formattedDate = inputDate.toLocaleDateString("en-GB", options);
   return formattedDate;
 };
 
 export const formatRupiah = (angka) => {
   if (typeof angka !== "number") {
-    return "Rp 0,00";
+    angka = parseFloat(angka);
+    if (isNaN(angka)) {
+      return "Rp 0,00";
+    }
   }
 
   const formattedAngka = angka.toLocaleString("id-ID", {
