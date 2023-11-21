@@ -2,11 +2,18 @@
 import React, { useEffect, useState } from "react";
 import Table from "react-bootstrap/Table";
 import { deleteAnggota, getAnggota } from "../utils/api";
-import { Button, Card, Container, Modal, Row, Col } from "react-bootstrap";
+import {
+  Button,
+  Card,
+  Container,
+  Modal,
+  Row,
+  Col,
+  Pagination,
+} from "react-bootstrap";
 import AnggotaEditModal from "./AnggotaEditModal";
 import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
-import { Pagination } from "react-bootstrap";
 
 function AnggotaTable() {
   const [anggotaData, setAnggotaData] = useState([]);
@@ -70,17 +77,29 @@ function AnggotaTable() {
   };
 
   // Pagination //
-  const [activePage, setActivePage] = useState(1);
+  const [paginationData, setPaginationData] = useState({
+    activePage: 1,
+    anggotaHalaman: [],
+  });
+
   const itemsPerPage = 10; // Ganti dengan jumlah item per halaman
 
   const handlePageChange = (pageNumber) => {
-    setActivePage(pageNumber);
+    setPaginationData((prevState) => ({
+      ...prevState,
+      activePage: pageNumber,
+      anggotaHalaman: anggotaData.slice(
+        (pageNumber - 1) * itemsPerPage,
+        pageNumber * itemsPerPage
+      ),
+    }));
   };
 
-  // const startIndex = (activePage - 1) * itemsPerPage;
-  // const endIndex = startIndex + itemsPerPage;
-
-  // const anggotaHalaman = anggotaData.slice(startIndex, endIndex);
+  // Menggunakan paginationData.activePage
+  const anggotaHalaman = anggotaData.slice(
+    (paginationData.activePage - 1) * itemsPerPage,
+    paginationData.activePage * itemsPerPage
+  );
 
   return (
     <>
@@ -134,7 +153,7 @@ function AnggotaTable() {
                 </tr>
               </thead>
               <tbody>
-                {anggotaData
+                {anggotaHalaman
                   .filter((anggota) => {
                     const inputString = input.toString().toLowerCase(); // Konversi input ke huruf kecil
 
@@ -209,35 +228,47 @@ function AnggotaTable() {
         <Pagination className="justify-content-center">
           <Pagination.First
             onClick={() => handlePageChange(1)}
-            disabled={activePage === 1}
+            disabled={paginationData.activePage === 1}
           />
           <Pagination.Prev
-            onClick={() => handlePageChange(activePage - 1)}
-            disabled={activePage === 1}
+            onClick={() => {
+              console.log("Prev Clicked");
+              handlePageChange(paginationData.activePage - 1);
+            }}
+            disabled={paginationData.activePage === 1}
           />
           {Array.from({
             length: Math.ceil(anggotaData.length / itemsPerPage),
           }).map((item, index) => (
             <Pagination.Item
               key={index}
-              active={index + 1 === activePage}
-              onClick={() => handlePageChange(index + 1)}
+              active={index + 1 === paginationData.activePage}
+              onClick={() => {
+                console.log("Page Clicked:", index + 1);
+                handlePageChange(index + 1);
+              }}
             >
               {index + 1}
             </Pagination.Item>
           ))}
           <Pagination.Next
-            onClick={() => handlePageChange(activePage + 1)}
+            onClick={() => {
+              console.log("Next Clicked");
+              handlePageChange(paginationData.activePage + 1);
+            }}
             disabled={
-              activePage === Math.ceil(anggotaData.length / itemsPerPage)
+              paginationData.activePage ===
+              Math.ceil(anggotaData.length / itemsPerPage)
             }
           />
           <Pagination.Last
-            onClick={() =>
-              handlePageChange(Math.ceil(anggotaData.length / itemsPerPage))
-            }
+            onClick={() => {
+              console.log("Last Clicked");
+              handlePageChange(Math.ceil(anggotaData.length / itemsPerPage));
+            }}
             disabled={
-              activePage === Math.ceil(anggotaData.length / itemsPerPage)
+              paginationData.activePage ===
+              Math.ceil(anggotaData.length / itemsPerPage)
             }
           />
         </Pagination>

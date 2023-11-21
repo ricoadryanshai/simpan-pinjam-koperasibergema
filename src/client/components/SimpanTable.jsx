@@ -44,23 +44,7 @@ export default function SimpanTable() {
     setSimpananData(fetchedData);
   };
 
-  // eslint-disable-next-line no-unused-vars
-  const [error, setError] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  const [isLoaded, setIsLoaded] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [items, setItems] = useState([]);
   const [input, setInput] = useState("");
-
-  //     set search query to empty string
-  // eslint-disable-next-line no-unused-vars
-  const [q, setQ] = useState("");
-  //     set search parameters
-  //     we only what to search countries by capital and name
-  //     this list can be longer if you want
-  // just add it to this array
-  // eslint-disable-next-line no-unused-vars
-  const [searchParam] = useState(["kodeAnggota", "nama"]);
 
   useEffect(() => {
     fetchData();
