@@ -3,17 +3,13 @@
 import React, { useState } from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { tambahSimpan } from "../utils/api";
+import { formatNumber } from "../utils/format";
 
 export default function SimpanAmbilModal(props) {
   const { show, onClose, rowData, clearModalData, fetchData } = props;
 
   const [inputNominal, setInputNominal] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-
-  // Fungsi untuk memformat angka dengan pemisahan desimal setiap 3 digit
-  const formatNumber = (number) => {
-    return new Intl.NumberFormat("id-ID").format(number);
-  };
 
   const handleInputChange = (event) => {
     // Hapus karakter selain angka dan tanda minus (untuk nilai negatif)
@@ -85,7 +81,7 @@ export default function SimpanAmbilModal(props) {
           <Form>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="formPlaintextKodeAnggota"
             >
               <Form.Label column sm="4">
@@ -99,7 +95,7 @@ export default function SimpanAmbilModal(props) {
                 />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="mb-3" controlId="formPlaintextNama">
+            <Form.Group as={Row} className="mb-2" controlId="formPlaintextNama">
               <Form.Label column sm="4">
                 Nama
               </Form.Label>
@@ -113,7 +109,7 @@ export default function SimpanAmbilModal(props) {
             </Form.Group>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="formPlaintextTotalSaldo"
             >
               <Form.Label column sm="4">
@@ -129,7 +125,7 @@ export default function SimpanAmbilModal(props) {
             </Form.Group>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="formPlaintextJenisSimpanan"
             >
               <Form.Label column sm="4">
@@ -143,7 +139,7 @@ export default function SimpanAmbilModal(props) {
                 />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="mb-3" controlId="inputNominal">
+            <Form.Group as={Row} className="mb-2" controlId="inputNominal">
               <Form.Label column sm="4">
                 Nominal
               </Form.Label>
@@ -157,7 +153,7 @@ export default function SimpanAmbilModal(props) {
             </Form.Group>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="inputTanggalTransaksi"
             >
               <Form.Label column sm="4">
@@ -167,7 +163,7 @@ export default function SimpanAmbilModal(props) {
                 <Form.Control type="date" />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} controlId="formFile" className="mb-3">
+            <Form.Group as={Row} controlId="formFile" className="mb-2">
               <Form.Label column sm="4">
                 Bukti Transfer
               </Form.Label>
@@ -194,7 +190,7 @@ export default function SimpanAmbilModal(props) {
   );
   function formatRupiah(angka) {
     if (typeof angka !== "number") {
-      return "Rp. 0,00";
+      return "Rp 0,00";
     }
 
     // Format angka dengan koma sebagai pemisah ribuan dan dua digit desimal

@@ -1,7 +1,5 @@
-// eslint-disable-next-line no-unused-vars
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Table from "react-bootstrap/Table";
-import { deleteAnggota, getAnggota } from "../utils/api";
 import {
   Button,
   Card,
@@ -9,51 +7,44 @@ import {
   Modal,
   Row,
   Col,
-  Pagination,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import AnggotaEditModal from "./AnggotaEditModal";
 import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
+import { Pagination } from "react-bootstrap";
+import { formatDate } from "../utils/format";
+import { fetchAnggota } from "../utils/fetch";
+import { deleteMembers, handleEdit } from "../utils/handle";
 
-function AnggotaTable() {
-  const [anggotaData, setAnggotaData] = useState([]);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+const ITEMS_PER_PAGE = 10;
 
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "2-digit", day: "2-digit" };
-    const formattedDate = new Date(dateString).toLocaleDateString(
-      "en-GB",
-      options
-    );
-    return formattedDate;
-  };
+export default function AnggotaTable() {
+  const [anggotaData, setAnggotaData] = React.useState([]);
+  const [showEditModal, setShowEditModal] = React.useState(false);
+  const [selectedItem, setSelectedItem] = React.useState(null);
+  const [input, setInput] = React.useState("");
+  const [activePage, setActivePage] = React.useState(1);
 
-  const handleEditClick = (anggota) => {
-    setSelectedItem(anggota);
-    setShowEditModal(true);
-  };
-
-  const handlerDelete = async (id) => {
-    try {
-      await deleteAnggota(id);
-
-      setAnggotaData(await getAnggota());
-    } catch (error) {
-      console.error("Error deleting data:", error);
+  const fetchData = async () => {
+    const members = await fetchAnggota();
+    if (members) {
+      setAnggotaData(members);
     }
   };
 
-  //Search //
-  const [input, setInput] = useState("");
-
-  const fetchData = async () => {
-    setAnggotaData(await getAnggota());
-  };
-
-  useEffect(() => {
+  React.useEffect(() => {
     fetchData();
   }, []);
+
+  const handleEditClick = (anggota) => {
+    handleEdit(anggota, setSelectedItem, setShowEditModal);
+  };
+
+  const handleDeleteWrapper = async (id) => {
+    await deleteMembers(id, setAnggotaData);
+  };
 
   const highlightSearchText = (text, search) => {
     if (text && search) {
@@ -72,43 +63,72 @@ function AnggotaTable() {
         );
       }
     }
-
     return text;
   };
 
-  // Pagination //
-  const [paginationData, setPaginationData] = useState({
-    activePage: 1,
-    anggotaHalaman: [],
-  });
-
-  const itemsPerPage = 10; // Ganti dengan jumlah item per halaman
-
   const handlePageChange = (pageNumber) => {
-    setPaginationData((prevState) => ({
-      ...prevState,
-      activePage: pageNumber,
-      anggotaHalaman: anggotaData.slice(
-        (pageNumber - 1) * itemsPerPage,
-        pageNumber * itemsPerPage
-      ),
-    }));
+    setActivePage(pageNumber);
   };
 
-  // Menggunakan paginationData.activePage
-  const anggotaHalaman = anggotaData.slice(
-    (paginationData.activePage - 1) * itemsPerPage,
-    paginationData.activePage * itemsPerPage
-  );
+  const goToFirstPage = () => {
+    setActivePage(1);
+  };
 
+  const goToLastPage = () => {
+    setActivePage(Math.ceil(anggotaData.length / ITEMS_PER_PAGE));
+  };
+
+  const goToPrevPage = () => {
+    setActivePage((prevPage) => Math.max(prevPage - 1, 1));
+  };
+
+  const goToNextPage = () => {
+    setActivePage((prevPage) =>
+      Math.min(prevPage + 1, Math.ceil(anggotaData.length / ITEMS_PER_PAGE))
+    );
+  };
+
+  const renderHeaderWithTooltip = (text, tooltipText, maxLength) => {
+    const renderedText =
+      text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+
+    return (
+      <OverlayTrigger
+        placement="top"
+        overlay={<Tooltip id={`tooltip-${text}`}>{tooltipText}</Tooltip>}
+      >
+        <th
+          style={{
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {renderedText}
+        </th>
+      </OverlayTrigger>
+    );
+  };
+
+  const indexOfLastEntry = activePage * ITEMS_PER_PAGE;
+  const indexOfFirstEntry = indexOfLastEntry - ITEMS_PER_PAGE;
+  const currentEntries = anggotaData.slice(indexOfFirstEntry, indexOfLastEntry);
+
+  const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
   return (
     <>
-      <Container fluid style={{ marginBottom: "6rem" }}>
-        <Card>
-          <Card.Header>
-            <Card.Title className="fw-bold text-uppercase mt-2">
-              <Row>
-                <Col>Data Anggota</Col>
+      <Container fluid className="pb-5" as={Row}>
+        <Col />
+        <Col sm={9}>
+          <Card>
+            <Container fluid>
+              <Card.Title className="fw-bold text-uppercase my-2">
+                Data Anggota
+              </Card.Title>
+
+              <hr className="my-2" />
+              <Row className="mb-2">
+                <Col />
                 <Col>
                   <div className="search-bar-container">
                     <div className="input-wrapper">
@@ -121,157 +141,183 @@ function AnggotaTable() {
                   </div>
                 </Col>
               </Row>
-            </Card.Title>
-          </Card.Header>
-          <Card.Body>
-            <Table hover borderless responsive size="sm">
-              <thead>
-                <tr className="text-center align-middle fs-7">
-                  <th>No.</th>
-                  <th style={{ borderInline: "solid 1px lightgray" }}>
-                    Kode Anggota
-                  </th>
-                  <th>Nama</th>
-                  <th style={{ borderInline: "solid 1px lightgray" }}>
-                    Jenis Kelamin
-                  </th>
-                  <th>Tempat Lahir</th>
-                  <th style={{ borderInline: "solid 1px lightgray" }}>
-                    Tanggal Lahir
-                  </th>
-                  <th>Alamat</th>
-                  <th style={{ borderInline: "solid 1px lightgray" }}>
-                    No. HP
-                  </th>
-                  <th>Tanggal Daftar</th>
-                  <th
-                    style={{ borderInlineStart: "solid 1px lightgray" }}
-                    colSpan={2}
-                  >
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {anggotaHalaman
-                  .filter((anggota) => {
-                    const inputString = input.toString().toLowerCase(); // Konversi input ke huruf kecil
+              <Table hover responsive size="sm">
+                <thead className="table-light">
+                  <tr className="text-center align-middle table-info">
+                    <th>No.</th>
+                    {renderHeaderWithTooltip(
+                      "Kode Anggota",
+                      "Kode untuk setiap anggota",
+                      10
+                    )}
+                    {renderHeaderWithTooltip(
+                      "Nama",
+                      "Nama lengkap anggota",
+                      15
+                    )}
+                    {renderHeaderWithTooltip(
+                      "Jenis Kelamin",
+                      "Jenis kelamin anggota",
+                      12
+                    )}
+                    {renderHeaderWithTooltip(
+                      "Tempat Lahir",
+                      "Tempat lahir anggota",
+                      15
+                    )}
+                    {renderHeaderWithTooltip(
+                      "Tanggal Lahir",
+                      "Tanggal lahir anggota",
+                      15
+                    )}
+                    {renderHeaderWithTooltip(
+                      "Alamat",
+                      "Alamat lengkap anggota",
+                      20
+                    )}
+                    {renderHeaderWithTooltip(
+                      "No. HP",
+                      "Nomor telepon anggota",
+                      10
+                    )}
+                    {renderHeaderWithTooltip(
+                      "Tanggal Daftar",
+                      "Tanggal bergabung anggota",
+                      15
+                    )}
+                    <th colSpan={2}>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentEntries
+                    .filter((anggota) => {
+                      const inputString = input.toString().toLowerCase();
 
-                    return (
-                      anggota.kodeAnggota.toLowerCase().includes(inputString) ||
-                      anggota.nama.toLowerCase().includes(inputString) ||
-                      (anggota.tempatLahir &&
-                        anggota.tempatLahir
-                          .toLowerCase()
-                          .includes(inputString)) ||
-                      (anggota.tanggalLahir &&
-                        anggota.tanggalLahir
-                          .toLowerCase()
-                          .includes(inputString)) ||
-                      anggota.alamat.toLowerCase().includes(inputString) ||
-                      anggota.noHP.toLowerCase().includes(inputString) ||
-                      (anggota.tanggalDaftar &&
-                        anggota.tanggalDaftar
-                          .toLowerCase()
-                          .includes(inputString))
-                    );
-                  })
-                  .map((anggota, index) => (
-                    <tr
-                      style={{ borderBlockStart: "solid 1px lightgray" }}
-                      key={anggota.id}
-                      className="align-middle"
-                    >
-                      <td className="text-center align-middle">{index + 1}</td>
-                      <td style={{ borderInline: "solid 1px lightgray" }}>
-                        {highlightSearchText(anggota.kodeAnggota)}
-                      </td>
-                      <td>{highlightSearchText(anggota.nama)}</td>
-                      <td style={{ borderInline: "solid 1px lightgray" }}>
-                        {anggota.jenKel}
-                      </td>
-                      <td>{highlightSearchText(anggota.tempatLahir)}</td>
-                      <td style={{ borderInline: "solid 1px lightgray" }}>
-                        {formatDate(anggota.tanggalLahir)}
-                      </td>
-                      <td>{highlightSearchText(anggota.alamat)}</td>
-                      <td style={{ borderInline: "solid 1px lightgray" }}>
-                        {highlightSearchText(anggota.noHP)}
-                      </td>
-                      <td>{formatDate(anggota.tanggalDaftar)}</td>
-                      <td style={{ borderInlineStart: "solid 1px lightgray" }}>
-                        <Button
-                          variant="warning"
-                          size="md"
-                          onClick={() => {
-                            handleEditClick(anggota);
-                          }}
-                        >
-                          Edit
-                        </Button>
-                      </td>
-                      <td>
-                        <Button
-                          variant="danger"
-                          size="md"
-                          onClick={() => handlerDelete(anggota.id)}
-                        >
-                          Delete
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </Table>
-          </Card.Body>
-        </Card>
-        <Pagination className="justify-content-center">
-          <Pagination.First
-            onClick={() => handlePageChange(1)}
-            disabled={paginationData.activePage === 1}
-          />
-          <Pagination.Prev
-            onClick={() => {
-              console.log("Prev Clicked");
-              handlePageChange(paginationData.activePage - 1);
-            }}
-            disabled={paginationData.activePage === 1}
-          />
-          {Array.from({
-            length: Math.ceil(anggotaData.length / itemsPerPage),
-          }).map((item, index) => (
-            <Pagination.Item
-              key={index}
-              active={index + 1 === paginationData.activePage}
-              onClick={() => {
-                console.log("Page Clicked:", index + 1);
-                handlePageChange(index + 1);
-              }}
-            >
-              {index + 1}
-            </Pagination.Item>
-          ))}
-          <Pagination.Next
-            onClick={() => {
-              console.log("Next Clicked");
-              handlePageChange(paginationData.activePage + 1);
-            }}
-            disabled={
-              paginationData.activePage ===
-              Math.ceil(anggotaData.length / itemsPerPage)
-            }
-          />
-          <Pagination.Last
-            onClick={() => {
-              console.log("Last Clicked");
-              handlePageChange(Math.ceil(anggotaData.length / itemsPerPage));
-            }}
-            disabled={
-              paginationData.activePage ===
-              Math.ceil(anggotaData.length / itemsPerPage)
-            }
-          />
-        </Pagination>
+                      return (
+                        (anggota.kodeAnggota &&
+                          anggota.kodeAnggota
+                            .toLowerCase()
+                            .includes(inputString)) ||
+                        (anggota.nama &&
+                          anggota.nama.toLowerCase().includes(inputString)) ||
+                        (anggota.jenKel &&
+                          anggota.jenKel.toLowerCase().includes(inputString)) ||
+                        (anggota.tanggalTransaksi &&
+                          anggota.tanggalTransaksi
+                            .toLowerCase()
+                            .includes(inputString)) ||
+                        (anggota.tempatLahir &&
+                          anggota.tempatLahir
+                            .toLowerCase()
+                            .includes(inputString)) ||
+                        (anggota.tanggalLahir &&
+                          anggota.tanggalLahir
+                            .toLowerCase()
+                            .includes(inputString)) ||
+                        (anggota.alamat &&
+                          anggota.alamat.toLowerCase().includes(inputString)) ||
+                        (anggota.noHP &&
+                          anggota.noHP.toLowerCase().includes(inputString)) ||
+                        (anggota.tanggalDaftar &&
+                          anggota.tanggalDaftar
+                            .toLowerCase()
+                            .includes(inputString))
+                      );
+                    })
+                    .map((anggota, index) => (
+                      <tr key={anggota.id} className="align-middle text-center">
+                        <td>{startIndex + index}</td>
+                        <td>{highlightSearchText(anggota.kodeAnggota)}</td>
+                        <td className="text-start">
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip>
+                                <div style={{ maxWidth: "300px" }}>
+                                  {anggota.nama}
+                                </div>
+                              </Tooltip>
+                            }
+                          >
+                            <span>
+                              {highlightSearchText(
+                                anggota.nama.length > 12
+                                  ? anggota.nama.substring(0, 12) + "..."
+                                  : anggota.nama
+                              )}
+                            </span>
+                          </OverlayTrigger>
+                        </td>
+                        <td>{anggota.jenKel}</td>
+                        <td>{highlightSearchText(anggota.tempatLahir)}</td>
+                        <td>{formatDate(anggota.tanggalLahir)}</td>
+                        <td className="text-start">
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip>
+                                <div style={{ maxWidth: "300px" }}>
+                                  {anggota.alamat}
+                                </div>
+                              </Tooltip>
+                            }
+                          >
+                            <span>
+                              {highlightSearchText(
+                                anggota.alamat.length > 20
+                                  ? anggota.alamat.substring(0, 20) + "..."
+                                  : anggota.alamat
+                              )}
+                            </span>
+                          </OverlayTrigger>
+                        </td>
+                        <td>{highlightSearchText(anggota.noHP)}</td>
+                        <td>{formatDate(anggota.tanggalDaftar)}</td>
+                        <td>
+                          <Button
+                            variant="warning"
+                            size="md"
+                            onClick={() => handleEditClick(anggota)}
+                          >
+                            Edit
+                          </Button>
+                        </td>
+                        <td>
+                          <Button
+                            variant="danger"
+                            size="md"
+                            onClick={() => handleDeleteWrapper(anggota.id)}
+                          >
+                            Delete
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </Table>
+            </Container>
+          </Card>
+        </Col>
+        <Col />
+        <div className="d-flex justify-content-center mt-2">
+          <Pagination>
+            <Pagination.First onClick={goToFirstPage} />
+            <Pagination.Prev onClick={goToPrevPage} />
+            {[...Array(Math.ceil(anggotaData.length / ITEMS_PER_PAGE))].map(
+              (_, index) => (
+                <Pagination.Item
+                  key={index + 1}
+                  active={index + 1 === activePage}
+                  onClick={() => handlePageChange(index + 1)}
+                >
+                  {index + 1}
+                </Pagination.Item>
+              )
+            )}
+            <Pagination.Next onClick={goToNextPage} />
+            <Pagination.Last onClick={goToLastPage} />
+          </Pagination>
+        </div>
       </Container>
 
       <Modal
@@ -284,16 +330,14 @@ function AnggotaTable() {
         <Modal.Header closeButton>
           <Modal.Title>Edit Data Anggota</Modal.Title>
         </Modal.Header>
-        {selectedItem && (
+        {showEditModal && selectedItem && (
           <AnggotaEditModal
             item={selectedItem}
             closeModal={() => setShowEditModal(false)}
-            fetchData={fetchData}
+            fetchData={fetchAnggota}
           />
         )}
       </Modal>
     </>
   );
 }
-
-export default AnggotaTable;

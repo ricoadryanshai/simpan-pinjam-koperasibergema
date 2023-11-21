@@ -1,22 +1,19 @@
 /* eslint-disable react/prop-types */
-// eslint-disable-next-line no-unused-vars
-import React, { useState } from "react";
+import React from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { tambahSimpan } from "../utils/api";
+import { formatNumber } from "../utils/format";
+import { handleInputChange } from "../utils/handle";
 
 export default function SimpanTambahModal(props) {
   const { show, onClose, rowData, clearModalData, fetchData } = props;
 
-  const [Dropdown, setDropdown] = useState("");
-  const [inputNominal, setInputNominal] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [Dropdown, setDropdown] = React.useState("");
+  const [inputNominal, setInputNominal] = React.useState("");
+  const [selectedFile, setSelectedFile] = React.useState(null);
 
-  const handleInputChange = (event) => {
-    // Hapus karakter selain angka dan tanda minus (untuk nilai negatif)
-    const formattedValue = event.target.value.replace(/[^0-9-]/g, "");
-
-    // Update state dengan angka yang telah diformat
-    setInputNominal(formattedValue);
+  const handleInput = (event) => {
+    handleInputChange(event, setInputNominal);
   };
 
   const handleFileChange = (event) => {
@@ -72,11 +69,6 @@ export default function SimpanTambahModal(props) {
     }
   };
 
-  // Fungsi untuk memformat angka dengan pemisahan desimal setiap 3 digit
-  const formatNumber = (number) => {
-    return new Intl.NumberFormat("id-ID").format(number);
-  };
-
   const isInputNominalReadOnly =
     Dropdown === "Simpanan Pokok" || Dropdown === "Simpanan Wajib";
 
@@ -96,7 +88,7 @@ export default function SimpanTambahModal(props) {
           <Form>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="formPlaintextKodeAnggota"
             >
               <Form.Label column sm="4">
@@ -110,7 +102,7 @@ export default function SimpanTambahModal(props) {
                 />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="mb-3" controlId="formPlaintextNama">
+            <Form.Group as={Row} className="mb-2" controlId="formPlaintextNama">
               <Form.Label column sm="4">
                 Nama
               </Form.Label>
@@ -124,7 +116,7 @@ export default function SimpanTambahModal(props) {
             </Form.Group>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="formPlaintextJenisSimpanan"
             >
               <Form.Label column sm="4">
@@ -143,7 +135,7 @@ export default function SimpanTambahModal(props) {
                 </Form.Select>
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="mb-3" controlId="inputNominal">
+            <Form.Group as={Row} className="mb-2" controlId="inputNominal">
               <Form.Label column sm="4">
                 Nominal
               </Form.Label>
@@ -151,14 +143,14 @@ export default function SimpanTambahModal(props) {
                 <Form.Control
                   type="text"
                   value={formatNumber(inputNominal)}
-                  onChange={handleInputChange}
+                  onChange={handleInput}
                   disabled={isInputNominalReadOnly}
                 />
               </Col>
             </Form.Group>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="inputTanggalTransaksi"
             >
               <Form.Label column sm="4">
@@ -168,7 +160,7 @@ export default function SimpanTambahModal(props) {
                 <Form.Control type="date" />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} controlId="formFile" className="mb-3">
+            <Form.Group as={Row} controlId="formFile" className="mb-2">
               <Form.Label column sm="4">
                 Bukti Transfer
               </Form.Label>
