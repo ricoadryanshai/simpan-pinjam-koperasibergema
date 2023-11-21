@@ -19,6 +19,9 @@ export const formatRupiah = (angka) => {
     }
   }
 
+  // Jika angka kurang dari 0, tampilkan sebagai 0
+  angka = Math.max(0, angka);
+
   const formattedAngka = angka.toLocaleString("id-ID", {
     style: "currency",
     currency: "IDR",
@@ -29,5 +32,8 @@ export const formatRupiah = (angka) => {
 };
 
 export const formatNumber = (number) => {
+  // Jika angka kurang dari 0, tampilkan sebagai 0
+  number = Math.max(0, number);
+
   return new Intl.NumberFormat("id-ID").format(number);
 };

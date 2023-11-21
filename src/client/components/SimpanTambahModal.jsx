@@ -88,7 +88,7 @@ export default function SimpanTambahModal(props) {
           <Form>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="formPlaintextKodeAnggota"
             >
               <Form.Label column sm="4">
@@ -102,7 +102,7 @@ export default function SimpanTambahModal(props) {
                 />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="mb-3" controlId="formPlaintextNama">
+            <Form.Group as={Row} className="mb-2" controlId="formPlaintextNama">
               <Form.Label column sm="4">
                 Nama
               </Form.Label>
@@ -116,7 +116,7 @@ export default function SimpanTambahModal(props) {
             </Form.Group>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="formPlaintextJenisSimpanan"
             >
               <Form.Label column sm="4">
@@ -135,7 +135,7 @@ export default function SimpanTambahModal(props) {
                 </Form.Select>
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="mb-3" controlId="inputNominal">
+            <Form.Group as={Row} className="mb-2" controlId="inputNominal">
               <Form.Label column sm="4">
                 Nominal
               </Form.Label>
@@ -150,7 +150,7 @@ export default function SimpanTambahModal(props) {
             </Form.Group>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="inputTanggalTransaksi"
             >
               <Form.Label column sm="4">
@@ -160,7 +160,7 @@ export default function SimpanTambahModal(props) {
                 <Form.Control type="date" />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} controlId="formFile" className="mb-3">
+            <Form.Group as={Row} controlId="formFile" className="mb-2">
               <Form.Label column sm="4">
                 Bukti Transfer
               </Form.Label>

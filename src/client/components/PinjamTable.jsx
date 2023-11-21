@@ -1,12 +1,22 @@
 import React from "react";
-import { Button, Card, Col, Container, Row, Table } from "react-bootstrap";
+import {
+  Button,
+  Card,
+  Col,
+  Container,
+  Pagination,
+  Row,
+  Table,
+} from "react-bootstrap";
 import { PinjamDetailModal } from "./PinjamDetailModal";
 import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
 import { formatRupiah } from "../utils/format";
-import { fetchPinjaman } from "../utils/fetch";
 import { PinjamTambahModal } from "./PinjamTambahModal";
 import { PinjamBayarModal } from "./PinjamBayarModal";
+import { getPinjamAnggota } from "../utils/api";
+
+const ITEMS_PER_PAGE = 10;
 
 export default function PinjamTable() {
   const [pinjamData, setPinjamData] = React.useState([]);
@@ -15,6 +25,7 @@ export default function PinjamTable() {
   const [showBayar, setShowBayar] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState(null);
   const [input, setInput] = React.useState("");
+  const [activePage, setActivePage] = React.useState(1);
 
   const handleDetailClick = (pinjam) => {
     setSelectedRow(pinjam);
@@ -35,68 +46,99 @@ export default function PinjamTable() {
     switch (modalType) {
       case "detail":
         setShowDetail(false);
+        fungsiLoad();
         break;
       case "pinjam":
         setShowPinjam(false);
+        fungsiLoad();
         break;
       case "bayar":
         setShowBayar(false);
+        fungsiLoad();
         break;
       default:
         break;
     }
   };
 
-  const fungsiLoad = () => {
-    fetchPinjaman(setPinjamData);
+  const fungsiLoad = async () => {
+    const data = await getPinjamAnggota();
+    if (data) {
+      setPinjamData(data);
+    } else {
+      console.log("Error fungsiLoad() di PinjamTable.jsx");
+    }
   };
+
   React.useEffect(() => {
     fungsiLoad();
   }, []);
+
+  const handlePageChange = (pageNumber) => {
+    setActivePage(pageNumber);
+  };
+
+  const goToFirstPage = () => {
+    setActivePage(1);
+  };
+
+  const goToLastPage = () => {
+    setActivePage(Math.ceil(pinjamData.length / ITEMS_PER_PAGE));
+  };
+
+  const goToPrevPage = () => {
+    setActivePage((prevPage) => Math.max(prevPage - 1, 1));
+  };
+
+  const goToNextPage = () => {
+    setActivePage((prevPage) =>
+      Math.min(prevPage + 1, Math.ceil(pinjamData.length / ITEMS_PER_PAGE))
+    );
+  };
+
+  const indexOfLastEntry = activePage * ITEMS_PER_PAGE;
+  const indexOfFirstEntry = indexOfLastEntry - ITEMS_PER_PAGE;
+  const currentEntries = pinjamData.slice(indexOfFirstEntry, indexOfLastEntry);
+
+  const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
   return (
     <>
-      <Container fluid style={{ marginTop: "6rem", marginBottom: "6rem" }}>
-        <Row>
+      <Container fluid className="my-5">
+        <Row className="pt-5">
           <Col />
           <Col sm={7}>
             <Card>
-              <Card.Header>
-                <Card.Title className="fw-bold text-uppercase mt-2">
-                  <Row>
-                    <Col>Data Pinjaman Anggota</Col>
-                    <Col>
-                      <div className="search-bar-container">
-                        <div className="input-wrapper">
-                          <FaSearch id="search-icon" />
-                          <input
-                            placeholder="Type to Search..."
-                            onChange={(e) => setInput(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </Col>
-                  </Row>
+              <Container className="py-2">
+                <Card.Title className="fw-bold text-uppercase mb-2">
+                  Data Pinjaman Anggota
                 </Card.Title>
-              </Card.Header>
-              <Card.Body>
-                <Table hover borderless responsive size="sm">
-                  <thead>
+                <hr className="mt-2 mb-2" />
+                <Row className="mb-2">
+                  <Col />
+                  <Col>
+                    <div className="search-bar-container">
+                      <div className="input-wrapper">
+                        <FaSearch id="search-icon" />
+                        <input
+                          placeholder="Type to Search..."
+                          onChange={(e) => setInput(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+                <Table hover responsive size="sm">
+                  <thead className="table-info">
                     <tr className="text-center align-middle fs-7">
                       <th>No.</th>
-                      <th style={{ borderInline: "solid 1px lightgray" }}>
-                        Kode Anggota
-                      </th>
-                      <th style={{ borderInline: "solid 1px lightgray" }}>
-                        Nama
-                      </th>
-                      <th style={{ borderInline: "solid 1px lightgray" }}>
-                        Sisa Tagihan
-                      </th>
-                      <th colSpan={3}>Aksi</th>
+                      <th>Kode Anggota</th>
+                      <th>Nama</th>
+                      <th>Sisa Tagihan</th>
+                      <th colSpan={2}>Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {pinjamData
+                    {currentEntries
                       .filter((pinjam) => {
                         const inputString = input.toString().toLowerCase();
                         return (
@@ -109,24 +151,11 @@ export default function PinjamTable() {
                         );
                       })
                       .map((pinjam, index) => (
-                        <tr
-                          style={{ borderBlockStart: "solid 1px lightgray" }}
-                          className="align-middle"
-                          key={index}
-                        >
-                          <td className="text-center align-middle">
-                            {index + 1}
-                          </td>
-                          <td style={{ borderInline: "solid 1px lightgray" }}>
-                            {pinjam.kodeAnggota}
-                          </td>
-                          <td>{pinjam.nama}</td>
-                          <td
-                            style={{
-                              textAlign: "end",
-                              borderInline: "solid 1px lightgray",
-                            }}
-                          >
+                        <tr key={index} className="text-center align-middle">
+                          <td>{index + startIndex}</td>
+                          <td>{pinjam.kodeAnggota}</td>
+                          <td className="text-start">{pinjam.nama}</td>
+                          <td className="text-start">
                             {formatRupiah(pinjam.sisaHutang)}
                           </td>
                           <td className="text-center">
@@ -154,17 +183,31 @@ export default function PinjamTable() {
                               </Button>
                             )}
                           </td>
-                          {/* <td className="text-center">
-                            {pinjam.sisaHutang > 0 ? (
-                              
-                            ) : null}
-                          </td> */}
                         </tr>
                       ))}
                   </tbody>
                 </Table>
-              </Card.Body>
+              </Container>
             </Card>
+            <div className="d-flex justify-content-center mt-2">
+              <Pagination>
+                <Pagination.First onClick={goToFirstPage} />
+                <Pagination.Prev onClick={goToPrevPage} />
+                {[...Array(Math.ceil(pinjamData.length / ITEMS_PER_PAGE))].map(
+                  (_, index) => (
+                    <Pagination.Item
+                      key={index + 1}
+                      active={index + 1 === activePage}
+                      onClick={() => handlePageChange(index + 1)}
+                    >
+                      {index + 1}
+                    </Pagination.Item>
+                  )
+                )}
+                <Pagination.Next onClick={goToNextPage} />
+                <Pagination.Last onClick={goToLastPage} />
+              </Pagination>
+            </div>
           </Col>
           <Col />
         </Row>

@@ -6,8 +6,8 @@ import TransaksiKas from "../client/components/TransaksiKas";
 export default function Transaksi() {
   return (
     <>
-      <Container fluid style={{ marginTop: "6rem", marginBottom: "6rem" }}>
-        <Row>
+      <Container fluid className="my-5">
+        <Row className="pt-5">
           <Col />
           <Col sm={7}>
             <TransaksiKas />

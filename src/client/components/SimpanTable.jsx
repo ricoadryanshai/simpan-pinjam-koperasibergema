@@ -1,5 +1,13 @@
 import React from "react";
-import { Button, Card, Col, Container, Row, Table } from "react-bootstrap";
+import {
+  Button,
+  Card,
+  Col,
+  Container,
+  Pagination,
+  Row,
+  Table,
+} from "react-bootstrap";
 import { getSimpanAnggotaById } from "../utils/api";
 import SimpanDetailModal from "./SimpanDetailModal";
 import SimpanTambahModal from "./SimpanTambahModal";
@@ -9,6 +17,8 @@ import "../styles/SearchBar.css";
 import { fetchSimpanan } from "../utils/fetch";
 import { formatRupiah } from "../utils/format";
 
+const ITEMS_PER_PAGE = 10;
+
 export default function SimpanTable() {
   const [simpananData, setSimpananData] = React.useState([]);
   const [selectedRowData, setSelectedRowData] = React.useState(null);
@@ -17,6 +27,7 @@ export default function SimpanTable() {
   const [showAmbilModal, setShowAmbilModal] = React.useState(false);
   const [modalData, setModalData] = React.useState([]);
   const [input, setInput] = React.useState("");
+  const [activePage, setActivePage] = React.useState(1);
 
   const fetchData = async () => {
     await fetchSimpanan(setSimpananData);
@@ -26,6 +37,11 @@ export default function SimpanTable() {
     setSelectedRowData(rowData);
     setShowModal(true);
   };
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+  };
+
   const handleDetailClick = (rowData) => {
     handleModal(rowData, setShowDetailModal);
 
@@ -37,6 +53,7 @@ export default function SimpanTable() {
         console.error("Error fetching detailed data:", error);
       });
   };
+
   const handleTambahClick = (rowData) => {
     handleModal(rowData, setShowTambahModal);
   };
@@ -45,53 +62,78 @@ export default function SimpanTable() {
     handleModal(rowData, setShowAmbilModal);
   };
 
+  const handlePageChange = (pageNumber) => {
+    setActivePage(pageNumber);
+  };
+
+  const goToFirstPage = () => {
+    setActivePage(1);
+  };
+
+  const goToLastPage = () => {
+    setActivePage(Math.ceil(simpananData.length / ITEMS_PER_PAGE));
+  };
+
+  const goToPrevPage = () => {
+    setActivePage((prevPage) => Math.max(prevPage - 1, 1));
+  };
+
+  const goToNextPage = () => {
+    setActivePage((prevPage) =>
+      Math.min(prevPage + 1, Math.ceil(simpananData.length / ITEMS_PER_PAGE))
+    );
+  };
+
+  const indexOfLastEntry = activePage * ITEMS_PER_PAGE;
+  const indexOfFirstEntry = indexOfLastEntry - ITEMS_PER_PAGE;
+  const currentEntries = simpananData.slice(
+    indexOfFirstEntry,
+    indexOfLastEntry
+  );
+
+  const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
+
   React.useEffect(() => {
     fetchData();
   }, []);
   return (
     <>
-      <Container fluid style={{ marginTop: "6rem", marginBottom: "6rem" }}>
-        <Row>
+      <Container fluid className="my-5">
+        <Row className="pt-5">
           <Col />
           <Col sm={7}>
             <Card>
-              <Card.Header>
-                <Card.Title className="fw-bold text-uppercase mt-2">
-                  <Row>
-                    <Col>Data Simpanan Anggota</Col>
-                    <Col>
-                      <div className="search-bar-container">
-                        <div className="input-wrapper">
-                          <FaSearch id="search-icon" />
-                          <input
-                            placeholder="Type to Search..."
-                            onChange={(e) => setInput(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </Col>
-                  </Row>
+              <Container className="py-2">
+                <Card.Title className="fw-bold text-uppercase mb-2">
+                  <span>Data Simpanan Anggota</span>
                 </Card.Title>
-              </Card.Header>
-              <Card.Body>
-                <Table hover borderless responsive size="sm">
-                  <thead>
-                    <tr className="text-center align-middle fs-7">
+                <hr className="mt-2 mb-2" />
+                <Row className="mb-2">
+                  <Col />
+                  <Col>
+                    <div className="search-bar-container">
+                      <div className="input-wrapper">
+                        <FaSearch id="search-icon" />
+                        <input
+                          placeholder="Ketika untuk mencari data..."
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+                <Table hover responsive size="sm">
+                  <thead className="table-info">
+                    <tr className="text-center align-middle">
                       <th>No.</th>
-                      <th style={{ borderInline: "solid 1px lightgray" }}>
-                        Kode Anggota
-                      </th>
-                      <th style={{ borderInline: "solid 1px lightgray" }}>
-                        Nama
-                      </th>
-                      <th style={{ borderInline: "solid 1px lightgray" }}>
-                        Saldo
-                      </th>
+                      <th>Kode Anggota</th>
+                      <th>Nama</th>
+                      <th>Saldo</th>
                       <th colSpan={3}>Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {simpananData
+                    {currentEntries
                       .filter((simpan) => {
                         const inputString = input.toString().toLowerCase();
                         return (
@@ -104,24 +146,11 @@ export default function SimpanTable() {
                         );
                       })
                       .map((simpan, index) => (
-                        <tr
-                          style={{ borderBlockStart: "solid 1px lightgray" }}
-                          className="align-middle"
-                          key={index}
-                        >
-                          <td className="text-center align-middle">
-                            {index + 1}
-                          </td>
-                          <td style={{ borderInline: "solid 1px lightgray" }}>
-                            {simpan.kodeAnggota}
-                          </td>
-                          <td>{simpan.nama}</td>
-                          <td
-                            style={{
-                              textAlign: "end",
-                              borderInline: "solid 1px lightgray",
-                            }}
-                          >
+                        <tr className="text-center align-middle" key={index}>
+                          <td>{index + startIndex}</td>
+                          <td>{simpan.kodeAnggota}</td>
+                          <td className="text-start">{simpan.nama}</td>
+                          <td className="text-start">
                             {formatRupiah(simpan.totalSaldo)}
                           </td>
                           <td>
@@ -154,8 +183,27 @@ export default function SimpanTable() {
                       ))}
                   </tbody>
                 </Table>
-              </Card.Body>
+              </Container>
             </Card>
+            <div className="d-flex justify-content-center mt-2">
+              <Pagination>
+                <Pagination.First onClick={goToFirstPage} />
+                <Pagination.Prev onClick={goToPrevPage} />
+                {[
+                  ...Array(Math.ceil(simpananData.length / ITEMS_PER_PAGE)),
+                ].map((_, index) => (
+                  <Pagination.Item
+                    key={index + 1}
+                    active={index + 1 === activePage}
+                    onClick={() => handlePageChange(index + 1)}
+                  >
+                    {index + 1}
+                  </Pagination.Item>
+                ))}
+                <Pagination.Next onClick={goToNextPage} />
+                <Pagination.Last onClick={goToLastPage} />
+              </Pagination>
+            </div>
           </Col>
           <Col />
         </Row>

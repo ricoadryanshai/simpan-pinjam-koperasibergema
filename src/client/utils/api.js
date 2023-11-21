@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_ENDPOINT = "http://localhost:3002";
+const API_ENDPOINT = "http://localhost:3023";
 
 // START >>> API ENDPOINT BERANDA
 
@@ -163,12 +163,74 @@ export const getPinjamByKodeAnggota = async (kodeAnggota) => {
   }
 };
 
+export const getBayarByKodeAnggota = async (kodeAnggota) => {
+  try {
+    const res = await axios.get(`${API_ENDPOINT}/get/bayar/${kodeAnggota}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const deletePinjamByKodeAnggota = async (kodeAnggota, id) => {
+  try {
+    const response = await axios.delete(
+      `${API_ENDPOINT}/delete/pinjam/${kodeAnggota}/${id}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    throw error;
+  }
+};
+
+export const getBayarAngsuran = async (idPinjam) => {
+  try {
+    const res = await axios.get(`${API_ENDPOINT}/get/angsuran/${idPinjam}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
 export const postPinjam = async (data) => {
   try {
     const response = await axios.post(`${API_ENDPOINT}/post/pinjam`, data);
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : error.message;
+  }
+};
+export const postAngsuran = async (data) => {
+  try {
+    const response = await axios.post(`${API_ENDPOINT}/post/angsuran`, data);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error.message;
+  }
+};
+
+export const updateBayarAngsuran = async (id) => {
+  try {
+    const response = await axios.put(`${API_ENDPOINT}/put/pinjam/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to update transaction");
+  }
+};
+
+export const updateLunasAngsuran = async (idPinjam) => {
+  try {
+    const response = await axios.put(
+      `${API_ENDPOINT}/put/angsuran/${idPinjam}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to update transaction");
   }
 };
 

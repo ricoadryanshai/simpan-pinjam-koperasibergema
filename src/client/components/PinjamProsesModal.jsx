@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+// eslint-disable-next-line no-unused-vars
 import React from "react";
 import { Button, Col, Modal, Row, Table } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
@@ -31,8 +32,8 @@ export const PinjamProsesModal = (props) => {
         console.log("Data berhasil ditambahkan:", result);
         setModalProses(false);
         setShowPinjam(false);
-        fungsiLoad();
         resetForm();
+        fungsiLoad();
       })
       .catch((error) => {
         console.error("Gagal menambahkan data:", error);
@@ -82,9 +83,9 @@ export const PinjamProsesModal = (props) => {
           </Row>
           <Row>
             <Table hover responsive size="sm">
-              <thead className="table-light">
-                <tr className="text-center table-info">
-                  <th>No.</th>
+              <thead className="table-info">
+                <tr>
+                  <th className="text-center">No.</th>
                   <th>Angsuran</th>
                   <th>Jasa Uang</th>
                   <th>Total Bayar</th>
@@ -92,14 +93,14 @@ export const PinjamProsesModal = (props) => {
               </thead>
               <tbody>
                 {[...Array(angsuran)].map((_, index) => (
-                  <tr key={index} className="text-end">
+                  <tr key={index}>
                     <td className="text-center">{index + 1}</td>
                     <td>{formatRupiah(biayaAngsuran)}</td>
                     <td>{formatRupiah(jasaUang)}</td>
                     <td>{formatRupiah(totalBayar)}</td>
                   </tr>
                 ))}
-                <tr className="text-end fw-bold">
+                <tr className="fw-bold table-light">
                   <td className="text-center">Jumlah</td>
                   <td>{formatRupiah(angsuran * biayaAngsuran)}</td>
                   <td>{formatRupiah(angsuran * jasaUang)}</td>

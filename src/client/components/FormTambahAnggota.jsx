@@ -81,12 +81,8 @@ export default function FormTambahAnggota() {
               </Card.Title>
             </Card.Header>
             <Card.Body>
-              <Form
-                noValidate
-                validated={validated}
-                onSubmit={handleProcessClick}
-              >
-                <Form.Group className="mb-3" controlId="kodeAnggota">
+              <Form noValidate validated={validated}>
+                <Form.Group className="mb-2" controlId="kodeAnggota">
                   <Form.Label>Kode Anggota</Form.Label>
                   <Form.Control
                     type="text"
@@ -100,7 +96,7 @@ export default function FormTambahAnggota() {
                   </Form.Control.Feedback>
                 </Form.Group>
 
-                <Form.Group className="mb-3" controlId="nama">
+                <Form.Group className="mb-2" controlId="nama">
                   <Form.Label>Nama</Form.Label>
                   <Form.Control
                     type="text"
@@ -114,7 +110,7 @@ export default function FormTambahAnggota() {
                   </Form.Control.Feedback>
                 </Form.Group>
 
-                <Form.Group className="mb-3" controlId="jenKel">
+                <Form.Group className="mb-2" controlId="jenKel">
                   <Form.Label>Jenis Kelamin</Form.Label>
                   <Form.Check
                     type="radio"
@@ -139,7 +135,7 @@ export default function FormTambahAnggota() {
                   </Form.Control.Feedback>
                 </Form.Group>
 
-                <Form.Group className="mb-3" controlId="tempatLahir">
+                <Form.Group className="mb-2" controlId="tempatLahir">
                   <Form.Label>Tempat Lahir</Form.Label>
                   <Form.Control
                     type="text"
@@ -153,7 +149,7 @@ export default function FormTambahAnggota() {
                   </Form.Control.Feedback>
                 </Form.Group>
 
-                <Form.Group className="mb-3" controlId="tanggalLahir">
+                <Form.Group className="mb-2" controlId="tanggalLahir">
                   <Form.Label column sm="2">
                     Tanggal Lahir
                   </Form.Label>
@@ -171,7 +167,7 @@ export default function FormTambahAnggota() {
                   </Form.Control.Feedback>
                 </Form.Group>
 
-                <Form.Group className="mb-3" controlId="alamat">
+                <Form.Group className="mb-2" controlId="alamat">
                   <Form.Label column sm="2">
                     Alamat
                   </Form.Label>
@@ -188,7 +184,7 @@ export default function FormTambahAnggota() {
                   </Form.Control.Feedback>
                 </Form.Group>
 
-                <Form.Group className="mb-3" controlId="noHP">
+                <Form.Group className="mb-2" controlId="noHP">
                   <Form.Label column sm="2">
                     No. Mobile Phone
                   </Form.Label>
@@ -205,20 +201,18 @@ export default function FormTambahAnggota() {
                     Silahkan masukkan nomor hp anggota terlebih dahulu.
                   </Form.Control.Feedback>
                 </Form.Group>
-                <hr />
-                <Stack direction="horizontal" gap={3}>
-                  <Button
-                    variant="secondary"
-                    type="button"
-                    className="mb-0 ms-auto"
-                    onClick={handleResetClick}
-                  >
+                <Card.Footer className="text-end">
+                  <Button variant="secondary" onClick={handleResetClick}>
                     Reset
                   </Button>
-                  <Button variant="primary" type="submit">
+                  <Button
+                    variant="primary"
+                    onClick={handleProcessClick}
+                    className="ms-2"
+                  >
                     Proses
                   </Button>
-                </Stack>
+                </Card.Footer>
               </Form>
             </Card.Body>
           </Card>

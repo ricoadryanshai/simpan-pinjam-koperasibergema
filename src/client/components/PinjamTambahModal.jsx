@@ -95,7 +95,7 @@ export const PinjamTambahModal = (props) => {
           <Modal.Body>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="formPlaintextKodeAnggota"
             >
               <Form.Label column sm="4">
@@ -111,7 +111,7 @@ export const PinjamTambahModal = (props) => {
                 />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="mb-3" controlId="formPlaintextNama">
+            <Form.Group as={Row} className="mb-2" controlId="formPlaintextNama">
               <Form.Label column sm="4">
                 Nama
               </Form.Label>
@@ -125,7 +125,7 @@ export const PinjamTambahModal = (props) => {
             </Form.Group>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="formPlaintextJenisTransaksi"
             >
               <Form.Label column sm="4">
@@ -137,7 +137,7 @@ export const PinjamTambahModal = (props) => {
             </Form.Group>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="formTanggalTransaksi"
             >
               <Form.Label column sm="4">
@@ -153,7 +153,7 @@ export const PinjamTambahModal = (props) => {
             </Form.Group>
             <Form.Group
               as={Row}
-              className="mb-3"
+              className="mb-2"
               controlId="formNominalTransaksi"
             >
               <Form.Label column sm="4">
@@ -167,7 +167,7 @@ export const PinjamTambahModal = (props) => {
                 />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="mb-3" controlId="formAngsuran">
+            <Form.Group as={Row} className="mb-2" controlId="formAngsuran">
               <Form.Label column sm="4">
                 Angsuran
               </Form.Label>

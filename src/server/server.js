@@ -9,7 +9,7 @@ const path = require("path");
 const fs = require("fs");
 
 const app = express();
-const port = process.env.PORT || 3002;
+const port = process.env.PORT || 3023;
 
 // Multer Configuration
 const storage = multer.diskStorage({
@@ -371,17 +371,47 @@ app.delete("/delete/simpan/:kodeAnggota/:id", (req, res) => {
 app.get("/get/pinjam", (req, res) => {
   const sqlQuery = `
     SELECT
-    tbl_anggota.kodeAnggota,
-    tbl_anggota.nama,
-    tbl_anggota.tanggalDaftar,
-    CASE
-      WHEN SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Pinjam' THEN -tbl_pinjam.nominalTransaksi ELSE tbl_pinjam.nominalTransaksi END) = 0 THEN 0
-      ELSE SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Bayar' THEN -tbl_pinjam.nominalTransaksi ELSE tbl_pinjam.nominalTransaksi END)
-    END AS sisaHutang
-  FROM tbl_anggota
-  LEFT JOIN tbl_pinjam ON tbl_anggota.kodeAnggota = tbl_pinjam.kodeAnggota
-  GROUP BY tbl_anggota.kodeAnggota, tbl_anggota.nama
-  ORDER BY sisaHutang DESC, kodeAnggota ASC;
+      kodeAnggota,
+      nama,
+      tanggalDaftar,
+      COALESCE(totalPinjam, 0) AS totalPinjam,
+      COALESCE(totalAngsuran, 0) AS totalAngsuran,
+      COALESCE(totalPinjam - totalAngsuran, 0) AS sisaHutang
+    FROM (
+      SELECT
+        tbl_anggota.kodeAnggota,
+        tbl_anggota.nama,
+        tbl_anggota.tanggalDaftar,
+        COALESCE(total_pinjaman.totalPinjam, 0) AS totalPinjam,
+        SUM(
+          CASE
+            WHEN tbl_angsuran.tanggalBayar IS NOT NULL OR tbl_angsuran.tanggalBayar <> '' THEN tbl_angsuran.uangAngsuran
+            ELSE 0
+          END
+        ) AS totalAngsuran
+      FROM
+        tbl_anggota
+      LEFT JOIN
+        (
+          SELECT 
+            kodeAnggota,
+            SUM(nominalTransaksi) AS totalPinjam
+          FROM
+            tbl_pinjam
+          WHERE
+            jenisTransaksi = 'Pinjam'
+          GROUP BY
+            kodeAnggota
+        ) AS total_pinjaman ON tbl_anggota.kodeAnggota = total_pinjaman.kodeAnggota
+      LEFT JOIN
+        tbl_pinjam ON tbl_anggota.kodeAnggota = tbl_pinjam.kodeAnggota
+      LEFT JOIN
+        tbl_angsuran ON tbl_pinjam.id = tbl_angsuran.idPinjam
+      GROUP BY
+        tbl_anggota.kodeAnggota
+    ) AS aggregatedResults
+    ORDER BY
+      totalAngsuran DESC, kodeAnggota ASC
   `;
 
   db.query(sqlQuery, (err, results) => {
@@ -397,21 +427,46 @@ app.get("/get/pinjam", (req, res) => {
 });
 
 app.get("/get/pinjam/:kodeAnggota", (req, res) => {
-  const kodeAnggota = req.params.kodeAnggota;
+  const { kodeAnggota } = req.params;
 
   const selectQuery = `
     SELECT id, kodeAnggota, jenisTransaksi, nominalTransaksi, angsuran, tanggalTransaksi
     FROM tbl_pinjam
     WHERE kodeAnggota = ?
-    ORDER BY tanggalTransaksi DESC;
+    ORDER BY createdAt DESC;
   `;
 
   db.query(selectQuery, [kodeAnggota], (err, results) => {
     if (err) {
-      console.error("Error fetching data:", err);
+      console.error("Error fetching data: " + err.sqlMessage);
       res.status(500).json({ error: "Internal Server Error" });
+    } else if (results.length === 0) {
+      res.status(404).json({ error: "Record not found" });
     } else {
       res.status(200).json(results);
+    }
+  });
+});
+
+app.get("/get/bayar/:kodeAnggota", (req, res) => {
+  const { kodeAnggota } = req.params;
+
+  const selectQuery = `
+    SELECT *
+    FROM tbl_pinjam
+    WHERE kodeAnggota = ? AND jenisTransaksi = 'Pinjam'
+    ORDER BY createdAt DESC
+    LIMIT 1
+  `;
+
+  db.query(selectQuery, [kodeAnggota], (err, results) => {
+    if (err) {
+      console.error("Error fetching data: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else if (results.length === 0) {
+      res.status(404).json({ error: "Record not found" });
+    } else {
+      res.status(200).json(results[0]);
     }
   });
 });
@@ -425,8 +480,8 @@ app.post("/post/pinjam", async (req, res) => {
     tanggalTransaksi,
   } = req.body;
 
-  const query = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, nominalTransaksi, angsuran, tanggalTransaksi) VALUES (?, ?, ?, ?, ?)`;
-  const values = [
+  const insertPinjamQuery = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, nominalTransaksi, angsuran, tanggalTransaksi) VALUES (?, ?, ?, ?, ?)`;
+  const pinjamValues = [
     kodeAnggota,
     jenisTransaksi,
     nominalTransaksi,
@@ -434,15 +489,178 @@ app.post("/post/pinjam", async (req, res) => {
     tanggalTransaksi,
   ];
 
-  db.query(query, values, (err, result) => {
+  try {
+    // Insert data into tbl_pinjam
+    const pinjamInsertResult = await new Promise((resolve, reject) => {
+      db.query(insertPinjamQuery, pinjamValues, (err, result) => {
+        if (err) {
+          console.error(
+            "Error inserting data into tbl_pinjam: " + err.sqlMessage
+          );
+          reject(err);
+        } else {
+          console.log("Data inserted into tbl_pinjam successfully", result);
+          resolve(result.insertId); // Resolving with ID of the newly inserted data
+        }
+      });
+    });
+
+    // Calculate values for tbl_angsuran
+    const uangAngsuran = nominalTransaksi / angsuran;
+    const jasaUang = nominalTransaksi * 0.02;
+    const totalBayar = uangAngsuran + jasaUang;
+
+    // Create an array to hold values for multiple rows insertion into tbl_angsuran
+    const angsuranValues = Array.from({ length: angsuran }, () => [
+      pinjamInsertResult, // Using the ID from tbl_pinjam insertion
+      uangAngsuran,
+      jasaUang,
+      totalBayar,
+    ]);
+
+    const insertAngsuranQuery = `INSERT INTO tbl_angsuran (idPinjam, uangAngsuran, jasaUang, totalBayar) VALUES ?`;
+
+    // Insert data into tbl_angsuran
+    await new Promise((resolve, reject) => {
+      db.query(insertAngsuranQuery, [angsuranValues], (err, result) => {
+        if (err) {
+          console.error(
+            "Error inserting data into tbl_angsuran: " + err.sqlMessage
+          );
+          reject(err);
+        } else {
+          console.log("Data inserted into tbl_angsuran successfully", result);
+          resolve();
+        }
+      });
+    });
+
+    res.status(200).json({ message: "Data inserted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.delete("/delete/pinjam/:kodeAnggota/:idPinjam", (req, res) => {
+  const { kodeAnggota, id } = req.params;
+
+  // Query untuk menghapus data berdasarkan kodeAnggota dan id
+  const deleteQuery =
+    "DELETE FROM tbl_pinjam WHERE kodeAnggota = ? AND idPinjam = ?";
+
+  // Menjalankan query dengan parameter yang diberikan
+  db.query(deleteQuery, [kodeAnggota, id], (err) => {
     if (err) {
-      console.error("Error inserting data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      console.log("Data inserted successfully", result);
-      res.status(200).json({ message: "Data inserted successfully" });
+      res.status(500).send("Gagal menghapus data");
+      throw err;
     }
+    res.status(200).send("Data berhasil dihapus");
   });
+});
+
+app.put("/put/pinjam/:id", async (req, res) => {
+  const { id } = req.params;
+
+  const today = new Date()
+    .toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
+    .split(", ")[0];
+
+  const updateQuery = `
+    UPDATE tbl_angsuran
+    SET
+      tanggalBayar = '${today}'
+    WHERE id = ${id}
+  `;
+
+  try {
+    await getQueryResult(updateQuery);
+    res.status(200).json({ message: "Data updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.put("/put/angsuran/:idPinjam", async (req, res) => {
+  const { idPinjam } = req.params;
+
+  const today = new Date()
+    .toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
+    .split(", ")[0];
+
+  const updateQuery = `
+    UPDATE tbl_angsuran
+    SET tanggalBayar = '${today}'
+    WHERE idPinjam = ${idPinjam}
+      AND (tanggalBayar IS NULL OR tanggalBayar = '')
+  `;
+
+  try {
+    await getQueryResult(updateQuery);
+    res.status(200).json({ message: "Data updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/get/angsuran/:idPinjam", (req, res) => {
+  const idPinjam = req.params.idPinjam;
+
+  const query = `SELECT id, idPinjam, uangAngsuran, jasaUang, totalBayar, tanggalBayar FROM tbl_angsuran WHERE idPinjam = ?`;
+
+  db.query(query, [idPinjam], (err, rows) => {
+    if (err) {
+      console.error("Error fetching data: " + err);
+      res.status(500).json({ error: "Error fetching data" });
+      return;
+    }
+
+    res.json(rows);
+  });
+});
+
+app.post("/post/angsuran", async (req, res) => {
+  const {
+    kodeAnggota,
+    jenisTransaksi,
+    nominalTransaksi,
+    angsuran,
+    tanggalTransaksi,
+  } = req.body;
+
+  const insertPinjamQuery = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, nominalTransaksi, angsuran, tanggalTransaksi) VALUES (?, ?, ?, ?, ?)`;
+  const pinjamValues = [
+    kodeAnggota,
+    jenisTransaksi,
+    nominalTransaksi,
+    angsuran,
+    tanggalTransaksi,
+  ];
+
+  try {
+    // Insert data into tbl_pinjam
+    const pinjamInsertResult = await new Promise((resolve, reject) => {
+      db.query(insertPinjamQuery, pinjamValues, (err, result) => {
+        if (err) {
+          console.error(
+            "Error inserting data into tbl_pinjam: " + err.sqlMessage
+          );
+          reject(err);
+        } else {
+          console.log("Data inserted into tbl_pinjam successfully", result);
+          resolve(result.insertId); // Resolving with ID of the newly inserted data
+        }
+      });
+    });
+
+    res.status(200).json({
+      message: "Data inserted into tbl_pinjam successfully",
+      insertId: pinjamInsertResult,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // API ENDPOINT PINJAMAN <<< END
