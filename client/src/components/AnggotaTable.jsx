@@ -9,11 +9,11 @@ import {
   Col,
   OverlayTrigger,
   Tooltip,
+  Pagination,
 } from "react-bootstrap";
 import AnggotaEditModal from "./AnggotaEditModal";
 import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
-import { Pagination } from "react-bootstrap";
 import { formatDate } from "../utils/format";
 import { fetchAnggota } from "../utils/fetch";
 import { deleteMembers, handleEdit } from "../utils/handle";
@@ -117,9 +117,9 @@ export default function AnggotaTable() {
   const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
   return (
     <>
-      <Container fluid className="pb-5" as={Row}>
-        <Col />
-        <Col sm={9}>
+      <Container fluid className="pb-5 custom-container" as={Row}>
+        <Col className="custom-col" />
+        <Col className="custom-col">
           <Card>
             <Container fluid>
               <Card.Title className="fw-bold text-uppercase my-2">
@@ -134,7 +134,7 @@ export default function AnggotaTable() {
                     <div className="input-wrapper">
                       <FaSearch id="search-icon" />
                       <input
-                        placeholder="Type to Search..."
+                        placeholder="Ketika untuk mencari data..."
                         onChange={(e) => setInput(e.target.value)}
                       />
                     </div>
@@ -298,7 +298,7 @@ export default function AnggotaTable() {
             </Container>
           </Card>
         </Col>
-        <Col />
+        <Col className="custom-col" />
         <div className="d-flex justify-content-center mt-2">
           <Pagination>
             <Pagination.First onClick={goToFirstPage} />
