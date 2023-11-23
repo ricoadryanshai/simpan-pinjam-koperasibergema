@@ -103,115 +103,109 @@ export default function PinjamTable() {
   const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
   return (
     <>
-      <Container fluid className="my-5">
-        <Row className="pt-5">
-          <Col />
-          <Col sm={7}>
-            <Card>
-              <Container className="py-2">
-                <Card.Title className="fw-bold text-uppercase mb-2">
-                  Data Pinjaman Anggota
-                </Card.Title>
-                <hr className="mt-2 mb-2" />
-                <Row className="mb-2">
-                  <Col />
-                  <Col>
-                    <div className="search-bar-container">
-                      <div className="input-wrapper">
-                        <FaSearch id="search-icon" />
-                        <input
-                          placeholder="Ketika untuk mencari data..."
-                          onChange={(e) => setInput(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
-                <Table hover responsive size="sm">
-                  <thead className="table-info">
-                    <tr className="text-center align-middle fs-7">
-                      <th>No.</th>
-                      <th>Kode Anggota</th>
-                      <th>Nama</th>
-                      <th>Sisa Tagihan</th>
-                      <th colSpan={2}>Aksi</th>
+      <div className="d-flex justify-content-center">
+        <Card>
+          <Container className="py-2">
+            <Card.Title className="fw-bold text-uppercase mb-2">
+              Data Pinjaman Anggota
+            </Card.Title>
+            <hr className="mt-2 mb-2" />
+            <Row className="mb-2">
+              <Col />
+              <Col>
+                <div className="search-bar-container">
+                  <div className="input-wrapper">
+                    <FaSearch id="search-icon" />
+                    <input
+                      placeholder="Ketika untuk mencari data..."
+                      onChange={(e) => setInput(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </Col>
+            </Row>
+            <Table hover responsive size="sm">
+              <thead className="table-info">
+                <tr className="text-center align-middle fs-7">
+                  <th>No.</th>
+                  <th>Kode Anggota</th>
+                  <th>Nama</th>
+                  <th>Sisa Tagihan</th>
+                  <th colSpan={2}>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentEntries
+                  .filter((pinjam) => {
+                    const inputString = input.toString().toLowerCase();
+                    return (
+                      (pinjam.kodeAnggota &&
+                        pinjam.kodeAnggota
+                          .toLowerCase()
+                          .includes(inputString)) ||
+                      (pinjam.nama &&
+                        pinjam.nama.toLowerCase().includes(inputString))
+                    );
+                  })
+                  .map((pinjam, index) => (
+                    <tr key={index} className="text-center align-middle">
+                      <td>{index + startIndex}</td>
+                      <td>{pinjam.kodeAnggota}</td>
+                      <td className="text-start">{pinjam.nama}</td>
+                      <td className="text-start">
+                        {formatRupiah(pinjam.sisaHutang)}
+                      </td>
+                      <td className="text-center">
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleDetailClick(pinjam)}
+                        >
+                          Detail
+                        </Button>
+                      </td>
+                      <td className="text-center">
+                        {pinjam.sisaHutang <= 0 ? (
+                          <Button
+                            variant="warning"
+                            onClick={() => handlePinjamClick(pinjam)}
+                          >
+                            Pinjam
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="success"
+                            onClick={() => handleBayarClick(pinjam)}
+                          >
+                            Bayar
+                          </Button>
+                        )}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {currentEntries
-                      .filter((pinjam) => {
-                        const inputString = input.toString().toLowerCase();
-                        return (
-                          (pinjam.kodeAnggota &&
-                            pinjam.kodeAnggota
-                              .toLowerCase()
-                              .includes(inputString)) ||
-                          (pinjam.nama &&
-                            pinjam.nama.toLowerCase().includes(inputString))
-                        );
-                      })
-                      .map((pinjam, index) => (
-                        <tr key={index} className="text-center align-middle">
-                          <td>{index + startIndex}</td>
-                          <td>{pinjam.kodeAnggota}</td>
-                          <td className="text-start">{pinjam.nama}</td>
-                          <td className="text-start">
-                            {formatRupiah(pinjam.sisaHutang)}
-                          </td>
-                          <td className="text-center">
-                            <Button
-                              variant="secondary"
-                              onClick={() => handleDetailClick(pinjam)}
-                            >
-                              Detail
-                            </Button>
-                          </td>
-                          <td className="text-center">
-                            {pinjam.sisaHutang <= 0 ? (
-                              <Button
-                                variant="warning"
-                                onClick={() => handlePinjamClick(pinjam)}
-                              >
-                                Pinjam
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="success"
-                                onClick={() => handleBayarClick(pinjam)}
-                              >
-                                Bayar
-                              </Button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </Table>
-              </Container>
-            </Card>
-            <div className="d-flex justify-content-center mt-2">
-              <Pagination>
-                <Pagination.First onClick={goToFirstPage} />
-                <Pagination.Prev onClick={goToPrevPage} />
-                {[...Array(Math.ceil(pinjamData.length / ITEMS_PER_PAGE))].map(
-                  (_, index) => (
-                    <Pagination.Item
-                      key={index + 1}
-                      active={index + 1 === activePage}
-                      onClick={() => handlePageChange(index + 1)}
-                    >
-                      {index + 1}
-                    </Pagination.Item>
-                  )
-                )}
-                <Pagination.Next onClick={goToNextPage} />
-                <Pagination.Last onClick={goToLastPage} />
-              </Pagination>
-            </div>
-          </Col>
-          <Col />
-        </Row>
-      </Container>
+                  ))}
+              </tbody>
+            </Table>
+          </Container>
+        </Card>
+      </div>
+      <div className="d-flex justify-content-center mt-2">
+        <Pagination>
+          <Pagination.First onClick={goToFirstPage} />
+          <Pagination.Prev onClick={goToPrevPage} />
+          {[...Array(Math.ceil(pinjamData.length / ITEMS_PER_PAGE))].map(
+            (_, index) => (
+              <Pagination.Item
+                key={index + 1}
+                active={index + 1 === activePage}
+                onClick={() => handlePageChange(index + 1)}
+              >
+                {index + 1}
+              </Pagination.Item>
+            )
+          )}
+          <Pagination.Next onClick={goToNextPage} />
+          <Pagination.Last onClick={goToLastPage} />
+        </Pagination>
+      </div>
 
       <PinjamDetailModal
         show={showDetail}

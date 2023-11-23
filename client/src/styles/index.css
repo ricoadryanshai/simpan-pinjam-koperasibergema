@@ -5,8 +5,17 @@
   padding: 0;
   font-family: "Inter", sans-serif;
 }
+body {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  padding-block: 6rem;
+}
 .flex-gap-1 {
   gap: 1rem;
+}
+.custom-width-card {
+  min-width: 1200px;
 }
 @media print {
   .no-print {
@@ -30,7 +39,7 @@
 
 /* Untuk layar sangat besar (>= 1200px) */
 @media (min-width: 1200px) {
-  .custom-container-child {
+  .custom-width {
     max-width: 1200px;
   }
 }

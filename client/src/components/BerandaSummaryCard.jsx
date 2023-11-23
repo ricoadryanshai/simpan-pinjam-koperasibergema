@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, Container } from "react-bootstrap";
 import { getBeranda } from "../utils/api";
+import { formatRupiah } from "../utils/format";
 
 export const BerandaSummaryCard = () => {
   const [beranda, setBeranda] = useState([]);
@@ -9,70 +10,85 @@ export const BerandaSummaryCard = () => {
     month: "long",
   }).format(new Date());
 
-  const cardObject = [
-    {
-      id: 1,
-      bg: "warning",
-      cardTitle: "Pinjaman",
-      data1: `Transaksi Bulan Ini: `,
-      data2: `Jumlah Tagihan Tahun Ini: `,
-      data3: `Sisa Tagihan Tahun Ini`,
-    },
-    {
-      id: 2,
-      bg: "success",
-      cardTitle: `Simpanan ${currentMonth} ${new Date().getFullYear()}`,
-      data1: `Jumlah Simpanan: ${formatRupiah(beranda.jumlahSimpanan)}`,
-      data2: `Penarikan Simpanan: ${formatRupiah(beranda.penarikanSimpanan)}`,
-      data3: `Jumlah Saldo Simpanan: ${formatRupiah(beranda.jumlahSaldo)}`,
-    },
-    {
-      id: 3,
-      bg: "primary",
-      cardTitle: "Data Anggota",
-      data1: `Jumlah Anggota Terdaftar: ${beranda.jumlahAnggota}`,
-      data2: "",
-      data3: "",
-    },
-  ];
+  const fetchData = async () => {
+    try {
+      setBeranda(await getBeranda());
+    } catch (error) {
+      console.log("Error fetching data statistik: ", error);
+    }
+  };
 
   useEffect(() => {
-    getBeranda().then((result) => {
-      setBeranda(result);
-    });
+    fetchData();
   }, []);
   return (
     <>
-      {cardObject.map((card) => (
-        <Card
-          key={card.id}
-          style={{ minWidth: "400px" }}
-          bg={card.bg}
-          text="white"
-          className="p-2"
-        >
-          <Container className="p-1">
-            <h3>{card.cardTitle}</h3>
-            <hr className="mb-2 mt-0" />
-            <h6>{card.data1}</h6>
-            <h6>{card.data2}</h6>
-            <h6>{card.data3}</h6>
-          </Container>
-        </Card>
-      ))}
+      <Card
+        bg="danger"
+        text="white"
+        className="p-2"
+        style={{ minWidth: "421.33px" }}
+      >
+        <Container className="p-1">
+          <h3 className="pb-2 text-uppercase fw-bold border-bottom">
+            Pinjaman
+          </h3>
+          <div className="d-flex justify-content-between">
+            <span>Transaksi Bulan Ini</span>
+            <span></span>
+          </div>
+          <div className="d-flex justify-content-between">
+            <span>Jumlah Tagihan Tahun Ini</span>
+            <span></span>
+          </div>
+          <div className="d-flex justify-content-between">
+            <span>Sisa Tagihan Tahun Ini</span>
+            <span></span>
+          </div>
+        </Container>
+      </Card>
+      <Card
+        bg="success"
+        text="white"
+        className="p-2"
+        style={{ minWidth: "421.33px" }}
+      >
+        <Container className="p-1">
+          <h3 className="pb-2 text-uppercase fw-bold border-bottom">
+            Simpanan {currentMonth} {new Date().getFullYear()}
+          </h3>
+          <div className="d-flex justify-content-between">
+            <span>Jumlah Simpanan</span>
+            <span>{formatRupiah(beranda.jumlahSimpanan)}</span>
+          </div>
+          <div className="d-flex justify-content-between">
+            <span>Penarikan Simpanan</span>
+            <span>{formatRupiah(beranda.penarikanSimpanan)}</span>
+          </div>
+          <div className="d-flex justify-content-between">
+            <span>Jumlah Saldo Simpanan</span>
+            <span>{formatRupiah(beranda.jumlahSaldo)}</span>
+          </div>
+        </Container>
+      </Card>
+      <Card
+        bg="primary"
+        text="white"
+        className="p-2"
+        style={{ minWidth: "421.33px" }}
+      >
+        <Container className="p-1">
+          <h3 className="pb-2 text-uppercase fw-bold border-bottom">
+            Data Anggota
+          </h3>
+          <div className="d-flex justify-content-between">
+            <span>Jumlah Anggota Terdaftar</span>
+            <span>{beranda.jumlahAnggota}</span>
+          </div>
+          <div />
+          <div />
+        </Container>
+      </Card>
     </>
   );
-  function formatRupiah(angka) {
-    if (typeof angka !== "number") {
-      return "Rp. 0,00";
-    }
-
-    const formattedAngka = angka.toLocaleString("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 2,
-    });
-
-    return formattedAngka;
-  }
 };

@@ -7,7 +7,7 @@ export default function Beranda() {
   return (
     <>
       <Container fluid>
-        <div className="d-flex flex-gap-1 flex-wrap custom-container-child">
+        <div className="d-flex flex-gap-1 custom-width">
           <BerandaSummaryCard />
         </div>
       </Container>

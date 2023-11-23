@@ -7,7 +7,6 @@ import {
   Pagination,
   Row,
   Col,
-  Stack,
 } from "react-bootstrap";
 import { TransaksiTambahModal } from "./TransaksiTambahModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -80,107 +79,112 @@ export default function TransaksiKas() {
   const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
   return (
     <>
-      <Card>
-        <Container className="pt-2 pb-2">
-          <Card.Title className="text-uppercase fw-bold mb-2">
-            Data Transaksi Kas
-          </Card.Title>
-          <hr className="mt-2 mb-2" />
-          <Row className="mb-2">
-            <Col>
-              <Button className="no-print" onClick={() => setShowTambah(true)}>
-                Tambah Transaksi
-                <FontAwesomeIcon
-                  icon={faSquarePlus}
-                  size="lg"
-                  className="mx-1"
-                />
-              </Button>
-            </Col>
-            <Col>
-              <div className="search-bar-container">
-                <div className="input-wrapper">
-                  <FaSearch id="search-icon" />
-                  <input
-                    placeholder="Ketika untuk mencari data..."
-                    onChange={(e) => setInput(e.target.value)}
+      <div className="d-flex justify-content-center">
+        <Card>
+          <Container className="pt-2 pb-2">
+            <Card.Title className="text-uppercase fw-bold mb-2">
+              Data Transaksi Kas
+            </Card.Title>
+            <hr className="mt-2 mb-2" />
+            <Row className="mb-2">
+              <Col>
+                <Button
+                  className="no-print"
+                  onClick={() => setShowTambah(true)}
+                >
+                  Tambah Transaksi
+                  <FontAwesomeIcon
+                    icon={faSquarePlus}
+                    size="lg"
+                    className="mx-1"
                   />
+                </Button>
+              </Col>
+              <Col>
+                <div className="search-bar-container">
+                  <div className="input-wrapper">
+                    <FaSearch id="search-icon" />
+                    <input
+                      placeholder="Ketika untuk mencari data..."
+                      onChange={(e) => setInput(e.target.value)}
+                    />
+                  </div>
                 </div>
-              </div>
-            </Col>
-          </Row>
-          <Table hover responsive size="sm">
-            <thead className="table-light">
-              <tr className="text-center table-info">
-                <th>No.</th>
-                <th>Tanggal Transaksi</th>
-                <th>Jenis Transaksi</th>
-                <th>Uraian</th>
-                <th>Nominal Transaksi</th>
-                <th colSpan={2} className="no-print">
-                  Aksi
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentEntries
-                .filter((transaksi) => {
-                  const inputString = input.toString().toLowerCase();
-                  return (
-                    (transaksi.tanggalTransaksi &&
-                      transaksi.tanggalTransaksi
-                        .toLowerCase()
-                        .includes(inputString)) ||
-                    (transaksi.jenisTransaksi &&
-                      transaksi.jenisTransaksi
-                        .toLowerCase()
-                        .includes(inputString)) ||
-                    (transaksi.keterangan &&
-                      transaksi.keterangan
-                        .toLowerCase()
-                        .includes(inputString)) ||
-                    (transaksi.nominalTransaksi &&
-                      transaksi.nominalTransaksi
-                        .toLowerCase()
-                        .includes(inputString))
-                  );
-                })
-                .map((transaksi, index) => (
-                  <tr className="text-center align-middle" key={index}>
-                    <td>{index + startIndex}</td>
-                    <td>{formatDate(transaksi.tanggalTransaksi)}</td>
-                    <td>{transaksi.jenisTransaksi}</td>
-                    <td>{transaksi.keterangan}</td>
-                    <td className="text-end">
-                      {formatRupiah(parseFloat(transaksi.nominalTransaksi))}
-                    </td>
-                    <td className="no-print">
-                      <Button
-                        variant="warning"
-                        onClick={() => handleEdit(transaksi)}
-                      >
-                        <FontAwesomeIcon
-                          icon={faPenToSquare}
-                          className="mx-1"
-                        />
-                        Edit
-                      </Button>
-                    </td>
-                    <td className="no-print">
-                      <Button
-                        variant="danger"
-                        onClick={() => handleDeleteWrapper(transaksi.id)}
-                      >
-                        <FontAwesomeIcon icon={faTrashCan} className="mx-1" />
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </Table>
-        </Container>
-      </Card>
+              </Col>
+            </Row>
+            <Table hover responsive size="sm">
+              <thead className="table-light">
+                <tr className="text-center table-info">
+                  <th>No.</th>
+                  <th>Tanggal Transaksi</th>
+                  <th>Jenis Transaksi</th>
+                  <th>Uraian</th>
+                  <th>Nominal Transaksi</th>
+                  <th colSpan={2} className="no-print">
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentEntries
+                  .filter((transaksi) => {
+                    const inputString = input.toString().toLowerCase();
+                    return (
+                      (transaksi.tanggalTransaksi &&
+                        transaksi.tanggalTransaksi
+                          .toLowerCase()
+                          .includes(inputString)) ||
+                      (transaksi.jenisTransaksi &&
+                        transaksi.jenisTransaksi
+                          .toLowerCase()
+                          .includes(inputString)) ||
+                      (transaksi.keterangan &&
+                        transaksi.keterangan
+                          .toLowerCase()
+                          .includes(inputString)) ||
+                      (transaksi.nominalTransaksi &&
+                        transaksi.nominalTransaksi
+                          .toLowerCase()
+                          .includes(inputString))
+                    );
+                  })
+                  .map((transaksi, index) => (
+                    <tr className="text-center align-middle" key={index}>
+                      <td>{index + startIndex}</td>
+                      <td>{formatDate(transaksi.tanggalTransaksi)}</td>
+                      <td>{transaksi.jenisTransaksi}</td>
+                      <td>{transaksi.keterangan}</td>
+                      <td className="text-end">
+                        {formatRupiah(parseFloat(transaksi.nominalTransaksi))}
+                      </td>
+                      <td className="no-print">
+                        <Button
+                          variant="warning"
+                          onClick={() => handleEdit(transaksi)}
+                        >
+                          <FontAwesomeIcon
+                            icon={faPenToSquare}
+                            className="mx-1"
+                          />
+                          Edit
+                        </Button>
+                      </td>
+                      <td className="no-print">
+                        <Button
+                          variant="danger"
+                          onClick={() => handleDeleteWrapper(transaksi.id)}
+                        >
+                          <FontAwesomeIcon icon={faTrashCan} className="mx-1" />
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </Table>
+          </Container>
+        </Card>
+      </div>
       <div className="d-flex justify-content-center mt-2">
         <Pagination>
           <Pagination.First onClick={goToFirstPage} />

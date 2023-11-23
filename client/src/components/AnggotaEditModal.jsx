@@ -1,153 +1,182 @@
 /* eslint-disable react/prop-types */
 // eslint-disable-next-line no-unused-vars
-import React, { useState } from "react";
-import { Button, Col, Form, InputGroup, Modal, Row } from "react-bootstrap";
+import React from "react";
+import { Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { editAnggota } from "../utils/api";
 
-export default function AnggotaEditModal({ item, closeModal, fetchData }) {
-  const [editedData, setEditedData] = useState(item);
+export default function AnggotaEditModal(props) {
+  const { show, onHide, selectedRow } = props;
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditedData({ ...editedData, [name]: value });
-  };
+  const kodeAnggota = selectedRow?.kodeAnggota || "";
+  const nama = selectedRow?.nama || "";
+  const jenKel = selectedRow?.jenKel || "";
+  const tempatLahir = selectedRow?.tempatLahir || "";
+  const tanggalLahir = selectedRow?.tanggalLahir || "";
+  const alamat = selectedRow?.alamat || "";
+  const noHP = selectedRow?.noHP || "";
 
-  const handleSave = async () => {
+  const handleSave = async (id) => {
     try {
-      const response = await editAnggota(item.id, editedData);
-      console.log("Record updated successfully:", response.data);
-      closeModal();
-      fetchData();
+      const updatedData = {
+        kodeAnggota: document.getElementById("kodeAnggota")?.value || "",
+        nama: document.getElementById("nama")?.value || "",
+        jenKel: document.getElementById("jenKel")?.value || "",
+        tempatLahir: document.getElementById("tempatLahir")?.value || "",
+        tanggalLahir: document.getElementById("tanggalLahir")?.value || "",
+        alamat: document.getElementById("alamat")?.value || "",
+        noHP: document.getElementById("noHP")?.value || "",
+      };
+
+      await editAnggota(id, updatedData);
+      onHide();
     } catch (error) {
-      console.error("Error updating record:", error);
+      console.log("Error updating data anggota: ", error);
     }
   };
-
   return (
     <>
-      <Form>
+      <Modal show={show} onHide={onHide} backdrop="static" keyboard={false}>
+        <Modal.Header closeButton>
+          <Modal.Title className="text-uppercase fw-bold">
+            Edit Data {nama}
+          </Modal.Title>
+        </Modal.Header>
         <Modal.Body>
-          <Form.Group>
-            <Form.Label>Kode Anggota</Form.Label>
-            <Form.Control
-              type="text"
-              name="kodeAnggota"
-              value={editedData.kodeAnggota}
-              onChange={handleInputChange}
-              required
-            />
-            <Form.Control.Feedback type="invalid">
-              Silahkan masukkan kode anggota terlebih dahulu.
-            </Form.Control.Feedback>
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Nama</Form.Label>
-            <Form.Control
-              type="text"
-              name="nama"
-              value={editedData.nama}
-              onChange={handleInputChange}
-              required
-            />
-            <Form.Control.Feedback type="invalid">
-              Silahkan masukkan nama anggota terlebih dahulu.
-            </Form.Control.Feedback>
-          </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label>Jenis Kelamin</Form.Label>
-            <Col>
-              <Form.Check
-                type="radio"
-                label="Pria"
-                name="jenKel"
-                value="Pria"
-                checked={editedData.jenKel === "Pria"}
-                onChange={handleInputChange}
-                required
-              />
-            </Col>
-            <Col>
-              <Form.Check
-                type="radio"
-                label="Wanita"
-                name="jenKel"
-                value="Wanita"
-                checked={editedData.jenKel === "Wanita"}
-                onChange={handleInputChange}
-                required
-              />
-            </Col>
-            <Form.Control.Feedback type="invalid">
-              Silahkan pilih jenis kelamin terlebih dahulu.
-            </Form.Control.Feedback>
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Tempat Lahir</Form.Label>
-            <Form.Control
-              type="text"
-              name="tempatLahir"
-              value={editedData.tempatLahir}
-              onChange={handleInputChange}
-              required
-            />
-            <Form.Control.Feedback type="invalid">
-              Silahkan masukkan tempat lahir terlebih dahulu.
-            </Form.Control.Feedback>
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Tanggal Lahir</Form.Label>
-            <InputGroup>
-              <Form.Control
-                type="date"
-                name="tanggalLahir"
-                value={editedData.tanggalLahir}
-                onChange={handleInputChange}
-                required
-              />
-              <InputGroup.Text id="basic-addon1">dd/mm/yyyy</InputGroup.Text>
-              <Form.Control.Feedback type="invalid">
-                Silahkan masukkan tanggal lahir anggota terlebih dahulu.
-              </Form.Control.Feedback>
-            </InputGroup>
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Alamat</Form.Label>
-            <Form.Control
-              as="textarea"
-              name="alamat"
-              value={editedData.alamat}
-              onChange={handleInputChange}
-              required
-            />
-            <Form.Control.Feedback type="invalid">
-              Silahkan masukkan alamat anggota terlebih dahulu.
-            </Form.Control.Feedback>
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>No. Mobile Phone</Form.Label>
-            <Form.Control
-              type="text"
-              name="noHP"
-              value={editedData.noHP}
-              onChange={handleInputChange}
-              required
-            />
-            <Form.Control.Feedback type="invalid">
-              Silahkan masukkan nomor hp anggota terlebih dahulu.
-            </Form.Control.Feedback>
-          </Form.Group>
+          <Form>
+            <Form.Group as={Row} className="mb-3">
+              <Col sm={4}>
+                <Form.Label className="my-0">Kode Anggota</Form.Label>
+              </Col>
+              <Col>
+                <Form.Control
+                  type="text"
+                  name="kodeAnggota"
+                  id="kodeAnggota"
+                  plaintext={kodeAnggota}
+                  defaultValue={kodeAnggota}
+                  disabled
+                  required
+                  className=""
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Col sm={4}>
+                <Form.Label className="">Nama</Form.Label>
+              </Col>
+              <Col>
+                <Form.Control
+                  type="text"
+                  name="nama"
+                  id="nama"
+                  defaultValue={nama}
+                  required
+                  className=""
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Col sm={4}>
+                <Form.Label className="">Jenis Kelamin</Form.Label>
+              </Col>
+              <Col className="d-flex flex-gap-1">
+                <Form.Check
+                  type="radio"
+                  label="Pria"
+                  name="jenKel"
+                  id="jenKel"
+                  value="Pria"
+                  defaultChecked={jenKel === "Pria"}
+                  required
+                  className=""
+                />
+                <Form.Check
+                  type="radio"
+                  label="Wanita"
+                  name="jenKel"
+                  id="jenKel"
+                  value="Wanita"
+                  defaultChecked={jenKel === "Wanita"}
+                  required
+                  className=""
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Col sm={4}>
+                <Form.Label className="">Tempat Lahir</Form.Label>
+              </Col>
+              <Col>
+                <Form.Control
+                  type="text"
+                  name="tempatLahir"
+                  id="tempatLahir"
+                  defaultValue={tempatLahir}
+                  required
+                  className=""
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Col sm={4}>
+                <Form.Label className="">Tanggal Lahir</Form.Label>
+              </Col>
+              <Col>
+                <Form.Control
+                  type="date"
+                  name="tanggalLahir"
+                  id="tanggalLahir"
+                  defaultValue={tanggalLahir}
+                  required
+                  className=""
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Col sm={4}>
+                <Form.Label className="">Alamat</Form.Label>
+              </Col>
+              <Col>
+                <Form.Control
+                  as="textarea"
+                  name="alamat"
+                  id="alamat"
+                  defaultValue={alamat}
+                  required
+                  className=""
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Col sm={4}>
+                <Form.Label className="">No. Mobile Phone</Form.Label>
+              </Col>
+              <Col>
+                <Form.Control
+                  type="text"
+                  name="noHP"
+                  id="noHP"
+                  value={noHP}
+                  onChange={() => event.target?.value.replace(/[^0-9]/g, "")}
+                  required
+                  className=""
+                />
+              </Col>
+            </Form.Group>
+          </Form>
         </Modal.Body>
-        <Form.Group>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={closeModal}>
-              Close
-            </Button>
-            <Button variant="primary" onClick={handleSave}>
-              Simpan
-            </Button>
-          </Modal.Footer>
-        </Form.Group>
-      </Form>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={onHide}>
+            Close
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => handleSave(selectedRow?.id || "")}
+          >
+            Simpan
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 }

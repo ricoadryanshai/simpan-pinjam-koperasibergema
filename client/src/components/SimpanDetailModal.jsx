@@ -6,6 +6,7 @@ import { deleteSimpanan } from "../utils/handle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { FaSearch } from "react-icons/fa";
+import { IMG_SERVER_PORT } from "../utils/server_port";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -161,7 +162,7 @@ export default function SimpanDetailModal(props) {
                 .map((transaction, index) => (
                   <tr className="text-center align-middle" key={index}>
                     <td>{index + startIndex}</td>
-                    <td>{transaction.tanggalSimpan}</td>
+                    <td>{formatDate(transaction.tanggalSimpan)}</td>
                     <td>{transaction.jenisSimpan}</td>
                     <td
                       style={{
@@ -177,7 +178,7 @@ export default function SimpanDetailModal(props) {
                     <td>
                       {transaction.uploadFile ? (
                         <img
-                          src={`src/server/uploads/image/${transaction.uploadFile}`}
+                          src={`${IMG_SERVER_PORT}/${transaction.uploadFile}`}
                           alt="Bukti Transfer"
                           style={{ maxWidth: "50px", cursor: "pointer" }}
                         />

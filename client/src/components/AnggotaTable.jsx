@@ -1,40 +1,34 @@
 import React from "react";
 import Table from "react-bootstrap/Table";
-import {
-  Button,
-  Card,
-  Container,
-  Modal,
-  Row,
-  Col,
-  OverlayTrigger,
-  Tooltip,
-  Pagination,
-} from "react-bootstrap";
+import { Button, Card, Container, Row, Col, Pagination } from "react-bootstrap";
 import AnggotaEditModal from "./AnggotaEditModal";
 import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
-import { formatDate } from "../utils/format";
-import { fetchAnggota } from "../utils/fetch";
-import { deleteMembers, handleEdit } from "../utils/handle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSquarePlus } from "@fortawesome/free-solid-svg-icons";
-import AnggotaTambahModal from "./FormTambahAnggota";
+import { deleteAnggota, getAnggota } from "../utils/api";
+import AnggotaTambahModal from "./AnggotaTambahModal";
+import AnggotaDetailModal from "./AnggotaDetailModal";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function AnggotaTable() {
   const [anggotaData, setAnggotaData] = React.useState([]);
-  const [showTambah, setShowTambah] = React.useState(false);
-  const [showEditModal, setShowEditModal] = React.useState(false);
-  const [selectedItem, setSelectedItem] = React.useState(null);
   const [input, setInput] = React.useState("");
   const [activePage, setActivePage] = React.useState(1);
+  const [showTambah, setShowTambah] = React.useState(false);
+  const [showDetail, setShowDetail] = React.useState(false);
+  const [showEdit, setShowEdit] = React.useState(false);
+  const [selectedRow, setSelectedRow] = React.useState([]);
 
   const fetchData = async () => {
-    const members = await fetchAnggota();
-    if (members) {
-      setAnggotaData(members);
+    try {
+      const data = await getAnggota();
+      if (data) {
+        setAnggotaData(data);
+      }
+    } catch (error) {
+      console.log("error fetching data Anggota: ", error);
     }
   };
 
@@ -42,12 +36,51 @@ export default function AnggotaTable() {
     fetchData();
   }, []);
 
-  const handleEditClick = (anggota) => {
-    handleEdit(anggota, setSelectedItem, setShowEditModal);
+  const handleModalShow = (modalType, map) => {
+    switch (modalType) {
+      case "tambah":
+        setShowTambah(true);
+        break;
+      case "edit":
+        setShowEdit(true);
+        setSelectedRow(map);
+        break;
+      case "detail":
+        setShowDetail(true);
+        setSelectedRow(map);
+        break;
+      default:
+        break;
+    }
   };
 
-  const handleDeleteWrapper = async (id) => {
-    await deleteMembers(id, setAnggotaData);
+  const handleModalClose = (modalType) => {
+    switch (modalType) {
+      case "tambah":
+        setShowTambah(false);
+        fetchData();
+        break;
+      case "detail":
+        setShowDetail(false);
+        fetchData();
+        break;
+      case "edit":
+        setShowEdit(false);
+        fetchData();
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleDeleteClick = async (id) => {
+    try {
+      await deleteAnggota(id);
+      await fetchData();
+      console.log("Data deleted successfully");
+    } catch (error) {
+      console.error("Error deleting data:", error);
+    }
   };
 
   const highlightSearchText = (text, search) => {
@@ -92,28 +125,6 @@ export default function AnggotaTable() {
     );
   };
 
-  const renderHeaderWithTooltip = (text, tooltipText, maxLength) => {
-    const renderedText =
-      text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
-
-    return (
-      <OverlayTrigger
-        placement="top"
-        overlay={<Tooltip id={`tooltip-${text}`}>{tooltipText}</Tooltip>}
-      >
-        <th
-          style={{
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {renderedText}
-        </th>
-      </OverlayTrigger>
-    );
-  };
-
   const indexOfLastEntry = activePage * ITEMS_PER_PAGE;
   const indexOfFirstEntry = indexOfLastEntry - ITEMS_PER_PAGE;
   const currentEntries = anggotaData.slice(indexOfFirstEntry, indexOfLastEntry);
@@ -122,7 +133,7 @@ export default function AnggotaTable() {
   return (
     <>
       <div className="d-flex justify-content-center">
-        <Card className="custom-container-child">
+        <Card className="custom-width">
           <Container fluid>
             <Card.Title className="fw-bold text-uppercase my-2">
               Data Anggota
@@ -133,7 +144,7 @@ export default function AnggotaTable() {
               <Col>
                 <Button
                   className="no-print"
-                  onClick={() => setShowTambah(true)}
+                  onClick={() => handleModalShow("tambah")}
                 >
                   Tambah Transaksi
                   <FontAwesomeIcon
@@ -159,43 +170,9 @@ export default function AnggotaTable() {
               <thead className="table-light">
                 <tr className="text-center align-middle table-info">
                   <th>No.</th>
-                  {renderHeaderWithTooltip(
-                    "Kode Anggota",
-                    "Kode untuk setiap anggota",
-                    10
-                  )}
-                  {renderHeaderWithTooltip("Nama", "Nama lengkap anggota", 15)}
-                  {renderHeaderWithTooltip(
-                    "Jenis Kelamin",
-                    "Jenis kelamin anggota",
-                    12
-                  )}
-                  {renderHeaderWithTooltip(
-                    "Tempat Lahir",
-                    "Tempat lahir anggota",
-                    15
-                  )}
-                  {renderHeaderWithTooltip(
-                    "Tanggal Lahir",
-                    "Tanggal lahir anggota",
-                    15
-                  )}
-                  {renderHeaderWithTooltip(
-                    "Alamat",
-                    "Alamat lengkap anggota",
-                    20
-                  )}
-                  {renderHeaderWithTooltip(
-                    "No. HP",
-                    "Nomor telepon anggota",
-                    10
-                  )}
-                  {renderHeaderWithTooltip(
-                    "Tanggal Daftar",
-                    "Tanggal bergabung anggota",
-                    15
-                  )}
-                  <th colSpan={2}>Aksi</th>
+                  <th>Kode Anggota</th>
+                  <th>Nama</th>
+                  <th colSpan={3}>Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -239,55 +216,21 @@ export default function AnggotaTable() {
                       <td>{startIndex + index}</td>
                       <td>{highlightSearchText(anggota.kodeAnggota)}</td>
                       <td className="text-start">
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={
-                            <Tooltip>
-                              <div style={{ maxWidth: "300px" }}>
-                                {anggota.nama}
-                              </div>
-                            </Tooltip>
-                          }
-                        >
-                          <span>
-                            {highlightSearchText(
-                              anggota.nama.length > 12
-                                ? anggota.nama.substring(0, 12) + "..."
-                                : anggota.nama
-                            )}
-                          </span>
-                        </OverlayTrigger>
+                        {highlightSearchText(anggota.nama)}
                       </td>
-                      <td>{anggota.jenKel}</td>
-                      <td>{highlightSearchText(anggota.tempatLahir)}</td>
-                      <td>{formatDate(anggota.tanggalLahir)}</td>
-                      <td className="text-start">
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={
-                            <Tooltip>
-                              <div style={{ maxWidth: "300px" }}>
-                                {anggota.alamat}
-                              </div>
-                            </Tooltip>
-                          }
+
+                      <td>
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleModalShow("detail", anggota)}
                         >
-                          <span>
-                            {highlightSearchText(
-                              anggota.alamat.length > 20
-                                ? anggota.alamat.substring(0, 20) + "..."
-                                : anggota.alamat
-                            )}
-                          </span>
-                        </OverlayTrigger>
+                          Detail
+                        </Button>
                       </td>
-                      <td>{highlightSearchText(anggota.noHP)}</td>
-                      <td>{formatDate(anggota.tanggalDaftar)}</td>
                       <td>
                         <Button
                           variant="warning"
-                          size="md"
-                          onClick={() => handleEditClick(anggota)}
+                          onClick={() => handleModalShow("edit", anggota)}
                         >
                           Edit
                         </Button>
@@ -295,8 +238,7 @@ export default function AnggotaTable() {
                       <td>
                         <Button
                           variant="danger"
-                          size="md"
-                          onClick={() => handleDeleteWrapper(anggota.id)}
+                          onClick={() => handleDeleteClick(anggota.id)}
                         >
                           Delete
                         </Button>
@@ -326,26 +268,23 @@ export default function AnggotaTable() {
         <Pagination.Last onClick={goToLastPage} />
       </Pagination>
 
-      <Modal
-        show={showEditModal}
-        onHide={() => setShowEditModal(false)}
-        backdrop="static"
-        keyboard={false}
-        size="md"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Data Anggota</Modal.Title>
-        </Modal.Header>
-        {showEditModal && selectedItem && (
-          <AnggotaEditModal
-            item={selectedItem}
-            closeModal={() => setShowEditModal(false)}
-            fetchData={fetchAnggota}
-          />
-        )}
-      </Modal>
+      <AnggotaTambahModal
+        show={showTambah}
+        onHide={() => handleModalClose("tambah")}
+        selectedRow={selectedRow}
+      />
 
-      <AnggotaTambahModal show={showTambah} onHide={setShowTambah(false)} />
+      <AnggotaDetailModal
+        show={showDetail}
+        onHide={() => handleModalClose("detail")}
+        selectedRow={selectedRow}
+      />
+
+      <AnggotaEditModal
+        show={showEdit}
+        onHide={() => handleModalClose("edit")}
+        selectedRow={selectedRow}
+      />
     </>
   );
 }

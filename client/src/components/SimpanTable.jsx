@@ -98,116 +98,110 @@ export default function SimpanTable() {
   }, []);
   return (
     <>
-      <Container fluid>
-        <Row className="pt-5">
-          <Col />
-          <Col sm={7}>
-            <Card>
-              <Container className="py-2">
-                <Card.Title className="fw-bold text-uppercase mb-2">
-                  <span>Data Simpanan Anggota</span>
-                </Card.Title>
-                <hr className="mt-2 mb-2" />
-                <Row className="mb-2">
-                  <Col />
-                  <Col>
-                    <div className="search-bar-container">
-                      <div className="input-wrapper">
-                        <FaSearch id="search-icon" />
-                        <input
-                          placeholder="Ketika untuk mencari data..."
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
-                <Table hover responsive size="sm">
-                  <thead className="table-info">
-                    <tr className="text-center align-middle">
-                      <th>No.</th>
-                      <th>Kode Anggota</th>
-                      <th>Nama</th>
-                      <th>Saldo</th>
-                      <th colSpan={3}>Aksi</th>
+      <div className="d-flex justify-content-center">
+        <Card>
+          <Container className="py-2">
+            <Card.Title className="fw-bold text-uppercase mb-2">
+              <span>Data Simpanan Anggota</span>
+            </Card.Title>
+            <hr className="mt-2 mb-2" />
+            <Row className="mb-2">
+              <Col />
+              <Col>
+                <div className="search-bar-container">
+                  <div className="input-wrapper">
+                    <FaSearch id="search-icon" />
+                    <input
+                      placeholder="Ketika untuk mencari data..."
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+              </Col>
+            </Row>
+            <Table hover responsive size="sm">
+              <thead className="table-info">
+                <tr className="text-center align-middle">
+                  <th>No.</th>
+                  <th>Kode Anggota</th>
+                  <th>Nama</th>
+                  <th>Saldo</th>
+                  <th colSpan={3}>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentEntries
+                  .filter((simpan) => {
+                    const inputString = input.toString().toLowerCase();
+                    return (
+                      (simpan.kodeAnggota &&
+                        simpan.kodeAnggota
+                          .toLowerCase()
+                          .includes(inputString)) ||
+                      (simpan.nama &&
+                        simpan.nama.toLowerCase().includes(inputString))
+                    );
+                  })
+                  .map((simpan, index) => (
+                    <tr className="text-center align-middle" key={index}>
+                      <td>{index + startIndex}</td>
+                      <td>{simpan.kodeAnggota}</td>
+                      <td className="text-start">{simpan.nama}</td>
+                      <td className="text-start">
+                        {formatRupiah(simpan.totalSaldo)}
+                      </td>
+                      <td>
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleDetailClick(simpan)}
+                        >
+                          Detail
+                        </Button>
+                      </td>
+                      <td>
+                        <Button
+                          variant="success"
+                          onClick={() => handleTambahClick(simpan)}
+                        >
+                          Simpan
+                        </Button>
+                      </td>
+                      <td>
+                        {simpan.totalSaldo > 0 ? (
+                          <Button
+                            variant="primary"
+                            onClick={() => handleAmbilClick(simpan)}
+                          >
+                            Ambil
+                          </Button>
+                        ) : null}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {currentEntries
-                      .filter((simpan) => {
-                        const inputString = input.toString().toLowerCase();
-                        return (
-                          (simpan.kodeAnggota &&
-                            simpan.kodeAnggota
-                              .toLowerCase()
-                              .includes(inputString)) ||
-                          (simpan.nama &&
-                            simpan.nama.toLowerCase().includes(inputString))
-                        );
-                      })
-                      .map((simpan, index) => (
-                        <tr className="text-center align-middle" key={index}>
-                          <td>{index + startIndex}</td>
-                          <td>{simpan.kodeAnggota}</td>
-                          <td className="text-start">{simpan.nama}</td>
-                          <td className="text-start">
-                            {formatRupiah(simpan.totalSaldo)}
-                          </td>
-                          <td>
-                            <Button
-                              variant="secondary"
-                              onClick={() => handleDetailClick(simpan)}
-                            >
-                              Detail
-                            </Button>
-                          </td>
-                          <td>
-                            <Button
-                              variant="success"
-                              onClick={() => handleTambahClick(simpan)}
-                            >
-                              Simpan
-                            </Button>
-                          </td>
-                          <td>
-                            {simpan.totalSaldo > 0 ? (
-                              <Button
-                                variant="primary"
-                                onClick={() => handleAmbilClick(simpan)}
-                              >
-                                Ambil
-                              </Button>
-                            ) : null}
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </Table>
-              </Container>
-            </Card>
-            <div className="d-flex justify-content-center mt-2">
-              <Pagination>
-                <Pagination.First onClick={goToFirstPage} />
-                <Pagination.Prev onClick={goToPrevPage} />
-                {[
-                  ...Array(Math.ceil(simpananData.length / ITEMS_PER_PAGE)),
-                ].map((_, index) => (
-                  <Pagination.Item
-                    key={index + 1}
-                    active={index + 1 === activePage}
-                    onClick={() => handlePageChange(index + 1)}
-                  >
-                    {index + 1}
-                  </Pagination.Item>
-                ))}
-                <Pagination.Next onClick={goToNextPage} />
-                <Pagination.Last onClick={goToLastPage} />
-              </Pagination>
-            </div>
-          </Col>
-          <Col />
-        </Row>
-      </Container>
+                  ))}
+              </tbody>
+            </Table>
+          </Container>
+        </Card>
+      </div>
+      <div className="d-flex justify-content-center mt-2">
+        <Pagination>
+          <Pagination.First onClick={goToFirstPage} />
+          <Pagination.Prev onClick={goToPrevPage} />
+          {[...Array(Math.ceil(simpananData.length / ITEMS_PER_PAGE))].map(
+            (_, index) => (
+              <Pagination.Item
+                key={index + 1}
+                active={index + 1 === activePage}
+                onClick={() => handlePageChange(index + 1)}
+              >
+                {index + 1}
+              </Pagination.Item>
+            )
+          )}
+          <Pagination.Next onClick={goToNextPage} />
+          <Pagination.Last onClick={goToLastPage} />
+        </Pagination>
+      </div>
 
       <SimpanDetailModal
         show={showDetailModal}

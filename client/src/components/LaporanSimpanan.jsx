@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useEffect, useState } from "react";
-import { Card, Col, Container, Row, Table } from "react-bootstrap";
+import { Card, Table } from "react-bootstrap";
 import { getLapSimpanan } from "../utils/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrint } from "@fortawesome/free-solid-svg-icons";
@@ -21,29 +21,23 @@ export const LaporanSimpanan = () => {
   }, []);
   return (
     <>
-      <Container fluid style={{ marginBottom: "6rem" }} className="margin-top">
-        <Row>
-          <Col />
-          <Col sm={10}>
-            <Card>
-              <Card.Header>
-                <div
-                  style={{ display: "flex", justifyContent: "space-between" }}
-                >
-                  <Card.Title
-                    style={{ textTransform: "uppercase", fontWeight: "bold" }}
-                  >
-                    Laporan Keuangan Gandaria Selatan -{" "}
-                    {new Date().getFullYear()}
-                  </Card.Title>
-                  <div>
-                    <FontAwesomeIcon
-                      icon={faPrint}
-                      onClick={handlePrint} // Tambahkan event handler untuk cetak
-                      style={{ cursor: "pointer" }}
-                      className="no-print"
-                    />
-                    {/* <ExcelFile
+      <div className="d-flex justify-content-center">
+        <Card className="custom-width-card">
+          <Card.Header>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <Card.Title
+                style={{ textTransform: "uppercase", fontWeight: "bold" }}
+              >
+                Laporan Keuangan Gandaria Selatan - {new Date().getFullYear()}
+              </Card.Title>
+              <div>
+                <FontAwesomeIcon
+                  icon={faPrint}
+                  onClick={handlePrint} // Tambahkan event handler untuk cetak
+                  style={{ cursor: "pointer" }}
+                  className="no-print"
+                />
+                {/* <ExcelFile
                       element={
                         <FontAwesomeIcon
                           icon={faFileExcel}
@@ -62,56 +56,49 @@ export const LaporanSimpanan = () => {
                         />
                       </ExcelSheet>
                     </ExcelFile> */}
-                  </div>
-                </div>
-              </Card.Header>
-              <Card.Body>
-                <Table borderless responsive>
-                  <thead>
-                    <tr className="text-center align-middle fs-7">
-                      <th>No.</th>
-                      <th style={{ borderInline: "solid 1px lightgray" }}>
-                        Kode Anggota
-                      </th>
-                      <th style={{ borderInline: "solid 1px lightgray" }}>
-                        Nama
-                      </th>
-                      <th>Total Simpanan</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lapSimpanan.map((laporan, index) => (
-                      <tr
-                        style={{ borderBlockStart: "solid 1px lightgray" }}
-                        className="align-middle"
-                        key={index}
-                      >
-                        <td className="text-center align-middle">
-                          {index + 1}
-                        </td>
-                        <td style={{ borderInline: "solid 1px lightgray" }}>
-                          {laporan.kodeAnggota}
-                        </td>
-                        <td
-                          style={{
-                            borderInline: "solid 1px lightgray",
-                          }}
-                        >
-                          {laporan.nama}
-                        </td>
-                        <td style={{ textAlign: "end" }}>
-                          {formatRupiah(laporan.totalSaldo)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col />
-        </Row>
-      </Container>
+              </div>
+            </div>
+          </Card.Header>
+          <Card.Body>
+            <Table borderless responsive>
+              <thead>
+                <tr className="text-center align-middle fs-7">
+                  <th>No.</th>
+                  <th style={{ borderInline: "solid 1px lightgray" }}>
+                    Kode Anggota
+                  </th>
+                  <th style={{ borderInline: "solid 1px lightgray" }}>Nama</th>
+                  <th>Total Simpanan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lapSimpanan.map((laporan, index) => (
+                  <tr
+                    style={{ borderBlockStart: "solid 1px lightgray" }}
+                    className="align-middle"
+                    key={index}
+                  >
+                    <td className="text-center align-middle">{index + 1}</td>
+                    <td style={{ borderInline: "solid 1px lightgray" }}>
+                      {laporan.kodeAnggota}
+                    </td>
+                    <td
+                      style={{
+                        borderInline: "solid 1px lightgray",
+                      }}
+                    >
+                      {laporan.nama}
+                    </td>
+                    <td style={{ textAlign: "end" }}>
+                      {formatRupiah(laporan.totalSaldo)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </Card.Body>
+        </Card>
+      </div>
     </>
   );
   function formatRupiah(angka) {

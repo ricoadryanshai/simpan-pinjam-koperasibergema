@@ -1,18 +1,8 @@
-import { deleteAnggota, deleteSimpan, deleteTransaksi } from "./api";
+import { deleteSimpan, deleteTransaksi } from "./api";
 
 export const handleEdit = (item, setSelectedItem, setShowEditModal) => {
   setSelectedItem(item);
   setShowEditModal(true);
-};
-
-export const deleteMembers = async (id, setData) => {
-  try {
-    await deleteAnggota(id);
-    setData((prevTransaksi) => prevTransaksi.filter((item) => item.id !== id));
-    console.log("Data deleted successfully");
-  } catch (error) {
-    console.error("Error deleting data:", error);
-  }
 };
 
 export const deleteTransaction = async (id, setData) => {

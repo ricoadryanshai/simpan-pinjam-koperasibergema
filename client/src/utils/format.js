@@ -6,8 +6,12 @@ export const formatDate = (dateString) => {
     return "dd/mm/yyyy";
   }
 
-  const options = { year: "numeric", month: "2-digit", day: "2-digit" };
-  const formattedDate = inputDate.toLocaleDateString("en-GB", options);
+  const options = {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  };
+  const formattedDate = inputDate.toLocaleDateString("id-ID", options);
   return formattedDate;
 };
 

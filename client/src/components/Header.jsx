@@ -41,7 +41,7 @@ export default function Header() {
               <Offcanvas.Title id="offcanvasNavbarLabel-expand-lg">
                 <img
                   alt="Logo Gandaria Selatan"
-                  src="logo-gansel.png"
+                  src="/logo-gansel.png"
                   width="50"
                 />{" "}
                 <span style={{ fontWeight: "700", textTransform: "uppercase" }}>
