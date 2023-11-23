@@ -2,19 +2,16 @@
 import React from "react";
 import AnggotaTable from "../components/AnggotaTable";
 import FormTambahAnggota from "../components/FormTambahAnggota";
-import { Tab, Tabs } from "react-bootstrap";
+import { Tab, Tabs, Container } from "react-bootstrap";
 
 export default function Anggota() {
   return (
     <>
-      <Tabs
-        defaultActiveKey="key-1"
-        className="mb-3"
-        fill
-        style={{ marginTop: "6rem" }}
-      >
+      <Tabs defaultActiveKey="key-1" className="mb-3" fill>
         <Tab eventKey="key-1" title="Data Anggota">
-          <AnggotaTable />
+          <Container fluid>
+            <AnggotaTable />
+          </Container>
         </Tab>
         <Tab eventKey="key-2" title="Penambahan Anggota">
           <FormTambahAnggota />

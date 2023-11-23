@@ -20,7 +20,11 @@ export default function Header() {
       >
         <Container fluid>
           <Navbar.Brand href="/">
-            <img alt="Logo Gandaria Selatan" src="logo-gansel.png" width="50" />{" "}
+            <img
+              alt="Logo Gandaria Selatan"
+              src="/logo-gansel.png"
+              width="50"
+            />{" "}
             <span style={{ fontWeight: "700", textTransform: "uppercase" }}>
               Gandaria Selatan
             </span>

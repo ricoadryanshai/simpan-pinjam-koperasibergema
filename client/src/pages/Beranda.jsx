@@ -6,17 +6,10 @@ import { BerandaSummaryCard } from "../components/BerandaSummaryCard";
 export default function Beranda() {
   return (
     <>
-      <Container
-        fluid
-        style={{
-          marginTop: "6rem",
-          marginBottom: "6rem",
-          display: "flex",
-          gap: "1rem",
-          flexWrap: "wrap",
-        }}
-      >
-        <BerandaSummaryCard />
+      <Container fluid>
+        <div className="d-flex flex-gap-1 flex-wrap custom-container-child">
+          <BerandaSummaryCard />
+        </div>
       </Container>
     </>
   );

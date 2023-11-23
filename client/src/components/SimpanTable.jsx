@@ -98,7 +98,7 @@ export default function SimpanTable() {
   }, []);
   return (
     <>
-      <Container fluid className="my-5">
+      <Container fluid>
         <Row className="pt-5">
           <Col />
           <Col sm={7}>

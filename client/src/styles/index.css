@@ -5,6 +5,9 @@
   padding: 0;
   font-family: "Inter", sans-serif;
 }
+.flex-gap-1 {
+  gap: 1rem;
+}
 @media print {
   .no-print {
     display: none;
@@ -25,35 +28,9 @@
   }
 }
 
-/* Untuk layar kecil (<= 767px) */
-@media (max-width: 767px) {
-  .custom-container {
-    padding-bottom: 5rem;
-  }
-
-  .custom-col {
-    width: 100%;
-    margin-bottom: rem;
-  }
-}
-
-/* Untuk layar medium (768px - 991px) */
-@media (min-width: 768px) and (max-width: 991px) {
-  .custom-col {
-    width: 33.33%;
-  }
-}
-
-/* Untuk layar besar (992px - 1199px) */
-@media (min-width: 992px) and (max-width: 1199px) {
-  .custom-col {
-    width: 25%;
-  }
-}
-
 /* Untuk layar sangat besar (>= 1200px) */
 @media (min-width: 1200px) {
-  .custom-col {
-    width: 20%;
+  .custom-container-child {
+    max-width: 1200px;
   }
 }
