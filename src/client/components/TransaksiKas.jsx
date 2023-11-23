@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React from "react";
 import {
   Button,
@@ -102,7 +103,7 @@ export default function TransaksiKas() {
                 <div className="input-wrapper">
                   <FaSearch id="search-icon" />
                   <input
-                    placeholder="Ketika untuk mencari data..."
+                    placeholder="Ketik untuk mencari data..."
                     onChange={(e) => setInput(e.target.value)}
                   />
                 </div>

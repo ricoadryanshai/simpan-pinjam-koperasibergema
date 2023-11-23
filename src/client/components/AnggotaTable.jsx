@@ -117,9 +117,9 @@ export default function AnggotaTable() {
   const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
   return (
     <>
-      <Container fluid className="pb-5 custom-container" as={Row}>
-        <Col className="custom-col" />
-        <Col className="custom-col">
+      <Container fluid className="pb-5 " as={Row}>
+        <Col />
+        <Col>
           <Card>
             <Container fluid>
               <Card.Title className="fw-bold text-uppercase my-2">
@@ -134,14 +134,14 @@ export default function AnggotaTable() {
                     <div className="input-wrapper">
                       <FaSearch id="search-icon" />
                       <input
-                        placeholder="Ketika untuk mencari data..."
+                        placeholder="Ketik untuk mencari data..."
                         onChange={(e) => setInput(e.target.value)}
                       />
                     </div>
                   </div>
                 </Col>
               </Row>
-              <Table hover responsive size="sm">
+              <Table hover responsive size="" className="table-responsive">
                 <thead className="table-light">
                   <tr className="text-center align-middle table-info">
                     <th>No.</th>
