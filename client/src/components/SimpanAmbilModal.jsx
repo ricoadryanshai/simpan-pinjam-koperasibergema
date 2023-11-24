@@ -1,6 +1,5 @@
 /* eslint-disable react/prop-types */
-// eslint-disable-next-line no-unused-vars
-import React, { useState } from "react";
+import React from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { tambahSimpan } from "../utils/api";
 import { formatNumber } from "../utils/format";
@@ -8,8 +7,8 @@ import { formatNumber } from "../utils/format";
 export default function SimpanAmbilModal(props) {
   const { show, onClose, rowData, clearModalData, fetchData } = props;
 
-  const [inputNominal, setInputNominal] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [inputNominal, setInputNominal] = React.useState("");
+  const [selectedFile, setSelectedFile] = React.useState(null);
 
   const handleInputChange = (event) => {
     // Hapus karakter selain angka dan tanda minus (untuk nilai negatif)
@@ -65,7 +64,6 @@ export default function SimpanAmbilModal(props) {
       console.error("Error posting data:", error);
     }
   };
-
   return (
     <>
       <Modal

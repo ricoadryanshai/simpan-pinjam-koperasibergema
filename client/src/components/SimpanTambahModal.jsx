@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
-import { tambahSimpan } from "../utils/api";
+import { getPengaturan, tambahSimpan } from "../utils/api";
 import { formatNumber } from "../utils/format";
 import { handleInputChange } from "../utils/handle";
 
@@ -11,6 +11,7 @@ export default function SimpanTambahModal(props) {
   const [Dropdown, setDropdown] = React.useState("");
   const [inputNominal, setInputNominal] = React.useState("");
   const [selectedFile, setSelectedFile] = React.useState(null);
+  const [fetchPengaturan, setFetchPengaturan] = React.useState([]);
 
   const handleInput = (event) => {
     handleInputChange(event, setInputNominal);
@@ -58,10 +59,18 @@ export default function SimpanTambahModal(props) {
 
     switch (selectedOption) {
       case "Simpanan Pokok":
-        setInputNominal("300000");
+        setInputNominal(
+          fetchPengaturan.length > 0
+            ? fetchPengaturan[0]?.simpananPokok || 0
+            : 0
+        );
         break;
       case "Simpanan Wajib":
-        setInputNominal("250000");
+        setInputNominal(
+          fetchPengaturan.length > 0
+            ? fetchPengaturan[0]?.simpananWajib || 0
+            : 0
+        );
         break;
       default:
         setInputNominal("");
@@ -72,6 +81,18 @@ export default function SimpanTambahModal(props) {
   const isInputNominalReadOnly =
     Dropdown === "Simpanan Pokok" || Dropdown === "Simpanan Wajib";
 
+  const fecthedData = async () => {
+    try {
+      const data = await getPengaturan();
+      setFetchPengaturan(data);
+    } catch (error) {
+      console.log("Error fetching pengaturan: ", error);
+    }
+  };
+
+  React.useEffect(() => {
+    fecthedData();
+  }, [show]);
   return (
     <>
       <Modal

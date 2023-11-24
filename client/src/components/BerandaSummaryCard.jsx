@@ -30,7 +30,7 @@ export const BerandaSummaryCard = () => {
         style={{ minWidth: "421.33px" }}
       >
         <Container className="p-1">
-          <h3 className="pb-2 text-uppercase fw-bold border-bottom">
+          <h3 className="pb-2 text-uppercase fw-bold border-bottom border-2">
             Pinjaman
           </h3>
           <div className="d-flex justify-content-between">
@@ -54,7 +54,7 @@ export const BerandaSummaryCard = () => {
         style={{ minWidth: "421.33px" }}
       >
         <Container className="p-1">
-          <h3 className="pb-2 text-uppercase fw-bold border-bottom">
+          <h3 className="pb-2 text-uppercase fw-bold border-bottom border-2">
             Simpanan {currentMonth} {new Date().getFullYear()}
           </h3>
           <div className="d-flex justify-content-between">
@@ -78,7 +78,7 @@ export const BerandaSummaryCard = () => {
         style={{ minWidth: "421.33px" }}
       >
         <Container className="p-1">
-          <h3 className="pb-2 text-uppercase fw-bold border-bottom">
+          <h3 className="pb-2 text-uppercase fw-bold border-bottom border-2">
             Data Anggota
           </h3>
           <div className="d-flex justify-content-between">

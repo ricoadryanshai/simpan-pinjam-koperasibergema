@@ -1,19 +1,25 @@
 /* eslint-disable react/prop-types */
-// eslint-disable-next-line no-unused-vars
 import React from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { editAnggota } from "../utils/api";
 
 export default function AnggotaEditModal(props) {
   const { show, onHide, selectedRow } = props;
+  const { kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP } =
+    selectedRow;
 
-  const kodeAnggota = selectedRow?.kodeAnggota || "";
-  const nama = selectedRow?.nama || "";
-  const jenKel = selectedRow?.jenKel || "";
-  const tempatLahir = selectedRow?.tempatLahir || "";
-  const tanggalLahir = selectedRow?.tanggalLahir || "";
-  const alamat = selectedRow?.alamat || "";
-  const noHP = selectedRow?.noHP || "";
+  const [noHpData, setNoHp] = React.useState("");
+
+  React.useEffect(() => {
+    if (selectedRow && noHP) {
+      setNoHp(noHP);
+    }
+  }, [selectedRow, noHP]);
+
+  const handleInputChange = (e) => {
+    const formattedValue = e.target.value.replace(/[^0-9]/g, "");
+    setNoHp(formattedValue);
+  };
 
   const handleSave = async (id) => {
     try {
@@ -156,8 +162,8 @@ export default function AnggotaEditModal(props) {
                   type="text"
                   name="noHP"
                   id="noHP"
-                  value={noHP}
-                  onChange={() => event.target?.value.replace(/[^0-9]/g, "")}
+                  value={noHpData}
+                  onChange={(e) => handleInputChange(e)}
                   required
                   className=""
                 />

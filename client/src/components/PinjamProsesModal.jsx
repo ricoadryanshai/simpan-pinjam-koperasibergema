@@ -3,7 +3,7 @@
 import React from "react";
 import { Button, Col, Modal, Row, Table } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
-import { postPinjam } from "../utils/api";
+import { getPengaturan, postPinjam } from "../utils/api";
 
 export const PinjamProsesModal = (props) => {
   const {
@@ -16,15 +16,27 @@ export const PinjamProsesModal = (props) => {
     fungsiLoad,
   } = props;
 
+  const [fetchPengaturan, setFetchPengaturan] = React.useState([]);
+
   const kodeAnggota = savedData?.kodeAnggota || "";
   const nama = savedData?.nama || "";
   const tanggalTransaksi = formatDate(savedData?.tanggalTransaksi || "");
   const nominalTransaksi = parseFloat(savedData?.nominalTransaksi || 0);
   const angsuran = parseFloat(savedData?.angsuran || 1);
+  const bungaAngsuran =
+    fetchPengaturan.length > 0 ? fetchPengaturan[0]?.bungaAngsuran || 0 : 0;
 
   const biayaAngsuran = nominalTransaksi / angsuran;
-  const jasaUang = nominalTransaksi * 0.02;
+  const jasaUang = nominalTransaksi * (bungaAngsuran / 100);
   const totalBayar = biayaAngsuran + jasaUang;
+
+  const fetchedPengaturan = async () => {
+    try {
+      setFetchPengaturan(await getPengaturan());
+    } catch (error) {
+      console.log("Error fetching pengaturan: ", error);
+    }
+  };
 
   const handleProsesClick = () => {
     postPinjam(savedData)
@@ -40,6 +52,10 @@ export const PinjamProsesModal = (props) => {
         alert("Gagal menambahkan data", error);
       });
   };
+
+  React.useEffect(() => {
+    fetchedPengaturan();
+  }, [show]);
   return (
     <>
       <Modal
