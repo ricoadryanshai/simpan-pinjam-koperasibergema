@@ -40,13 +40,16 @@ export const BerandaSummaryCard = () => {
             Pinjaman
           </Card.Title>
           <Card.Text>
-            Transaksi Bulan Ini: <span className="fw-bold">Rp 0,00</span>
+            Transaksi Pinjam {currentMonth}:{" "}
+            <span className="fw-bold">{formatRupiah(beranda.pinjamBulan)}</span>
           </Card.Text>
           <Card.Text>
-            Jumlah Tagihan Tahun Ini: <span className="fw-bold">Rp 0,00</span>
+            Jumlah Tagihan {new Date().getFullYear()}:{" "}
+            <span className="fw-bold">Rp 0,00</span>
           </Card.Text>
           <Card.Text>
-            Sisa Tagihan Tahun Ini: <span className="fw-bold">Rp 0,00</span>
+            Sisa Tagihan {new Date().getFullYear()}:{" "}
+            <span className="fw-bold">Rp 0,00</span>
           </Card.Text>
         </Container>
         <FontAwesomeIcon icon={faLandmark} className="floating-icon" />

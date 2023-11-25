@@ -111,11 +111,22 @@ app.get("/get/statistik", async (req, res) => {
         MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
         AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`);
 
+    const pinjamBulan = await getQueryResult(`
+      SELECT
+        SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Pinjam' THEN nominalTransaksi ELSE 0 END) AS pinjamBulan
+      FROM
+        tbl_pinjam
+      WHERE
+        MONTH(tbl_pinjam.tanggalTransaksi) = MONTH(CURRENT_DATE())
+        AND YEAR(tbl_pinjam.tanggalTransaksi) = YEAR(CURRENT_DATE())
+    `);
+
     res.status(200).json({
       jumlahAnggota: jumlahAnggota.jumlahAnggota,
       jumlahSimpanan: jumlahSimpanan.jumlahSimpanan,
       penarikanSimpanan: penarikanSimpanan.penarikanSimpanan,
       jumlahSaldo: jumlahSaldo.jumlahSaldo,
+      pinjamBulan: pinjamBulan.pinjamBulan,
     });
   } catch (error) {
     console.error("Error fetching data: " + error.message);

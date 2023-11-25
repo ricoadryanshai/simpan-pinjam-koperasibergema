@@ -64,6 +64,7 @@ export const PinjamProsesModal = (props) => {
         backdrop="static"
         keyboard={false}
         size="lg"
+        scrollable={true}
       >
         <Modal.Header closeButton>
           <Modal.Title className="fw-bold text-uppercase">
@@ -102,9 +103,9 @@ export const PinjamProsesModal = (props) => {
               <thead className="table-info">
                 <tr>
                   <th className="text-center">No.</th>
-                  <th>Angsuran</th>
-                  <th>Jasa Uang</th>
-                  <th>Total Bayar</th>
+                  <th>Angsuran Pokok</th>
+                  <th>Angsuran Jasa</th>
+                  <th>Angsuran/Bulan</th>
                 </tr>
               </thead>
               <tbody>
