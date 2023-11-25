@@ -146,7 +146,7 @@ export default function AnggotaTable() {
                   className="no-print"
                   onClick={() => handleModalShow("tambah")}
                 >
-                  Tambah Transaksi
+                  Tambah Anggota
                   <FontAwesomeIcon
                     icon={faSquarePlus}
                     size="lg"
