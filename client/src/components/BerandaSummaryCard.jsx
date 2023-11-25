@@ -35,15 +35,15 @@ export const BerandaSummaryCard = () => {
           </h3>
           <div className="d-flex justify-content-between">
             <span>Transaksi Bulan Ini</span>
-            <span></span>
+            <span className="fw-bold"></span>
           </div>
           <div className="d-flex justify-content-between">
             <span>Jumlah Tagihan Tahun Ini</span>
-            <span></span>
+            <span className="fw-bold"></span>
           </div>
           <div className="d-flex justify-content-between">
             <span>Sisa Tagihan Tahun Ini</span>
-            <span></span>
+            <span className="fw-bold"></span>
           </div>
         </Container>
       </Card>
@@ -59,15 +59,19 @@ export const BerandaSummaryCard = () => {
           </h3>
           <div className="d-flex justify-content-between">
             <span>Jumlah Simpanan</span>
-            <span>{formatRupiah(beranda.jumlahSimpanan)}</span>
+            <span className="fw-bold">
+              {formatRupiah(beranda.jumlahSimpanan)}
+            </span>
           </div>
           <div className="d-flex justify-content-between">
             <span>Penarikan Simpanan</span>
-            <span>{formatRupiah(beranda.penarikanSimpanan)}</span>
+            <span className="fw-bold">
+              {formatRupiah(beranda.penarikanSimpanan)}
+            </span>
           </div>
           <div className="d-flex justify-content-between">
             <span>Jumlah Saldo Simpanan</span>
-            <span>{formatRupiah(beranda.jumlahSaldo)}</span>
+            <span className="fw-bold">{formatRupiah(beranda.jumlahSaldo)}</span>
           </div>
         </Container>
       </Card>
@@ -83,7 +87,7 @@ export const BerandaSummaryCard = () => {
           </h3>
           <div className="d-flex justify-content-between">
             <span>Jumlah Anggota Terdaftar</span>
-            <span>{beranda.jumlahAnggota}</span>
+            <span className="fw-bold">{beranda.jumlahAnggota}</span>
           </div>
           <div />
           <div />
