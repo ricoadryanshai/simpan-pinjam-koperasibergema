@@ -254,19 +254,7 @@ export const getTransaksi = async () => {
 
 export const tambahTransaksi = async (transaksiData) => {
   try {
-    const response = await axios.post(
-      `${API_ENDPOINT}/post/transaksi`,
-      transaksiData
-    );
-
-    console.log(response);
-
-    if (response.status === 200) {
-      console.log("Data added successfully");
-      return response.data;
-    } else {
-      throw new Error("Failed to add data");
-    }
+    await axios.post(`${API_ENDPOINT}/post/transaksi`, transaksiData);
   } catch (error) {
     console.error("Error adding data:", error.message);
     throw new Error("Internal Server Error");
@@ -278,13 +266,7 @@ export const deleteTransaksi = async (transaksiId) => {
     const deleteResponse = await axios.delete(
       `${API_ENDPOINT}/delete/transaksi/${transaksiId}`
     );
-
-    if (deleteResponse.status === 200) {
-      console.log("Data deleted successfully");
-      return deleteResponse.data;
-    } else {
-      throw new Error("Failed to delete data");
-    }
+    return deleteResponse.data;
   } catch (error) {
     console.error("Error deleting data:", error.message);
     throw new Error("Internal Server Error");

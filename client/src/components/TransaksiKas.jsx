@@ -8,7 +8,6 @@ import {
   Row,
   Col,
 } from "react-bootstrap";
-import { TransaksiTambahModal } from "./TransaksiTambahModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPenToSquare,
@@ -16,10 +15,10 @@ import {
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 import { FaSearch } from "react-icons/fa";
+import { TransaksiTambahModal } from "./TransaksiTambahModal";
 import { TransaksiEditModal } from "./TransaksiEditModal";
-import { fetchTransaksi } from "../utils/fetch";
 import { formatDate, formatRupiah } from "../utils/format";
-import { deleteTransaction } from "../utils/handle";
+import { deleteTransaksi, getTransaksi } from "../utils/api";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -27,28 +26,56 @@ export default function TransaksiKas() {
   const [transaksi, setTransaksi] = React.useState([]);
   const [showTambah, setShowTambah] = React.useState(false);
   const [showEdit, setShowEdit] = React.useState(false);
-  const [selectedItem, setSelectedItem] = React.useState(null);
+  const [selectedRow, setSelectedRow] = React.useState({});
   const [input, setInput] = React.useState("");
   const [activePage, setActivePage] = React.useState(1);
 
-  const handleDeleteWrapper = async (id) => {
-    await deleteTransaction(id, setTransaksi);
+  const fetchedData = async () => {
+    try {
+      const data = await getTransaksi();
+      setTransaksi(data);
+    } catch (error) {
+      console.log("Error fetching data transaksi: ", error);
+    }
   };
 
-  const handleEdit = (transaksi) => {
-    handleEdit(transaksi, setSelectedItem, setShowEdit);
+  const handleModalShow = (modalType, transaksi) => {
+    switch (modalType) {
+      case "tambah":
+        setShowTambah(true);
+        break;
+      case "edit":
+        setShowEdit(true);
+        setSelectedRow(transaksi);
+        break;
+      default:
+        break;
+    }
   };
 
-  React.useEffect(() => {
-    const fetchData = async () => {
-      const transactions = await fetchTransaksi();
-      if (transactions) {
-        setTransaksi(transactions);
-      }
-    };
+  const handleModalClose = (modalType) => {
+    switch (modalType) {
+      case "tambah":
+        setShowTambah(false);
+        fetchedData();
+        break;
+      case "edit":
+        setShowEdit(false);
+        fetchedData();
+        break;
+      default:
+        break;
+    }
+  };
 
-    fetchData();
-  }, []);
+  const handleDeleteClick = async (id) => {
+    try {
+      await deleteTransaksi(id);
+      fetchedData();
+    } catch (error) {
+      console.log("Error deleting data transaksi: ", error);
+    }
+  };
 
   const handlePageChange = (pageNumber) => {
     setActivePage(pageNumber);
@@ -77,6 +104,10 @@ export default function TransaksiKas() {
   const currentEntries = transaksi.slice(indexOfFirstEntry, indexOfLastEntry);
 
   const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
+
+  React.useEffect(() => {
+    fetchedData();
+  }, []);
   return (
     <>
       <div className="d-flex justify-content-center">
@@ -90,7 +121,7 @@ export default function TransaksiKas() {
               <Col>
                 <Button
                   className="no-print"
-                  onClick={() => setShowTambah(true)}
+                  onClick={() => handleModalShow("tambah")}
                 >
                   Tambah Transaksi
                   <FontAwesomeIcon
@@ -160,7 +191,7 @@ export default function TransaksiKas() {
                       <td className="no-print">
                         <Button
                           variant="warning"
-                          onClick={() => handleEdit(transaksi)}
+                          onClick={() => handleModalShow("edit", transaksi)}
                         >
                           <FontAwesomeIcon
                             icon={faPenToSquare}
@@ -172,7 +203,7 @@ export default function TransaksiKas() {
                       <td className="no-print">
                         <Button
                           variant="danger"
-                          onClick={() => handleDeleteWrapper(transaksi.id)}
+                          onClick={() => handleDeleteClick(transaksi.id)}
                         >
                           <FontAwesomeIcon icon={faTrashCan} className="mx-1" />
                           Delete
@@ -207,16 +238,14 @@ export default function TransaksiKas() {
 
       <TransaksiTambahModal
         show={showTambah}
-        onHide={() => setShowTambah(false)}
+        onHide={() => handleModalClose("tambah")}
       />
 
-      {selectedItem && (
-        <TransaksiEditModal
-          show={showEdit}
-          onHide={() => setShowEdit(false)}
-          selectedTransaction={selectedItem}
-        />
-      )}
+      <TransaksiEditModal
+        show={showEdit}
+        onHide={() => handleModalClose("edit")}
+        selectedRow={selectedRow}
+      />
     </>
   );
 }

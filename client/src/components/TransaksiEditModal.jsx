@@ -2,70 +2,52 @@
 import React from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { editTransaksi } from "../utils/api";
+import { handleInputChange } from "../utils/handle";
+import { formatNumber } from "../utils/format";
 
 export const TransaksiEditModal = (props) => {
-  const { show, onHide, selectedTransaction } = props;
+  const { show, onHide, selectedRow } = props;
 
-  const [formValues, setFormValues] = React.useState(selectedTransaction);
+  const [input, setInput] = React.useState("");
 
-  const resetForm = () => {
-    setFormValues({
-      nominal: "",
-      tanggalTransaksi: "",
-      jenisTransaksi: "Pilih Jenis Transaksi",
-      keterangan: "",
-    });
-  };
+  const handleSubmitClick = async (id) => {
+    const updatedData = {
+      jenisTransaksi: document.getElementById("jenisTransaksi").value,
+      tanggalTransaksi: document.getElementById("tanggalTransaksi").value,
+      nominalTransaksi: input,
+      keterangan: document.getElementById("keterangan").value,
+    };
 
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setFormValues((prevValues) => ({
-      ...prevValues,
-      [name]: value,
-    }));
-  };
-
-  const handleNominalChange = (event) => {
-    // Hapus karakter selain angka dan tanda minus (untuk nilai negatif)
-    const formattedValue = event.target.value.replace(/[^0-9-]/g, "");
-
-    // Update state dengan angka yang telah diformat
-    setFormValues((prevValues) => ({
-      ...prevValues,
-      nominal: formattedValue,
-    }));
-  };
-
-  const handleSubmitChange = async () => {
     try {
-      const response = await editTransaksi(selectedTransaction.id, formValues);
-      // Reset formulir setelah berhasil mengubah data
-      console.log("Record updated successfully:", response.data);
-      resetForm();
-      onHide(); // Sembunyikan modal setelah berhasil mengubah data
+      await editTransaksi(id, updatedData);
+      onHide();
     } catch (error) {
       console.error("Error updating data:", error.message);
     }
   };
 
-  const formatNumber = (number) => {
-    // Memformat angka dengan pemisahan desimal setiap 3 digit
-    return new Intl.NumberFormat("id-ID").format(number);
+  const handleInput = (event) => {
+    handleInputChange(event, setInput);
   };
 
+  const id = selectedRow?.id || "";
+  const jenisTransaksi = selectedRow?.jenisTransaksi || "";
+  const tanggalTransaksi = selectedRow?.tanggalTransaksi || "";
+  const nominalTransaksi = selectedRow?.nominalTransaksi || "";
+  const keterangan = selectedRow?.keterangan || "";
+
+  React.useEffect(() => {
+    setInput(nominalTransaksi);
+  }, [show, nominalTransaksi]);
+
   return (
-    <Modal
-      show={show}
-      onHide={() => {
-        onHide();
-      }}
-    >
+    <Modal show={show} onHide={onHide}>
       <Modal.Header closeButton>
         <Modal.Title className="text-uppercase fw-bold">
           Ubah Transaksi
         </Modal.Title>
       </Modal.Header>
-      <Form onClick={handleSubmitChange}>
+      <Form>
         <Modal.Body>
           <Form.Group className="mb-2">
             <Form.Label>Tanggal Transaksi</Form.Label>
@@ -73,8 +55,8 @@ export const TransaksiEditModal = (props) => {
               type="date"
               placeholder="Pilih Tanggal"
               name="tanggalTransaksi"
-              value={formValues.tanggalTransaksi}
-              onChange={handleInputChange}
+              id="tanggalTransaksi"
+              defaultValue={tanggalTransaksi}
             />
           </Form.Group>
 
@@ -82,12 +64,12 @@ export const TransaksiEditModal = (props) => {
             <Form.Label>Jenis Transaksi</Form.Label>
             <Form.Select
               name="jenisTransaksi"
-              value={formValues.jenisTransaksi}
-              onChange={handleInputChange}
+              id="jenisTransaksi"
+              defaultValue={jenisTransaksi}
             >
               <option disabled>Pilih Jenis Transaksi</option>
-              <option>Transaksi Masuk</option>
-              <option>Transaksi Keluar</option>
+              <option value={"Transaksi Masuk"}>Transaksi Masuk</option>
+              <option value={"Transaksi Keluar"}>Transaksi Keluar</option>
             </Form.Select>
           </Form.Group>
 
@@ -96,9 +78,10 @@ export const TransaksiEditModal = (props) => {
             <Form.Control
               type="text"
               placeholder="Masukkan Nominal"
-              name="nominal"
-              value={formatNumber(formValues.nominal)}
-              onChange={handleNominalChange}
+              name="nominalTransaksi"
+              id="nominalTransaksi"
+              value={formatNumber(input)}
+              onChange={handleInput}
             />
           </Form.Group>
 
@@ -109,22 +92,21 @@ export const TransaksiEditModal = (props) => {
               rows={3}
               placeholder="Masukkan Keterangan"
               name="keterangan"
-              value={formValues.keterangan}
-              onChange={handleInputChange}
+              id="keterangan"
+              defaultValue={keterangan}
             />
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              onHide();
-              resetForm();
-            }}
-          >
+          <Button variant="secondary" onClick={onHide}>
             Close
           </Button>
-          <Button variant="primary" type="submit">
+          <Button
+            variant="primary"
+            onClick={() => {
+              handleSubmitClick(id);
+            }}
+          >
             Submit
           </Button>
         </Modal.Footer>

@@ -637,6 +637,7 @@ app.post("/post/angsuran", async (req, res) => {
   } = req.body;
 
   const insertPinjamQuery = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, nominalTransaksi, angsuran, tanggalTransaksi) VALUES (?, ?, ?, ?, ?)`;
+
   const pinjamValues = [
     kodeAnggota,
     jenisTransaksi,
@@ -690,35 +691,38 @@ app.get("/get/transaksi", (req, res) => {
 });
 
 app.post("/post/transaksi", async (req, res) => {
+  const { jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan } =
+    req.body;
+
+  // Query untuk menambahkan data ke tbl_transaksi
+  const insertQuery = `
+    INSERT INTO tbl_transaksi (jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  const values = [
+    jenisTransaksi,
+    tanggalTransaksi,
+    nominalTransaksi,
+    keterangan,
+  ];
+
   try {
-    const { jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan } =
-      req.body;
-
-    // Pastikan data yang dibutuhkan ada
-    if (!jenisTransaksi || !tanggalTransaksi || !nominalTransaksi) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    // Query untuk menambahkan data ke tbl_transaksi
-    const insertQuery = `
-      INSERT INTO tbl_transaksi (jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan)
-      VALUES (?, ?, ?, ?)
-    `;
-
-    // Eksekusi query dengan menggunakan prepared statement untuk menghindari SQL injection
-    const result = await getQueryResult(insertQuery, [
-      jenisTransaksi,
-      tanggalTransaksi,
-      nominalTransaksi,
-      keterangan,
-    ]);
-
-    res.status(200).json({
-      message: "Data added successfully",
-      insertedId: result.insertId,
+    db.query(insertQuery, values, (err, result) => {
+      if (err) {
+        console.error(
+          "Error inserting data into tbl_transaksi: " + err.sqlMessage
+        );
+        res
+          .status(500)
+          .json({ error: "Error inserting data into tbl_transaksi" });
+      } else {
+        console.log("Data inserted into tbl_transaksi successfully", result);
+        res.status(200).json({ insertId: result.insertId });
+      }
     });
   } catch (error) {
-    console.error("Error adding data:", error);
+    console.error("Error occurred: ", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
