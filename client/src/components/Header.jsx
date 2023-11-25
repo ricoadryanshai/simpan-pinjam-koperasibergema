@@ -16,14 +16,12 @@ export default function Header() {
         expand="lg"
         variant="dark"
         fixed="top"
-        style={{ backgroundColor: "#a11010" }}
+        className="custom-navbar-color"
       >
         <Container fluid>
           <Navbar.Brand href="/">
             <img alt="Logo Gansel" src="/kpgansel/logo-gansel.png" width="50" />{" "}
-            <span style={{ fontWeight: "700", textTransform: "uppercase" }}>
-              Gandaria Selatan
-            </span>
+            <span className="fw-bold text-uppercase">Gandaria Selatan</span>
           </Navbar.Brand>
 
           <Navbar.Toggle aria-controls="offcanvasNavbar-expand-lg" />
@@ -32,26 +30,22 @@ export default function Header() {
             id="offcanvasNavbar-expand-lg"
             aria-labelledby="offcanvasNavbarLabel-expand-lg"
             placement="end"
-            style={{ backgroundColor: "#a11010", color: "white" }}
+            className="custom-navbar-color"
           >
-            <Offcanvas.Header
-              closeButton
-              closeVariant="white"
-              className="border-bottom"
-            >
+            <Offcanvas.Header closeButton closeVariant="white">
               <Offcanvas.Title id="offcanvasNavbarLabel-expand-lg">
                 <img
                   alt="Logo Gansel"
                   src="/kpgansel/logo-gansel.png"
                   width="50"
                 />{" "}
-                <span style={{ fontWeight: "700", textTransform: "uppercase" }}>
+                <span className="fw-bold text-uppercase text-light">
                   Gandaria Selatan
                 </span>
               </Offcanvas.Title>
             </Offcanvas.Header>
             <Offcanvas.Body>
-              <Nav className="justify-content-end flex-grow-1 pe-3">
+              <Nav className="justify-content-end flex-grow-1 pe-5 text-light">
                 <Nav.Link as={NavLink} to="/">
                   Beranda
                 </Nav.Link>
@@ -73,6 +67,8 @@ export default function Header() {
                 <NavDropdown
                   title="Master Data"
                   id="offcanvasNavbarDropdown-expand-lg"
+                  placement="start"
+                  className="text-light"
                 >
                   <NavDropdown.Item as={NavLink} to={"/pengaturan/simpan"}>
                     Pengaturan Simpan

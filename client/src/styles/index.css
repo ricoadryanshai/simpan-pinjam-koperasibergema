@@ -31,6 +31,9 @@ body {
   opacity: 0.3; /* Opacity bisa disesuaikan */
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
+.custom-navbar-color {
+  background-color: #a11010;
+}
 /* Efek hover untuk perbesaran ikon */
 .position-relative:hover .floating-icon {
   transform: translate(-50%, -50%) scale(1.2); /* Perubahan skala saat hover */
