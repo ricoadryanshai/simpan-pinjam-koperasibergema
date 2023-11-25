@@ -206,6 +206,7 @@ export const postPinjam = async (data) => {
     throw error.response ? error.response.data : error.message;
   }
 };
+
 export const postAngsuran = async (data) => {
   try {
     const response = await axios.post(`${API_ENDPOINT}/post/angsuran`, data);

@@ -41,7 +41,9 @@ export const PinjamDetailModal = (props) => {
 
   React.useEffect(() => {
     if (show) {
-      fetchPinjamData(selectedRow?.kodeAnggota);
+      if (selectedRow) {
+        fetchPinjamData(selectedRow?.kodeAnggota);
+      }
     }
   }, [show, selectedRow]);
 

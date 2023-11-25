@@ -104,7 +104,7 @@ export default function PinjamTable() {
   return (
     <>
       <div className="d-flex justify-content-center">
-        <Card>
+        <Card className="custom-border-box">
           <Container className="py-2">
             <Card.Title className="fw-bold text-uppercase mb-2">
               Data Pinjaman Anggota

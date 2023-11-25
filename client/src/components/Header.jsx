@@ -20,11 +20,7 @@ export default function Header() {
       >
         <Container fluid>
           <Navbar.Brand href="/">
-            <img
-              alt="Logo Gandaria Selatan"
-              src="/logo-gansel.png"
-              width="50"
-            />{" "}
+            <img alt="Logo Gansel" src="/kpgansel/logo-gansel.png" width="50" />{" "}
             <span style={{ fontWeight: "700", textTransform: "uppercase" }}>
               Gandaria Selatan
             </span>
@@ -36,12 +32,17 @@ export default function Header() {
             id="offcanvasNavbar-expand-lg"
             aria-labelledby="offcanvasNavbarLabel-expand-lg"
             placement="end"
+            style={{ backgroundColor: "#a11010", color: "white" }}
           >
-            <Offcanvas.Header closeButton>
+            <Offcanvas.Header
+              closeButton
+              closeVariant="white"
+              className="border-bottom"
+            >
               <Offcanvas.Title id="offcanvasNavbarLabel-expand-lg">
                 <img
-                  alt="Logo Gandaria Selatan"
-                  src="/logo-gansel.png"
+                  alt="Logo Gansel"
+                  src="/kpgansel/logo-gansel.png"
                   width="50"
                 />{" "}
                 <span style={{ fontWeight: "700", textTransform: "uppercase" }}>
@@ -70,10 +71,12 @@ export default function Header() {
                   Laporan
                 </Nav.Link>
                 <NavDropdown
-                  title="Pengaturan"
+                  title="Master Data"
                   id="offcanvasNavbarDropdown-expand-lg"
                 >
-                  <NavDropdown.Item>Action</NavDropdown.Item>
+                  <NavDropdown.Item as={NavLink} to={"/pengaturan/simpan"}>
+                    Pengaturan Simpan
+                  </NavDropdown.Item>
                 </NavDropdown>
               </Nav>
             </Offcanvas.Body>

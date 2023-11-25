@@ -11,6 +11,7 @@ import {
   Laporan,
   Transaksi,
 } from "./pages/index";
+import { Pengaturan } from "./pages/Pengaturan";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/pinjaman" element={<Pinjaman />} />
           <Route path="/transaksi" element={<Transaksi />} />
           <Route path="/laporan" element={<Laporan />} />
+          <Route path="/pengaturan/simpan" element={<Pengaturan />} />
         </Routes>
         <Footer />
       </Router>

@@ -28,35 +28,51 @@ export default function AnggotaDetailModal(props) {
       </Modal.Header>
       <Modal.Body>
         <Row className="mb-2">
-          <Col sm={4}>Kode Anggota</Col>
+          <Col sm={4} className="fw-bold">
+            Kode Anggota
+          </Col>
           <Col>{kodeAnggota}</Col>
         </Row>
         <Row className="mb-2">
-          <Col sm={4}>Nama</Col>
+          <Col sm={4} className="fw-bold">
+            Nama
+          </Col>
           <Col>{nama}</Col>
         </Row>
         <Row className="mb-2">
-          <Col sm={4}>Jenis Kelamin</Col>
+          <Col sm={4} className="fw-bold">
+            Jenis Kelamin
+          </Col>
           <Col>{jenKel}</Col>
         </Row>
         <Row className="mb-2">
-          <Col sm={4}>Tempat Lahir</Col>
+          <Col sm={4} className="fw-bold">
+            Tempat Lahir
+          </Col>
           <Col>{tempatLahir}</Col>
         </Row>
         <Row className="mb-2">
-          <Col sm={4}>Tanggal Lahir</Col>
+          <Col sm={4} className="fw-bold">
+            Tanggal Lahir
+          </Col>
           <Col>{formatDate(tanggalLahir)}</Col>
         </Row>
         <Row className="mb-2">
-          <Col sm={4}>Alamat</Col>
+          <Col sm={4} className="fw-bold">
+            Alamat
+          </Col>
           <Col>{alamat}</Col>
         </Row>
         <Row className="mb-2">
-          <Col sm={4}>No. HP</Col>
+          <Col sm={4} className="fw-bold">
+            No. HP
+          </Col>
           <Col>{noHP}</Col>
         </Row>
         <Row className="mb-2">
-          <Col sm={4}>Tanggal Daftar</Col>
+          <Col sm={4} className="fw-bold">
+            Tanggal Daftar
+          </Col>
           <Col>{formatDate(tanggalDaftar)}</Col>
         </Row>
       </Modal.Body>

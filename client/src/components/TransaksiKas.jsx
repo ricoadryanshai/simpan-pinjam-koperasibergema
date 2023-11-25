@@ -80,7 +80,7 @@ export default function TransaksiKas() {
   return (
     <>
       <div className="d-flex justify-content-center">
-        <Card>
+        <Card className="custom-border-box">
           <Container className="pt-2 pb-2">
             <Card.Title className="text-uppercase fw-bold mb-2">
               Data Transaksi Kas

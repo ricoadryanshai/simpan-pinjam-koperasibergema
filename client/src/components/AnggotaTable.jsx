@@ -133,7 +133,7 @@ export default function AnggotaTable() {
   return (
     <>
       <div className="d-flex justify-content-center">
-        <Card className="custom-width">
+        <Card className="custom-border-box">
           <Container fluid>
             <Card.Title className="fw-bold text-uppercase my-2">
               Data Anggota
