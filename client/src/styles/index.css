@@ -22,6 +22,20 @@ body {
   min-width: 800px;
   min-height: 650px;
 }
+.floating-icon {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  font-size: 5rem;
+  transform: translate(-50%, -50%);
+  opacity: 0.3; /* Opacity bisa disesuaikan */
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+/* Efek hover untuk perbesaran ikon */
+.position-relative:hover .floating-icon {
+  transform: translate(-50%, -50%) scale(1.2); /* Perubahan skala saat hover */
+  opacity: 1; /* Ubah opacity saat hover */
+}
 @media print {
   .no-print {
     display: none;

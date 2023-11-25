@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { Card, Container } from "react-bootstrap";
 import { getBeranda } from "../utils/api";
 import { formatRupiah } from "../utils/format";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faLandmark,
+  faPiggyBank,
+  faUsers,
+} from "@fortawesome/free-solid-svg-icons";
 
 export const BerandaSummaryCard = () => {
   const [beranda, setBeranda] = useState([]);
@@ -26,72 +32,70 @@ export const BerandaSummaryCard = () => {
       <Card
         bg="danger"
         text="white"
-        className="p-2"
+        className="p-2 position-relative"
         style={{ minWidth: "421.33px" }}
       >
         <Container className="p-1">
-          <h3 className="pb-2 text-uppercase fw-bold border-bottom border-2">
+          <Card.Title className="pb-2 text-uppercase fw-bold border-bottom border-2">
             Pinjaman
-          </h3>
-          <div className="d-flex justify-content-between">
-            <span>Transaksi Bulan Ini</span>
-            <span className="fw-bold"></span>
-          </div>
-          <div className="d-flex justify-content-between">
-            <span>Jumlah Tagihan Tahun Ini</span>
-            <span className="fw-bold"></span>
-          </div>
-          <div className="d-flex justify-content-between">
-            <span>Sisa Tagihan Tahun Ini</span>
-            <span className="fw-bold"></span>
-          </div>
+          </Card.Title>
+          <Card.Text>
+            Transaksi Bulan Ini: <span className="fw-bold">Rp 0,00</span>
+          </Card.Text>
+          <Card.Text>
+            Jumlah Tagihan Tahun Ini: <span className="fw-bold">Rp 0,00</span>
+          </Card.Text>
+          <Card.Text>
+            Sisa Tagihan Tahun Ini: <span className="fw-bold">Rp 0,00</span>
+          </Card.Text>
         </Container>
+        <FontAwesomeIcon icon={faLandmark} className="floating-icon" />
       </Card>
       <Card
         bg="success"
         text="white"
-        className="p-2"
+        className="p-2 position-relative"
         style={{ minWidth: "421.33px" }}
       >
         <Container className="p-1">
-          <h3 className="pb-2 text-uppercase fw-bold border-bottom border-2">
+          <Card.Title className="pb-2 text-uppercase fw-bold border-bottom border-2">
             Simpanan {currentMonth} {new Date().getFullYear()}
-          </h3>
-          <div className="d-flex justify-content-between">
-            <span>Jumlah Simpanan</span>
+          </Card.Title>
+          <Card.Text>
+            Jumlah Simpanan:{" "}
             <span className="fw-bold">
               {formatRupiah(beranda.jumlahSimpanan)}
             </span>
-          </div>
-          <div className="d-flex justify-content-between">
-            <span>Penarikan Simpanan</span>
+          </Card.Text>
+          <Card.Text>
+            Penarikan Simpanan:{" "}
             <span className="fw-bold">
               {formatRupiah(beranda.penarikanSimpanan)}
             </span>
-          </div>
-          <div className="d-flex justify-content-between">
-            <span>Jumlah Saldo Simpanan</span>
+          </Card.Text>
+          <Card.Text>
+            Jumlah Saldo Simpanan:{" "}
             <span className="fw-bold">{formatRupiah(beranda.jumlahSaldo)}</span>
-          </div>
+          </Card.Text>
         </Container>
+        <FontAwesomeIcon icon={faPiggyBank} className="floating-icon" />
       </Card>
       <Card
         bg="primary"
         text="white"
-        className="p-2"
+        className="p-2 position-relative"
         style={{ minWidth: "421.33px" }}
       >
         <Container className="p-1">
-          <h3 className="pb-2 text-uppercase fw-bold border-bottom border-2">
+          <Card.Title className="pb-2 text-uppercase fw-bold border-bottom border-2">
             Data Anggota
-          </h3>
-          <div className="d-flex justify-content-between">
-            <span>Jumlah Anggota Terdaftar</span>
+          </Card.Title>
+          <Card.Text>
+            Jumlah Anggota Terdaftar:{" "}
             <span className="fw-bold">{beranda.jumlahAnggota}</span>
-          </div>
-          <div />
-          <div />
+          </Card.Text>
         </Container>
+        <FontAwesomeIcon icon={faUsers} className="floating-icon" />
       </Card>
     </>
   );

@@ -5,7 +5,12 @@ import AnggotaEditModal from "./AnggotaEditModal";
 import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSquarePlus } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCircleInfo,
+  faPenToSquare,
+  faSquarePlus,
+  faTrashCan,
+} from "@fortawesome/free-solid-svg-icons";
 import { deleteAnggota, getAnggota } from "../utils/api";
 import AnggotaTambahModal from "./AnggotaTambahModal";
 import AnggotaDetailModal from "./AnggotaDetailModal";
@@ -147,11 +152,7 @@ export default function AnggotaTable() {
                   onClick={() => handleModalShow("tambah")}
                 >
                   Tambah Anggota
-                  <FontAwesomeIcon
-                    icon={faSquarePlus}
-                    size="lg"
-                    className="mx-1"
-                  />
+                  <FontAwesomeIcon icon={faSquarePlus} className="ms-1" />
                 </Button>
               </Col>
               <Col>
@@ -224,6 +225,10 @@ export default function AnggotaTable() {
                           variant="secondary"
                           onClick={() => handleModalShow("detail", anggota)}
                         >
+                          <FontAwesomeIcon
+                            icon={faCircleInfo}
+                            className="me-1"
+                          />
                           Detail
                         </Button>
                       </td>
@@ -232,6 +237,10 @@ export default function AnggotaTable() {
                           variant="warning"
                           onClick={() => handleModalShow("edit", anggota)}
                         >
+                          <FontAwesomeIcon
+                            icon={faPenToSquare}
+                            className="me-1"
+                          />
                           Edit
                         </Button>
                       </td>
@@ -240,6 +249,7 @@ export default function AnggotaTable() {
                           variant="danger"
                           onClick={() => handleDeleteClick(anggota.id)}
                         >
+                          <FontAwesomeIcon icon={faTrashCan} className="me-1" />
                           Delete
                         </Button>
                       </td>

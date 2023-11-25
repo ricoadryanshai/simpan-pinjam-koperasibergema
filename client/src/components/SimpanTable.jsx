@@ -16,6 +16,12 @@ import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
 import { fetchSimpanan } from "../utils/fetch";
 import { formatRupiah } from "../utils/format";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCircleInfo,
+  faMoneyBillTransfer,
+  faPiggyBank,
+} from "@fortawesome/free-solid-svg-icons";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -155,6 +161,10 @@ export default function SimpanTable() {
                           variant="secondary"
                           onClick={() => handleDetailClick(simpan)}
                         >
+                          <FontAwesomeIcon
+                            icon={faCircleInfo}
+                            className="me-1"
+                          />
                           Detail
                         </Button>
                       </td>
@@ -163,6 +173,10 @@ export default function SimpanTable() {
                           variant="success"
                           onClick={() => handleTambahClick(simpan)}
                         >
+                          <FontAwesomeIcon
+                            icon={faPiggyBank}
+                            className="me-1"
+                          />
                           Simpan
                         </Button>
                       </td>
@@ -172,6 +186,10 @@ export default function SimpanTable() {
                             variant="primary"
                             onClick={() => handleAmbilClick(simpan)}
                           >
+                            <FontAwesomeIcon
+                              icon={faMoneyBillTransfer}
+                              className="me-1"
+                            />
                             Ambil
                           </Button>
                         ) : null}

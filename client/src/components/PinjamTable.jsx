@@ -15,6 +15,12 @@ import { formatRupiah } from "../utils/format";
 import { PinjamTambahModal } from "./PinjamTambahModal";
 import { PinjamBayarModal } from "./PinjamBayarModal";
 import { getPinjamAnggota } from "../utils/api";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCircleInfo,
+  faLandmark,
+  faMoneyBill,
+} from "@fortawesome/free-solid-svg-icons";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -160,6 +166,10 @@ export default function PinjamTable() {
                           variant="secondary"
                           onClick={() => handleDetailClick(pinjam)}
                         >
+                          <FontAwesomeIcon
+                            icon={faCircleInfo}
+                            className="me-1"
+                          />
                           Detail
                         </Button>
                       </td>
@@ -169,6 +179,10 @@ export default function PinjamTable() {
                             variant="warning"
                             onClick={() => handlePinjamClick(pinjam)}
                           >
+                            <FontAwesomeIcon
+                              icon={faLandmark}
+                              className="me-1"
+                            />
                             Pinjam
                           </Button>
                         ) : (
@@ -176,6 +190,10 @@ export default function PinjamTable() {
                             variant="success"
                             onClick={() => handleBayarClick(pinjam)}
                           >
+                            <FontAwesomeIcon
+                              icon={faMoneyBill}
+                              className="me-1"
+                            />
                             Bayar
                           </Button>
                         )}
