@@ -26,7 +26,7 @@ export const BerandaSummaryCard = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [beranda]);
   return (
     <>
       <Card

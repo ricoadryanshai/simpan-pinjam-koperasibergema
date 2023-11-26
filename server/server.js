@@ -113,7 +113,7 @@ app.get("/get/statistik", async (req, res) => {
 
     const pinjamBulan = await getQueryResult(`
       SELECT
-        SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Pinjam' THEN nominalTransaksi ELSE 0 END) AS pinjamBulan
+        SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Pinjam' THEN angsuranPokok ELSE 0 END) AS pinjamBulan
       FROM
         tbl_pinjam
       WHERE
@@ -348,7 +348,7 @@ app.delete("/delete/simpan/:kodeAnggota/:id", (req, res) => {
         fs.unlink(filePath, (unlinkErr) => {
           if (unlinkErr) {
             console.error("Error deleting file:", unlinkErr);
-            fileDeleted = false; // Set fileDeleted to false if there's an error
+            fileDeleted = false;
           }
         });
       }
@@ -382,55 +382,19 @@ app.delete("/delete/simpan/:kodeAnggota/:id", (req, res) => {
 app.get("/get/pinjam", (req, res) => {
   const sqlQuery = `
     SELECT
-      kodeAnggota,
-      nama,
-      tanggalDaftar,
-      COALESCE(totalPinjam, 0) AS totalPinjam,
-      COALESCE(totalAngsuran, 0) AS totalAngsuran,
-      COALESCE(totalPinjam - totalAngsuran, 0) AS sisaHutang
-    FROM (
-      SELECT
-        tbl_anggota.kodeAnggota,
-        tbl_anggota.nama,
-        tbl_anggota.tanggalDaftar,
-        COALESCE(total_pinjaman.totalPinjam, 0) AS totalPinjam,
-        SUM(
-          CASE
-            WHEN tbl_angsuran.tanggalBayar IS NOT NULL OR tbl_angsuran.tanggalBayar <> '' THEN tbl_angsuran.uangAngsuran
-            ELSE 0
-          END
-        ) AS totalAngsuran
-      FROM
-        tbl_anggota
-      LEFT JOIN
-        (
-          SELECT 
-            kodeAnggota,
-            SUM(nominalTransaksi) AS totalPinjam
-          FROM
-            tbl_pinjam
-          WHERE
-            jenisTransaksi = 'Pinjam'
-          GROUP BY
-            kodeAnggota
-        ) AS total_pinjaman ON tbl_anggota.kodeAnggota = total_pinjaman.kodeAnggota
-      LEFT JOIN
-        tbl_pinjam ON tbl_anggota.kodeAnggota = tbl_pinjam.kodeAnggota
-      LEFT JOIN
-        tbl_angsuran ON tbl_pinjam.id = tbl_angsuran.idPinjam
-      GROUP BY
-        tbl_anggota.kodeAnggota
-    ) AS aggregatedResults
+      tbl_anggota.kodeAnggota,
+      tbl_anggota.nama,
+      tbl_anggota.tanggalDaftar,
+      COALESCE(SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Pinjam' THEN tbl_pinjam.angsuranPerBulan ELSE 0 END), 0) AS jumlahHutang,
+      COALESCE(SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Bayar' THEN tbl_pinjam.angsuranPerBulan ELSE 0 END), 0) AS jumlahBayar
+    FROM
+      tbl_anggota
+    LEFT JOIN
+      tbl_pinjam ON tbl_anggota.kodeAnggota = tbl_pinjam.kodeAnggota
+    GROUP BY
+      tbl_anggota.kodeAnggota, tbl_anggota.nama, tbl_anggota.tanggalDaftar
     ORDER BY
-      CASE
-        WHEN sisaHutang <> 0 THEN 0  -- Mengurutkan sisaHutang yang tidak 0 terlebih dahulu
-        ELSE 1  -- Mengurutkan sisaHutang yang 0 berdasarkan kodeAnggota
-      END,
-      CASE
-        WHEN sisaHutang <> 0 THEN kodeAnggota  -- Mengurutkan sisaHutang yang tidak 0 berdasarkan kodeAnggota
-        ELSE NULL  -- Untuk memisahkan data dengan sisaHutang 0 dari yang tidak 0
-      END ASC,
-      kodeAnggota ASC
+      tbl_anggota.kodeAnggota ASC
   `;
 
   db.query(sqlQuery, (err, results) => {
@@ -449,7 +413,7 @@ app.get("/get/pinjam/:kodeAnggota", (req, res) => {
   const { kodeAnggota } = req.params;
 
   const selectQuery = `
-    SELECT id, kodeAnggota, jenisTransaksi, nominalTransaksi, angsuran, tanggalTransaksi
+    SELECT *
     FROM tbl_pinjam
     WHERE kodeAnggota = ?
     ORDER BY createdAt DESC;
@@ -457,10 +421,8 @@ app.get("/get/pinjam/:kodeAnggota", (req, res) => {
 
   db.query(selectQuery, [kodeAnggota], (err, results) => {
     if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
+      console.error("Error fetching data:", err);
       res.status(500).json({ error: "Internal Server Error" });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: "Record not found" });
     } else {
       res.status(200).json(results);
     }
@@ -471,21 +433,39 @@ app.get("/get/bayar/:kodeAnggota", (req, res) => {
   const { kodeAnggota } = req.params;
 
   const selectQuery = `
-    SELECT *
-    FROM tbl_pinjam
-    WHERE kodeAnggota = ? AND jenisTransaksi = 'Pinjam'
-    ORDER BY createdAt DESC
-    LIMIT 1
+    SELECT
+      *
+    FROM
+      tbl_pinjam
+    WHERE
+      kodeAnggota = ? AND jenisTransaksi = 'Pinjam'
+    ORDER BY
+      createdAt DESC
+    LIMIT
+      1
   `;
 
   db.query(selectQuery, [kodeAnggota], (err, results) => {
     if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
+      console.error("Error fetching data:", err);
       res.status(500).json({ error: "Internal Server Error" });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: "Record not found" });
     } else {
-      res.status(200).json(results[0]);
+      res.status(200).json(results);
+    }
+  });
+});
+
+app.get("/get/angsuran/:idPinjam", (req, res) => {
+  const idPinjam = req.params.idPinjam;
+
+  const query = `SELECT id, idPinjam, uangAngsuran, jasaUang, totalBayar, tanggalBayar FROM tbl_angsuran WHERE idPinjam = ?`;
+
+  db.query(query, [idPinjam], (err, results) => {
+    if (err) {
+      console.error("Error fetching data:", err);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      res.status(200).json(results);
     }
   });
 });
@@ -494,18 +474,23 @@ app.post("/post/pinjam", async (req, res) => {
   const {
     kodeAnggota,
     jenisTransaksi,
-    nominalTransaksi,
     angsuran,
     tanggalTransaksi,
+    angsuranPokok,
+    angsuranJasa,
+    angsuranPerBulan,
   } = req.body;
 
-  const insertPinjamQuery = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, nominalTransaksi, angsuran, tanggalTransaksi) VALUES (?, ?, ?, ?, ?)`;
+  const insertPinjamQuery = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, angsuran, tanggalTransaksi, angsuranPokok, angsuranJasa, angsuranPerBulan) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
   const pinjamValues = [
     kodeAnggota,
     jenisTransaksi,
-    nominalTransaksi,
     angsuran,
     tanggalTransaksi,
+    angsuranPokok,
+    angsuranJasa,
+    angsuranPerBulan,
   ];
 
   try {
@@ -525,8 +510,8 @@ app.post("/post/pinjam", async (req, res) => {
     });
 
     // Calculate values for tbl_angsuran
-    const uangAngsuran = nominalTransaksi / angsuran;
-    const jasaUang = nominalTransaksi * 0.02;
+    const uangAngsuran = angsuranPokok / angsuran;
+    const jasaUang = angsuranPokok * 0.02;
     const totalBayar = uangAngsuran + jasaUang;
 
     // Create an array to hold values for multiple rows insertion into tbl_angsuran
@@ -560,7 +545,7 @@ app.post("/post/pinjam", async (req, res) => {
   }
 });
 
-app.delete("/delete/pinjam/:id", (req, res) => {
+app.delete("/delete/pinjam/:kodeAnggota/:id", (req, res) => {
   const { id } = req.params;
 
   // Query untuk menghapus data berdasarkan kodeAnggota dan id
@@ -622,39 +607,27 @@ app.put("/put/angsuran/:idPinjam", async (req, res) => {
   }
 });
 
-app.get("/get/angsuran/:idPinjam", (req, res) => {
-  const idPinjam = req.params.idPinjam;
-
-  const query = `SELECT id, idPinjam, uangAngsuran, jasaUang, totalBayar, tanggalBayar FROM tbl_angsuran WHERE idPinjam = ?`;
-
-  db.query(query, [idPinjam], (err, rows) => {
-    if (err) {
-      console.error("Error fetching data: " + err);
-      res.status(500).json({ error: "Error fetching data" });
-      return;
-    }
-
-    res.json(rows);
-  });
-});
-
 app.post("/post/angsuran", async (req, res) => {
   const {
     kodeAnggota,
     jenisTransaksi,
-    nominalTransaksi,
     angsuran,
     tanggalTransaksi,
+    angsuranPokok,
+    angsuranJasa,
+    angsuranPerBulan,
   } = req.body;
 
-  const insertPinjamQuery = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, nominalTransaksi, angsuran, tanggalTransaksi) VALUES (?, ?, ?, ?, ?)`;
+  const insertPinjamQuery = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, angsuran, tanggalTransaksi, angsuranPokok, angsuranJasa, angsuranPerBulan) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
   const pinjamValues = [
     kodeAnggota,
     jenisTransaksi,
-    nominalTransaksi,
     angsuran,
     tanggalTransaksi,
+    angsuranPokok,
+    angsuranJasa,
+    angsuranPerBulan,
   ];
 
   try {
