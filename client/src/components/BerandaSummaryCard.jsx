@@ -45,11 +45,15 @@ export const BerandaSummaryCard = () => {
           </Card.Text>
           <Card.Text>
             Jumlah Tagihan {new Date().getFullYear()}:{" "}
-            <span className="fw-bold">Rp 0,00</span>
+            <span className="fw-bold">
+              {formatRupiah(beranda.tagihanPerTahun)}
+            </span>
           </Card.Text>
           <Card.Text>
             Sisa Tagihan {new Date().getFullYear()}:{" "}
-            <span className="fw-bold">Rp 0,00</span>
+            <span className="fw-bold">
+              {formatRupiah(beranda.sisaTagihanPerTahun)}
+            </span>
           </Card.Text>
         </Container>
         <FontAwesomeIcon icon={faLandmark} className="floating-icon" />

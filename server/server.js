@@ -121,12 +121,38 @@ app.get("/get/statistik", async (req, res) => {
         AND YEAR(tbl_pinjam.tanggalTransaksi) = YEAR(CURRENT_DATE())
     `);
 
+    const tagihanPerTahun = await getQueryResult(`
+      SELECT
+        SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Pinjam' THEN angsuranPerBulan ELSE 0 END) AS tagihanPerTahun
+      FROM
+        tbl_pinjam
+      WHERE
+        YEAR(tbl_pinjam.tanggalTransaksi) = YEAR(CURRENT_DATE())
+    `);
+
+    const sisaTagihanPerTahun = await getQueryResult(`
+      SELECT
+        (total_pinjam - total_bayar) AS sisaTagihanPerTahun
+      FROM
+        (
+          SELECT
+            COALESCE(SUM(CASE WHEN jenisTransaksi = 'Pinjam' THEN angsuranPerBulan ELSE 0 END), 0) AS total_pinjam,
+            COALESCE(SUM(CASE WHEN jenisTransaksi <> 'Pinjam' THEN angsuranPerBulan ELSE 0 END), 0) AS total_bayar
+          FROM
+            tbl_pinjam
+          WHERE
+            YEAR(tanggalTransaksi) = YEAR(CURRENT_DATE())
+        ) AS subquery;
+    `);
+
     res.status(200).json({
       jumlahAnggota: jumlahAnggota.jumlahAnggota,
       jumlahSimpanan: jumlahSimpanan.jumlahSimpanan,
       penarikanSimpanan: penarikanSimpanan.penarikanSimpanan,
       jumlahSaldo: jumlahSaldo.jumlahSaldo,
       pinjamBulan: pinjamBulan.pinjamBulan,
+      tagihanPerTahun: tagihanPerTahun.tagihanPerTahun,
+      sisaTagihanPerTahun: sisaTagihanPerTahun.sisaTagihanPerTahun,
     });
   } catch (error) {
     console.error("Error fetching data: " + error.message);
