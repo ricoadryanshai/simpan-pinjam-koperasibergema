@@ -11,9 +11,14 @@ import {
   updateLunasAngsuran,
 } from "../utils/api";
 
-const today = new Date()
-  .toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
-  .split(", ")[0];
+const today = new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" });
+const [month, date, year] = new Date(today)
+  .toLocaleDateString("en-US", { timeZone: "Asia/Jakarta" })
+  .split("/");
+const formattedDate = `${year}-${month.padStart(2, "0")}-${date.padStart(
+  2,
+  "0"
+)}`;
 
 export const PinjamBayarModal = (props) => {
   const { show, onHide, selectedRow } = props;
@@ -88,7 +93,7 @@ export const PinjamBayarModal = (props) => {
         kodeAnggota: kodeAnggota,
         jenisTransaksi: "Bayar",
         angsuran: index,
-        tanggalTransaksi: today,
+        tanggalTransaksi: formattedDate,
         angsuranPokok: tagihan.uangAngsuran,
         angsuranJasa: tagihan.jasaUang,
         angsuranPerBulan: tagihan.totalBayar,
@@ -127,7 +132,7 @@ export const PinjamBayarModal = (props) => {
         jenisTransaksi: "Bayar",
         angsuran:
           filteredBayarPinjam.length > 1 ? filteredBayarPinjam.length : 0,
-        tanggalTransaksi: today,
+        tanggalTransaksi: formattedDate,
         angsuranPokok: totalUangAngsuran,
         angsuranJasa: totalJasaUang,
         angsuranPerBulan: totalBayarFiltered,
