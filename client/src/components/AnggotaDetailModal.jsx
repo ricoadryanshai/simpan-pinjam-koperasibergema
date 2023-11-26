@@ -20,6 +20,7 @@ export default function AnggotaDetailModal(props) {
       onHide={() => onHide()}
       backdrop="static"
       keyboard={false}
+      scrollable={true}
     >
       <Modal.Header closeButton>
         <Modal.Title className="text-uppercase fw-bold">
