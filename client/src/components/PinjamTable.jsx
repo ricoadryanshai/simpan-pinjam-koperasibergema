@@ -33,52 +33,51 @@ export default function PinjamTable() {
   const [input, setInput] = React.useState("");
   const [activePage, setActivePage] = React.useState(1);
 
-  const handleDetailClick = (pinjam) => {
-    setSelectedRow(pinjam);
-    setShowDetail(true);
-  };
-
-  const handlePinjamClick = (pinjam) => {
-    setSelectedRow(pinjam);
-    setShowPinjam(true);
-  };
-
-  const handleBayarClick = (pinjam) => {
-    setSelectedRow(pinjam);
-    setShowBayar(true);
-  };
-
-  const handleModalClose = (modalType) => {
+  const handleModalShow = async (modalType, pinjam) => {
     switch (modalType) {
       case "detail":
-        setShowDetail(false);
-        fungsiLoad();
+        setShowDetail(true);
+        setSelectedRow(pinjam);
         break;
       case "pinjam":
-        setShowPinjam(false);
-        fungsiLoad();
+        setShowPinjam(true);
+        setSelectedRow(pinjam);
         break;
       case "bayar":
-        setShowBayar(false);
-        fungsiLoad();
+        setShowBayar(true);
+        setSelectedRow(pinjam);
         break;
       default:
         break;
     }
   };
 
-  const fungsiLoad = async () => {
-    const data = await getPinjamAnggota();
-    if (data) {
-      setPinjamData(data);
-    } else {
-      console.log("Error fungsiLoad() di PinjamTable.jsx");
+  const handleModalClose = (modalType) => {
+    switch (modalType) {
+      case "detail":
+        setShowDetail(false);
+        fetchedData();
+        break;
+      case "pinjam":
+        setShowPinjam(false);
+        fetchedData();
+        break;
+      case "bayar":
+        setShowBayar(false);
+        fetchedData();
+        break;
+      default:
+        break;
     }
   };
 
-  React.useEffect(() => {
-    fungsiLoad();
-  }, []);
+  const fetchedData = async () => {
+    try {
+      setPinjamData(await getPinjamAnggota());
+    } catch (error) {
+      console.log("Error fetching data pinjam :", error);
+    }
+  };
 
   const handlePageChange = (pageNumber) => {
     setActivePage(pageNumber);
@@ -107,6 +106,10 @@ export default function PinjamTable() {
   const currentEntries = pinjamData.slice(indexOfFirstEntry, indexOfLastEntry);
 
   const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
+
+  React.useEffect(() => {
+    fetchedData();
+  }, []);
   return (
     <>
       <div className="d-flex justify-content-center">
@@ -159,12 +162,12 @@ export default function PinjamTable() {
                       <td>{pinjam.kodeAnggota}</td>
                       <td className="text-start">{pinjam.nama}</td>
                       <td className="text-start">
-                        {formatRupiah(pinjam.sisaHutang)}
+                        {formatRupiah(pinjam.jumlahHutang - pinjam.jumlahBayar)}
                       </td>
                       <td className="text-center">
                         <Button
                           variant="secondary"
-                          onClick={() => handleDetailClick(pinjam)}
+                          onClick={() => handleModalShow("detail", pinjam)}
                         >
                           <FontAwesomeIcon
                             icon={faCircleInfo}
@@ -174,10 +177,10 @@ export default function PinjamTable() {
                         </Button>
                       </td>
                       <td className="text-center">
-                        {pinjam.sisaHutang <= 0 ? (
+                        {pinjam.jumlahHutang - pinjam.jumlahBayar <= 0 ? (
                           <Button
                             variant="warning"
-                            onClick={() => handlePinjamClick(pinjam)}
+                            onClick={() => handleModalShow("pinjam", pinjam)}
                           >
                             <FontAwesomeIcon
                               icon={faLandmark}
@@ -188,7 +191,7 @@ export default function PinjamTable() {
                         ) : (
                           <Button
                             variant="success"
-                            onClick={() => handleBayarClick(pinjam)}
+                            onClick={() => handleModalShow("bayar", pinjam)}
                           >
                             <FontAwesomeIcon
                               icon={faMoneyBill}
@@ -234,9 +237,6 @@ export default function PinjamTable() {
         show={showPinjam}
         onHide={() => handleModalClose("pinjam")}
         selectedRow={selectedRow}
-        setShowPinjam={setShowPinjam}
-        setSelectedRow={setSelectedRow}
-        fungsiLoad={fungsiLoad}
       />
       <PinjamBayarModal
         show={showBayar}

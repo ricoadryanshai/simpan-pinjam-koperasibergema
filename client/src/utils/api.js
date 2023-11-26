@@ -156,11 +156,6 @@ export const getPinjamAnggota = async () => {
 export const getPinjamByKodeAnggota = async (kodeAnggota) => {
   try {
     const res = await axios.get(`${API_ENDPOINT}/get/pinjam/${kodeAnggota}`);
-
-    if (res.status === 404) {
-      return [];
-    }
-
     return res.data;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -178,9 +173,11 @@ export const getBayarByKodeAnggota = async (kodeAnggota) => {
   }
 };
 
-export const deletePinjamByKodeAnggota = async (id) => {
+export const deletePinjamByKodeAnggota = async (kodeAnggota, id) => {
   try {
-    const response = await axios.delete(`${API_ENDPOINT}/delete/pinjam/${id}`);
+    const response = await axios.delete(
+      `${API_ENDPOINT}/delete/pinjam/${kodeAnggota}/${id}`
+    );
     return response.data;
   } catch (error) {
     console.error("Error deleting data:", error);

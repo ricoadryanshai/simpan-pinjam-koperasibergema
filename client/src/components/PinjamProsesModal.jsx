@@ -6,29 +6,25 @@ import { formatDate, formatRupiah } from "../utils/format";
 import { getPengaturan, postPinjam } from "../utils/api";
 
 export const PinjamProsesModal = (props) => {
-  const {
-    show,
-    onHide,
-    savedData,
-    setShowPinjam,
-    setModalProses,
-    resetForm,
-    fungsiLoad,
-  } = props;
+  const { show, onHide, savedData, closeAllModal } = props;
 
   const [fetchPengaturan, setFetchPengaturan] = React.useState([]);
 
   const kodeAnggota = savedData?.kodeAnggota || "";
   const nama = savedData?.nama || "";
-  const tanggalTransaksi = formatDate(savedData?.tanggalTransaksi || "");
+  const tanggalTransaksi = savedData?.tanggalTransaksi || "";
   const nominalTransaksi = parseFloat(savedData?.nominalTransaksi || 0);
   const angsuran = parseFloat(savedData?.angsuran || 1);
+
   const bungaAngsuran =
     fetchPengaturan.length > 0 ? fetchPengaturan[0]?.bungaAngsuran || 0 : 0;
+  const angsuranPokok = nominalTransaksi / angsuran;
+  const angsuranJasa = nominalTransaksi * (bungaAngsuran / 100);
+  const angsuranPerBulan = angsuranPokok + angsuranJasa;
 
-  const biayaAngsuran = nominalTransaksi / angsuran;
-  const jasaUang = nominalTransaksi * (bungaAngsuran / 100);
-  const totalBayar = biayaAngsuran + jasaUang;
+  const jumlahAngsuranPokok = angsuran * angsuranPokok;
+  const jumlahAngsuranJasa = angsuran * angsuranJasa;
+  const jumlahAngsuranPerBulan = angsuran * angsuranPerBulan;
 
   const fetchedPengaturan = async () => {
     try {
@@ -38,19 +34,23 @@ export const PinjamProsesModal = (props) => {
     }
   };
 
-  const handleProsesClick = () => {
-    postPinjam(savedData)
-      .then((result) => {
-        console.log("Data berhasil ditambahkan:", result);
-        setModalProses(false);
-        setShowPinjam(false);
-        resetForm();
-        fungsiLoad();
-      })
-      .catch((error) => {
-        console.error("Gagal menambahkan data:", error);
-        alert("Gagal menambahkan data", error);
-      });
+  const handleProsesClick = async () => {
+    const newPinjam = {
+      kodeAnggota: kodeAnggota,
+      jenisTransaksi: "Pinjam",
+      angsuran: angsuran,
+      tanggalTransaksi: tanggalTransaksi,
+      angsuranPokok: jumlahAngsuranPokok,
+      angsuranJasa: jumlahAngsuranJasa,
+      angsuranPerBulan: jumlahAngsuranPerBulan,
+    };
+
+    try {
+      await postPinjam(newPinjam);
+      closeAllModal();
+    } catch (error) {
+      console.log("Error submiting loan: ", error);
+    }
   };
 
   React.useEffect(() => {
@@ -86,7 +86,7 @@ export const PinjamProsesModal = (props) => {
             <Col>
               <Row className="mb-1">
                 <Col>Tanggal Pinjam</Col>
-                <Col>{tanggalTransaksi}</Col>
+                <Col>{formatDate(tanggalTransaksi)}</Col>
               </Row>
               <Row className="mb-1">
                 <Col>Jumlah Pinjam</Col>
@@ -112,16 +112,16 @@ export const PinjamProsesModal = (props) => {
                 {[...Array(angsuran)].map((_, index) => (
                   <tr key={index}>
                     <td className="text-center">{index + 1}</td>
-                    <td>{formatRupiah(biayaAngsuran)}</td>
-                    <td>{formatRupiah(jasaUang)}</td>
-                    <td>{formatRupiah(totalBayar)}</td>
+                    <td>{formatRupiah(angsuranPokok)}</td>
+                    <td>{formatRupiah(angsuranJasa)}</td>
+                    <td>{formatRupiah(angsuranPerBulan)}</td>
                   </tr>
                 ))}
                 <tr className="fw-bold table-light">
                   <td className="text-center">Jumlah</td>
-                  <td>{formatRupiah(angsuran * biayaAngsuran)}</td>
-                  <td>{formatRupiah(angsuran * jasaUang)}</td>
-                  <td>{formatRupiah(angsuran * totalBayar)}</td>
+                  <td>{formatRupiah(jumlahAngsuranPokok)}</td>
+                  <td>{formatRupiah(jumlahAngsuranJasa)}</td>
+                  <td>{formatRupiah(jumlahAngsuranPerBulan)}</td>
                 </tr>
               </tbody>
             </Table>
@@ -131,8 +131,8 @@ export const PinjamProsesModal = (props) => {
           <Button variant="secondary" onClick={onHide}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleProsesClick}>
-            Proses
+          <Button variant="primary" onClick={() => handleProsesClick()}>
+            Pinjam
           </Button>
         </Modal.Footer>
       </Modal>

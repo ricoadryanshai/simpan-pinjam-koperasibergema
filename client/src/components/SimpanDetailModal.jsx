@@ -94,6 +94,7 @@ export default function SimpanDetailModal(props) {
         backdrop="static"
         keyboard={false}
         size="lg"
+        scrollable={true}
       >
         <Modal.Header closeButton>
           <Modal.Title className="text-uppercase fw-bold">
