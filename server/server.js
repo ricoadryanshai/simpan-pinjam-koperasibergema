@@ -881,40 +881,56 @@ app.put("/put/pengaturan", (req, res) => {
 
 // API ENDPOINT PENGATURAN <<< END
 
-// Fungsi untuk menghapus gambar berdasarkan tahun
-const deleteImagesForPreviousYear = (yearToDelete) => {
-  const deleteQuery = `
-    DELETE FROM tbl_simpan
-    WHERE SUBSTRING(tanggalSimpan, 1, 4) = ?
-  `;
-
-  db.query(deleteQuery, [yearToDelete.toString()], (deleteErr, result) => {
-    if (deleteErr) {
-      console.error("Error deleting images:", deleteErr);
+// Fungsi untuk menghapus file dari direktori
+const deleteFile = (filePath) => {
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      console.error("Error deleting file:", err);
     } else {
-      const affectedRows = result.affectedRows;
-      console.log(`${affectedRows} images deleted for year ${yearToDelete}`);
-      // Handle success message or further logic
+      console.log("File deleted successfully");
     }
   });
 };
 
-// Fungsi untuk mendapatkan tahun saat ini
-const getCurrentYear = () => {
-  return new Date().getFullYear();
+// Fungsi untuk mencari dan menghapus file serta mengupdate nilai uploadFile dalam database
+const processFiles = () => {
+  let affectedRows = 0; // Untuk melacak jumlah baris yang terpengaruh
+
+  // Logika untuk mendapatkan tahun saat ini
+  const currentYear = new Date().getFullYear();
+  const lastYear = currentYear - 1;
+
+  // Query untuk mendapatkan data yang sesuai dengan kriteria
+  const selectQuery = `SELECT * FROM tbl_simpan WHERE YEAR(tanggalSimpan) = ? AND uploadFile IS NOT NULL`;
+  db.query(selectQuery, [lastYear], (error, results) => {
+    if (error) {
+      console.error("Error fetching data:", error);
+      return;
+    }
+
+    results.forEach((row) => {
+      const filePath = path.join("./uploads/image", row.uploadFile);
+      if (fs.existsSync(filePath)) {
+        deleteFile(filePath);
+        affectedRows++; // Menambah jumlah baris yang terpengaruh
+      }
+
+      // Update nilai uploadFile menjadi NULL atau kosong
+      const updateQuery = `UPDATE tbl_simpan SET uploadFile = NULL WHERE id = ?`;
+      db.query(updateQuery, [row.id], (err, result) => {
+        if (err) {
+          console.error("Error updating data:", err);
+        } else {
+          console.log("Data updated successfully");
+        }
+      });
+    });
+
+    console.log(`Total ${affectedRows} files affected`);
+  });
 };
 
-// Fungsi untuk memulai logika penghapusan pada awal tahun baru
-const startYearlyImageDeletion = () => {
-  const currentYear = getCurrentYear();
-  const yearToDelete = currentYear - 1; // Tahun sebelumnya
-
-  // Jalankan penghapusan gambar untuk tahun sebelumnya saat aplikasi dimulai
-  deleteImagesForPreviousYear(yearToDelete);
-};
-
-// Panggil fungsi untuk memulai logika penghapusan pada awal aplikasi atau saat awal tahun baru
-startYearlyImageDeletion();
+processFiles();
 
 // Start the server
 app.listen(port, () => {
