@@ -287,9 +287,9 @@ export const editTransaksi = async (id, data) => {
 
 // START >>> API ENDPOINT LAPORAN
 
-export const getLapSimpanan = async () => {
+export const getLapSimpanan = async (year) => {
   try {
-    const response = await axios.get(`${API_ENDPOINT}/get/lap_simpan`);
+    const response = await axios.get(`${API_ENDPOINT}/get/lapSimpan/${year}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching data:", error);

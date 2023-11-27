@@ -795,38 +795,27 @@ app.put("/put/transaksi/:id", async (req, res) => {
 
 // START >>> API ENDPOINT LAPORAN
 
-app.get("/get/lap_simpan", (req, res) => {
-  const currentYear = new Date().getFullYear();
+app.get("/get/lapSimpan/:year", (req, res) => {
+  const year = req.params.year;
 
   const sqlQuery = `
-    SELECT
-    tbl_anggota.kodeAnggota,
-    tbl_anggota.nama,
-    CASE
-      WHEN SUM(CASE 
-        WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' AND YEAR(tbl_simpan.tanggalSimpan) = ${currentYear} THEN -tbl_simpan.saldo 
-        WHEN YEAR(tbl_simpan.tanggalSimpan) = ${currentYear} THEN tbl_simpan.saldo 
-        ELSE 0
-      END) = 0 THEN 0
-      ELSE SUM(CASE 
-        WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' AND YEAR(tbl_simpan.tanggalSimpan) = ${currentYear} THEN -tbl_simpan.saldo 
-        WHEN YEAR(tbl_simpan.tanggalSimpan) = ${currentYear} THEN tbl_simpan.saldo 
-        ELSE 0
-      END)
-    END AS totalSaldo
-  FROM tbl_anggota
-  LEFT JOIN tbl_simpan ON tbl_anggota.kodeAnggota = tbl_simpan.kodeAnggota
-  WHERE YEAR(tbl_simpan.tanggalSimpan) = ${currentYear}
-  GROUP BY tbl_anggota.kodeAnggota, tbl_anggota.nama
-  ORDER BY kodeAnggota ASC;
+    SELECT 
+      a.kodeAnggota, 
+      a.nama, 
+      SUM(CASE WHEN s.jenisSimpan = 'Simpanan Pokok' THEN s.saldo ELSE 0 END) AS simpananPokok,
+      SUM(CASE WHEN s.jenisSimpan = 'Simpanan Wajib' THEN s.saldo ELSE 0 END) AS simpananWajib,
+      SUM(CASE WHEN s.jenisSimpan = 'Simpanan Sukarela' THEN s.saldo ELSE 0 END) AS simpananSukarela,
+      SUM(CASE WHEN s.jenisSimpan = 'Ambil Simpanan' THEN s.saldo ELSE 0 END) AS penarikan
+    FROM tbl_anggota a
+    LEFT JOIN tbl_simpan s ON a.kodeAnggota = s.kodeAnggota
+    WHERE YEAR(s.tanggalSimpan) = ? 
+    GROUP BY a.kodeAnggota
   `;
 
-  db.query(sqlQuery, (err, results) => {
+  db.query(sqlQuery, [year], (err, results) => {
     if (err) {
       console.error("Error fetching data: " + err.sqlMessage);
       res.status(500).json({ error: "Internal Server Error" });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: "Record not found" });
     } else {
       res.status(200).json(results);
     }
