@@ -156,6 +156,33 @@ export default function PinjamTable() {
                         pinjam.nama.toLowerCase().includes(inputString))
                     );
                   })
+                  .sort((a, b) => {
+                    const debtA = a.jumlahHutang - a.jumlahBayar;
+                    const debtB = b.jumlahHutang - b.jumlahBayar;
+
+                    // Urutan jika sisa tagihan lebih dari 0, dari kecil ke besar kode anggota
+                    if (debtA > 0 && debtB > 0) {
+                      return a.kodeAnggota.localeCompare(b.kodeAnggota);
+                    }
+
+                    // Urutan jika sisa tagihan lebih dari 0 harus diurutkan terlebih dahulu
+                    if (debtA > 0 && debtB <= 0) {
+                      return -1;
+                    }
+
+                    // Urutan jika sisa tagihan lebih dari 0 harus diurutkan terlebih dahulu
+                    if (debtA <= 0 && debtB > 0) {
+                      return 1;
+                    }
+
+                    // Jika kedua nilai hutang-bayar sama-sama 0, maka urutkan berdasarkan kode anggota
+                    if (debtA === 0 && debtB === 0) {
+                      return a.kodeAnggota.localeCompare(b.kodeAnggota);
+                    }
+
+                    // Jika salah satu dari nilai hutang-bayar adalah 0, urutkan yang 0 terlebih dahulu
+                    return debtB - debtA;
+                  })
                   .map((pinjam, index) => (
                     <tr key={index} className="text-center align-middle">
                       <td>{index + startIndex}</td>

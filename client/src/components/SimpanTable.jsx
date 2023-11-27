@@ -148,6 +148,33 @@ export default function SimpanTable() {
                         simpan.nama.toLowerCase().includes(inputString))
                     );
                   })
+                  .sort((a, b) => {
+                    const saldoA = a.totalSaldo;
+                    const saldoB = b.totalSaldo;
+
+                    // Urutan jika totalSaldo lebih dari 0, dari kecil ke besar totalSaldo
+                    if (saldoA > 0 && saldoB > 0) {
+                      return a.kodeAnggota.localeCompare(b.kodeAnggota);
+                    }
+
+                    // Urutan jika totalSaldo lebih dari 0 harus diurutkan terlebih dahulu
+                    if (saldoA > 0 && saldoB <= 0) {
+                      return -1;
+                    }
+
+                    // Urutan jika totalSaldo lebih dari 0 harus diurutkan terlebih dahulu
+                    if (saldoA <= 0 && saldoB > 0) {
+                      return 1;
+                    }
+
+                    // Jika kedua nilai totalSaldo sama-sama 0, maka urutkan berdasarkan kode anggota
+                    if (saldoA === 0 && saldoB === 0) {
+                      return a.kodeAnggota.localeCompare(b.kodeAnggota);
+                    }
+
+                    // Jika salah satu dari nilai totalSaldo adalah 0, urutkan yang 0 terlebih dahulu
+                    return saldoA - saldoB;
+                  })
                   .map((simpan, index) => (
                     <tr className="text-center align-middle" key={index}>
                       <td>{index + startIndex}</td>
