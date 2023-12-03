@@ -287,9 +287,39 @@ export const editTransaksi = async (id, data) => {
 
 // START >>> API ENDPOINT LAPORAN
 
-export const getLapSimpanan = async (year) => {
+export const getLapSimpanan = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/lapSimpan`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getLapSimpananByYear = async (year) => {
   try {
     const response = await axios.get(`${API_ENDPOINT}/get/lapSimpan/${year}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getLapAngsuran = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/lapAngsuran`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getLapAngsuranByYear = async (year) => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/lapAngsuran/${year}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching data:", error);

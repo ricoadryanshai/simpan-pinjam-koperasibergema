@@ -9,33 +9,33 @@ import { Container } from "react-bootstrap";
 export default function Laporan() {
   return (
     <>
-      <Container fluid className="custom-width px-0">
+      <Container fluid>
         <Tabs defaultActiveKey="key-1" className="no-print" fill>
           <Tab
             eventKey="key-1"
-            title="Laporan Simpanan"
-            className="border rounded-bottom"
+            title="Laporan Pembagian SHU"
+            className="border border-top-0 rounded-bottom"
           >
-            <Container fluid>
-              <LaporanSimpanan />
+            <Container fluid className="p-3">
+              <LaporanSHU />
             </Container>
           </Tab>
           <Tab
             eventKey="key-2"
-            title="Laporan Pinjaman"
-            className="border rounded-bottom"
+            title="Laporan Simpanan"
+            className="border border-top-0 rounded-bottom"
           >
-            <Container fluid>
-              <LaporanPinjaman />
+            <Container fluid className="p-3">
+              <LaporanSimpanan />
             </Container>
           </Tab>
           <Tab
             eventKey="key-3"
-            title="Laporan SHU"
-            className="border rounded-bottom"
+            title="Laporan Angsuran"
+            className="border border-top-0 rounded-bottom"
           >
-            <Container fluid>
-              <LaporanSHU />
+            <Container fluid className="p-3">
+              <LaporanPinjaman />
             </Container>
           </Tab>
         </Tabs>

@@ -61,7 +61,9 @@ export const PinjamBayarModal = (props) => {
 
   React.useEffect(() => {
     if (show) {
-      fetchedTagihan(idPinjam);
+      if (idPinjam !== "" || idPinjam !== null) {
+        fetchedTagihan(idPinjam);
+      }
     }
   }, [show, idPinjam]);
 

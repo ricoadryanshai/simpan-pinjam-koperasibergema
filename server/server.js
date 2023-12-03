@@ -171,8 +171,6 @@ app.get("/get/anggota", (req, res) => {
       if (err) {
         console.error("Error fetching data: " + err.sqlMessage);
         res.status(500).json({ error: "Internal Server Error" });
-      } else if (results.length === 0) {
-        res.status(404).json({ error: "Record not found" });
       } else {
         res.status(200).json(results);
       }
@@ -187,8 +185,6 @@ app.get("/get/anggota/:id", (req, res) => {
     if (err) {
       console.error("Error fetching data: " + err.sqlMessage);
       res.status(500).json({ error: "Internal Server Error" });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: "Record not found" });
     } else {
       res.status(200).json(results[0]);
     }
@@ -293,8 +289,6 @@ app.get("/get/simpan", (req, res) => {
     if (err) {
       console.error("Error fetching data: " + err.sqlMessage);
       res.status(500).json({ error: "Internal Server Error" });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: "Record not found" });
     } else {
       res.status(200).json(results);
     }
@@ -363,8 +357,6 @@ app.delete("/delete/simpan/:kodeAnggota/:id", (req, res) => {
     if (err) {
       console.error("Error fetching data:", err);
       res.status(500).json({ error: "Internal Server Error" });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: "Record not found" });
     } else {
       const uploadFile = results[0].uploadFile;
       let fileDeleted = true;
@@ -427,8 +419,6 @@ app.get("/get/pinjam", (req, res) => {
     if (err) {
       console.error("Error fetching data: " + err.sqlMessage);
       res.status(500).json({ error: "Internal Server Error" });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: "Record not found" });
     } else {
       res.status(200).json(results);
     }
@@ -593,11 +583,12 @@ app.put("/put/pinjam/:id", async (req, res) => {
   const today = new Date()
     .toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
     .split(", ")[0];
+  const formattedDate = today.split("/").reverse().join("-");
 
   const updateQuery = `
     UPDATE tbl_angsuran
     SET
-      tanggalBayar = '${today}'
+      tanggalBayar = '${formattedDate}'
     WHERE id = ${id}
   `;
 
@@ -616,10 +607,11 @@ app.put("/put/angsuran/:idPinjam", async (req, res) => {
   const today = new Date()
     .toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
     .split(", ")[0];
+  const formattedDate = today.split("/").reverse().join("-");
 
   const updateQuery = `
     UPDATE tbl_angsuran
-    SET tanggalBayar = '${today}'
+    SET tanggalBayar = '${formattedDate}'
     WHERE idPinjam = ${idPinjam}
       AND (tanggalBayar IS NULL OR tanggalBayar = '')
   `;
@@ -692,8 +684,6 @@ app.get("/get/transaksi", (req, res) => {
     if (err) {
       console.error("Error fetching data: " + err.sqlMessage);
       res.status(500).json({ error: "Internal Server Error" });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: "Record not found" });
     } else {
       res.status(200).json(results);
     }
@@ -795,24 +785,147 @@ app.put("/put/transaksi/:id", async (req, res) => {
 
 // START >>> API ENDPOINT LAPORAN
 
-app.get("/get/lapSimpan/:year", (req, res) => {
-  const year = req.params.year;
-
+app.get("/get/lapSimpan", (req, res) => {
   const sqlQuery = `
     SELECT 
       a.kodeAnggota, 
-      a.nama, 
+      a.nama,
+      a.jenisAnggota,
+      YEAR(s.tanggalSimpan) AS tahunSimpan,
       SUM(CASE WHEN s.jenisSimpan = 'Simpanan Pokok' THEN s.saldo ELSE 0 END) AS simpananPokok,
       SUM(CASE WHEN s.jenisSimpan = 'Simpanan Wajib' THEN s.saldo ELSE 0 END) AS simpananWajib,
       SUM(CASE WHEN s.jenisSimpan = 'Simpanan Sukarela' THEN s.saldo ELSE 0 END) AS simpananSukarela,
       SUM(CASE WHEN s.jenisSimpan = 'Ambil Simpanan' THEN s.saldo ELSE 0 END) AS penarikan
     FROM tbl_anggota a
     LEFT JOIN tbl_simpan s ON a.kodeAnggota = s.kodeAnggota
+    LEFT JOIN tbl_keanggotaan k ON a.jenisAnggota = k.jenisAnggota
+    GROUP BY a.kodeAnggota, tahunSimpan
+    ORDER BY a.kodeAnggota, tahunSimpan
+  `;
+
+  db.query(sqlQuery, (err, results) => {
+    if (err) {
+      console.error("Error fetching data: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
+app.get("/get/lapSimpan/:year", (req, res) => {
+  const year = req.params.year;
+
+  const sqlQuery = `
+    SELECT 
+      a.kodeAnggota, 
+      a.nama,
+      a.jenisAnggota,
+      YEAR(s.tanggalSimpan) AS tahunSimpan,
+      SUM(CASE WHEN s.jenisSimpan = 'Simpanan Pokok' THEN s.saldo ELSE 0 END) AS simpananPokok,
+      SUM(CASE WHEN s.jenisSimpan = 'Simpanan Wajib' THEN s.saldo ELSE 0 END) AS simpananWajib,
+      SUM(CASE WHEN s.jenisSimpan = 'Simpanan Sukarela' THEN s.saldo ELSE 0 END) AS simpananSukarela,
+      SUM(CASE WHEN s.jenisSimpan = 'Ambil Simpanan' THEN s.saldo ELSE 0 END) AS penarikan
+    FROM tbl_anggota a
+    LEFT JOIN tbl_simpan s ON a.kodeAnggota = s.kodeAnggota
+    LEFT JOIN tbl_keanggotaan k ON a.jenisAnggota = k.jenisAnggota
     WHERE YEAR(s.tanggalSimpan) = ? 
-    GROUP BY a.kodeAnggota
+    GROUP BY a.kodeAnggota, tahunSimpan
+    ORDER BY a.kodeAnggota
   `;
 
   db.query(sqlQuery, [year], (err, results) => {
+    if (err) {
+      console.error("Error fetching data: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
+app.get("/get/lapAngsuran", (req, res) => {
+  const sqlQuery = `
+    SELECT 
+      YEAR(s.tanggalTransaksi) AS tahunPinjam
+    FROM tbl_anggota a
+    LEFT JOIN tbl_pinjam s ON a.kodeAnggota = s.kodeAnggota
+    LEFT JOIN tbl_angsuran k ON s.id = k.idPinjam
+    GROUP BY tahunPinjam
+    ORDER BY tahunPinjam DESC
+  `;
+
+  db.query(sqlQuery, (err, results) => {
+    if (err) {
+      console.error("Error fetching data: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
+app.get("/get/lapAngsuran/:year", (req, res) => {
+  const yearInt = parseInt(req.params.year);
+
+  const sqlQuery = `
+    SELECT
+      s.id,
+      a.nama,
+      s.tanggalTransaksi,
+      s.angsuranPokok AS nominalPinjam,
+      s.angsuran,
+      (s.angsuranPokok / s.angsuran) AS angsuranPokok,
+      (s.angsuranPokok * (SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100) AS angsuranJasa,
+      ((s.angsuranPokok / s.angsuran) + (s.angsuranPokok * (SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100)) AS angsuranPerBulan,
+      SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.uangAngsuran ELSE 0 END) AS bayarAngsuranPokok,
+      SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.jasaUang ELSE 0 END) AS bayarAngsuranJasa,
+      SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.totalBayar ELSE 0 END) AS bayarTagihan,
+      (CASE WHEN (s.angsuranPokok - SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.uangAngsuran ELSE 0 END)) = 0 THEN 'Lunas' ELSE 'Belum Lunas' END) AS statusPinjaman
+    FROM tbl_anggota a
+    LEFT JOIN tbl_pinjam s ON a.kodeAnggota = s.kodeAnggota
+    LEFT JOIN tbl_angsuran k ON s.id = k.idPinjam
+    WHERE YEAR(s.tanggalTransaksi) >= ? - 1 AND YEAR(s.tanggalTransaksi) <= ?
+      AND s.jenisTransaksi = 'Pinjam'
+    GROUP BY s.id
+    ORDER BY s.createdAt DESC
+  `;
+
+  const startYear = yearInt - 1;
+  const endYear = yearInt;
+
+  db.query(
+    sqlQuery,
+    [yearInt, yearInt, yearInt, yearInt, startYear, endYear],
+    (err, results) => {
+      if (err) {
+        console.error("Error fetching data: " + err.sqlMessage);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    }
+  );
+});
+
+app.get("/get/pembagianSHU", (req, res) => {
+  const year = req.params.year; // Ambil nilai tahun dari parameter URL
+
+  const sqlQuery = `
+    SELECT 
+      SUM(CASE WHEN s.jenisTransaksi = 'Pinjam' THEN s.tanggalTransaksi) AS totalSimpanan,
+      (CASE WHEN s.jenisTransaksi = 'Pinjam' THEN s.angsuranPokok) AS jumlahPinjaman,
+      (CASE WHEN s.jenisTransaksi = 'Pinjam' THEN s.angsuran) AS angsuran,
+      (CASE WHEN s.jenisTransaksi = 'Pinjam' THEN s.angsuraJasa ELSE 0 END) AS angsuranPokok_mendatang
+    FROM tbl_anggota a
+    LEFT JOIN tbl_simpan s ON a.kodeAnggota = s.kodeAnggota
+    LEFT JOIN tbl_pinjam s ON a.kodeAnggota = s.kodeAnggota
+    LEFT JOIN tbl_angsuran k ON a.jenisAnggota = k.jenisAnggota
+    GROUP BY a.kodeAnggota, tanggalPinjam
+    ORDER BY a.kodeAnggota
+  `;
+
+  db.query(sqlQuery, [year, year, year, year], (err, results) => {
     if (err) {
       console.error("Error fetching data: " + err.sqlMessage);
       res.status(500).json({ error: "Internal Server Error" });
@@ -835,8 +948,6 @@ app.get("/get/pengaturan", (req, res) => {
     if (err) {
       console.error("Error fetching data: " + err.sqlMessage);
       res.status(500).json({ error: "Internal Server Error" });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: "Record not found" });
     } else {
       res.status(200).json(results);
     }

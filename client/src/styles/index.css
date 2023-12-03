@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Roboto+Slab:wght@300;400&display=swap");
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -35,28 +36,33 @@ body {
 .custom-navbar-color {
   background-color: #a11010;
 }
+.custom-icon-pointer {
+  cursor: pointer;
+}
 /* Efek hover untuk perbesaran ikon */
 .position-relative:hover .floating-icon {
   transform: translate(-50%, -50%) scale(1.2); /* Perubahan skala saat hover */
   opacity: 1; /* Ubah opacity saat hover */
 }
+.no-display {
+  display: none;
+}
+
 @media print {
+  .judul-cetak {
+    position: static;
+    flex: none;
+    padding-block: 1rem;
+  }
   .no-print {
     display: none;
   }
-  .print-only {
-    display: block;
+  .print-this {
+    display: table-cell;
   }
-  .font-12 {
-    font-size: 12px;
-  }
-  .margin-top {
-    margin-top: 6rem;
-  }
-  .no-link {
-    text-decoration: none;
-    color: inherit;
-    cursor: text;
+  body {
+    padding-block: 0;
+    padding-inline: 1rem;
   }
 }
 

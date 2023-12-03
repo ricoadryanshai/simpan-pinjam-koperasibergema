@@ -184,8 +184,8 @@ export default function TransaksiKas() {
                       <td>{index + startIndex}</td>
                       <td>{formatDate(transaksi.tanggalTransaksi)}</td>
                       <td>{transaksi.jenisTransaksi}</td>
-                      <td>{transaksi.keterangan}</td>
-                      <td className="text-end">
+                      <td className="text-start">{transaksi.keterangan}</td>
+                      <td className="text-start">
                         {formatRupiah(parseFloat(transaksi.nominalTransaksi))}
                       </td>
                       <td className="no-print">
