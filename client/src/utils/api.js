@@ -327,6 +327,26 @@ export const getLapAngsuranByYear = async (year) => {
   }
 };
 
+export const getLapSHU = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/lapSHU`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getLapSHUByYear = async (year) => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/lapSHU/${year}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
 // API ENDPOINT LAPORAN <<< END
 
 // START >>> API ENDPOINT PENGATURAN
@@ -350,6 +370,16 @@ export const editPengaturan = async (updatedData) => {
     return response.data;
   } catch (error) {
     console.error("Error editing data:", error);
+    throw error;
+  }
+};
+
+export const getKeanggotaan = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/keanggotaan`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
     throw error;
   }
 };

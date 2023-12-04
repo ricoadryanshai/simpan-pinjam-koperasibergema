@@ -47,7 +47,9 @@ body {
 .no-display {
   display: none;
 }
-
+.font-size-small {
+  font-size: 12px;
+}
 @media print {
   .judul-cetak {
     position: static;

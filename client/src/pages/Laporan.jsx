@@ -1,12 +1,27 @@
-// eslint-disable-next-line no-unused-vars
 import React from "react";
 import { Tab, Tabs } from "react-bootstrap";
 import { LaporanSHU } from "../components/LaporanSHU";
 import { LaporanSimpanan } from "../components/LaporanSimpanan";
 import { LaporanPinjaman } from "../components/LaporanPinjaman";
 import { Container } from "react-bootstrap";
+import { getKeanggotaan } from "../utils/api";
 
 export default function Laporan() {
+  const [keanggotaan, setKeanggotaan] = React.useState([]);
+
+  const fetchPengaturanPersen = async () => {
+    try {
+      const data = await getKeanggotaan();
+      setKeanggotaan(data);
+    } catch (error) {
+      console.log("Error fetching pengaturan persen: ", error);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchPengaturanPersen();
+  }, []);
+
   return (
     <>
       <Container fluid>
@@ -17,7 +32,7 @@ export default function Laporan() {
             className="border border-top-0 rounded-bottom"
           >
             <Container fluid className="p-3">
-              <LaporanSHU />
+              <LaporanSHU keanggotaan={keanggotaan} />
             </Container>
           </Tab>
           <Tab

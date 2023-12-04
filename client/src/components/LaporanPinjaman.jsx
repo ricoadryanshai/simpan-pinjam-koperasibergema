@@ -53,15 +53,39 @@ export const LaporanPinjaman = () => {
         fetchedDataByYear(selectedYear);
       }
     }, [selectedYear]);
+
+  const totalAngsuranPokok = lapByYear.reduce((total, laporan) => {
+    const jumlah = laporan.bayarAngsuranPokok;
+    return total + jumlah;
+  }, 0);
+  const totalAngsuranJasa = lapByYear.reduce((total, laporan) => {
+    const jumlah = laporan.bayarAngsuranJasa;
+    return total + jumlah;
+  }, 0);
+  const totalJumlahAngsuran = lapByYear.reduce((total, laporan) => {
+    const jumlah = laporan.bayarTagihan;
+    return total + jumlah;
+  }, 0);
   return (
     <>
       <Stack gap={3}>
-        <Stack className="justify-content-center pb-3 border-bottom border-3 judul-cetak">
+        <Stack className="justify-content-center py-3 border-bottom border-3 judul-cetak">
           <Stack direction="horizontal" className="justify-content-center">
             <Card.Title className="fw-bold text-uppercase text-center">
-              Laporan Angsuran Pinjaman Tahun {selectedYear - 2} SD{" "}
-              {selectedYear} <br />
-              Kelurahan Gandaria Selatan
+              {selectedYear ? (
+                <>
+                  Laporan Angsuran Pinjaman Tahun {selectedYear - 2} SD{" "}
+                  {selectedYear}
+                  <br />
+                  Kelurahan Gandaria Selatan
+                </>
+              ) : (
+                <>
+                  Laporan Angsuran Pinjaman Tahun ... SD ...
+                  <br />
+                  Kelurahan Gandaria Selatan
+                </>
+              )}
             </Card.Title>
           </Stack>
           <Stack direction="horizontal" className="justify-content-end">
@@ -86,13 +110,16 @@ export const LaporanPinjaman = () => {
               ))}
             </Form.Select>
           </Form>
-          <Table responsive hover size="sm" className="print-only">
+          <Table responsive hover size="sm" className="font-size-small">
             <thead className="table-info align-middle">
               <tr>
                 <th className="text-center">No.</th>
                 <th className="text-center">Nama</th>
                 <th className="text-center">Tanggal Pinjam</th>
                 <th>Nominal Pinjaman</th>
+                <th>Angsuran Pokok</th>
+                <th>Angsuran Jasa</th>
+                <th>Angsuran/Bulan</th>
                 <th>Bayar Pokok</th>
                 <th>Bayar Jasa</th>
                 <th>Bayar Total</th>
@@ -108,6 +135,9 @@ export const LaporanPinjaman = () => {
                     {formatDate(laporan.tanggalTransaksi)}
                   </td>
                   <td>{formatRupiah(laporan.nominalPinjam)}</td>
+                  <td>{formatRupiah(laporan.angsuranPokok)}</td>
+                  <td>{formatRupiah(laporan.angsuranJasa)}</td>
+                  <td>{formatRupiah(laporan.angsuranPerBulan)}</td>
                   <td className="fw-bold">
                     {formatRupiah(laporan.bayarAngsuranPokok)}
                   </td>
@@ -129,16 +159,18 @@ export const LaporanPinjaman = () => {
                   </td>
                 </tr>
               ))}
-              <tr className="table-light">
-                <td colSpan={4} className="text-center fw-bold">
-                  Jumlah Angsuran Tahun {selectedYear}
+            </tbody>
+            <tfoot className="table-light">
+              <tr>
+                <td colSpan={7} className="text-center fw-bold">
+                  Jumlah Bayar Angsuran
                 </td>
-                <td className="fw-bold">{"Total Angsuran Pokok"}</td>
-                <td className="fw-bold">{"Total Angsuran Jasa"}</td>
-                <td className="fw-bold">{"Total Bayar"}</td>
+                <td className="fw-bold">{formatRupiah(totalAngsuranPokok)}</td>
+                <td className="fw-bold">{formatRupiah(totalAngsuranJasa)}</td>
+                <td className="fw-bold">{formatRupiah(totalJumlahAngsuran)}</td>
                 <td />
               </tr>
-            </tbody>
+            </tfoot>
           </Table>
         </Stack>
       </Stack>

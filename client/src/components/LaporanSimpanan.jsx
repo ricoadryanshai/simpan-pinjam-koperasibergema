@@ -13,6 +13,7 @@ export const LaporanSimpanan = () => {
   const [uniqueYears, setUniqueYears] = React.useState([]);
 
   const componentRef = React.useRef();
+
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
   });
@@ -76,17 +77,14 @@ export const LaporanSimpanan = () => {
   return (
     <>
       <Stack gap={3} ref={componentRef}>
-        <Stack className="justify-content-center pb-3 border-bottom border-3 judul-cetak">
+        <Stack className="justify-content-center py-3 border-bottom border-3 judul-cetak">
           <Stack direction="horizontal" className="justify-content-center">
             <Card.Title className="fw-bold text-uppercase text-center">
               Laporan Keuangan Koperasi Bergema <br />
               Kelurahan Gandaria Selatan
             </Card.Title>
           </Stack>
-          <Stack
-            direction="horizontal"
-            className="justify-content-end no-print"
-          >
+          <Stack direction="horizontal" className="justify-content-end">
             <FontAwesomeIcon
               icon={faPrint}
               onClick={handlePrint}
@@ -95,33 +93,32 @@ export const LaporanSimpanan = () => {
           </Stack>
         </Stack>
         <Stack gap={3}>
-          <Form className="d-flex justify-content-end no-print">
+          <Form className="d-flex justify-content-end">
             <Form.Select
               size="sm"
               style={{ maxWidth: "150px" }}
               value={selectedYear}
               onChange={handleYearChange}
-              className="no-print"
             >
               <option value={""} disabled>
                 Pilih Tahun
               </option>
               {uniqueYears.map((year) => (
-                <option key={year} value={year} className="print-only">
+                <option key={year} value={year}>
                   {year}
                 </option>
               ))}
             </Form.Select>
           </Form>
-          <Table responsive hover size="sm" className="print-only">
+          <Table responsive hover size="sm" className="font-size-small">
             <thead className="table-info align-middle">
               <tr>
                 <th className="text-center">No.</th>
                 <th className="text-center">Kode Anggota</th>
                 <th className="text-center">Nama</th>
-                <th className="no-print">Simpanan Pokok</th>
-                <th className="no-print">Simpanan Wajib</th>
-                <th className="no-print">Simpanan Sukarela</th>
+                <th>Simpanan Pokok</th>
+                <th>Simpanan Wajib</th>
+                <th>Simpanan Sukarela</th>
                 <th>Penarikan</th>
                 <th>Total Simpanan</th>
               </tr>
@@ -144,30 +141,32 @@ export const LaporanSimpanan = () => {
                     <td className="text-center">{index + 1}</td>
                     <td className="text-center">{laporan.kodeAnggota}</td>
                     <td>{laporan.nama}</td>
-                    <td className="no-print">
-                      {formatRupiah(laporan.simpananPokok)}
-                    </td>
-                    <td className="no-print">
-                      {formatRupiah(laporan.simpananWajib)}
-                    </td>
-                    <td className="no-print">
-                      {formatRupiah(laporan.simpananSukarela)}
-                    </td>
+                    <td>{formatRupiah(laporan.simpananPokok)}</td>
+                    <td>{formatRupiah(laporan.simpananWajib)}</td>
+                    <td>{formatRupiah(laporan.simpananSukarela)}</td>
                     <td>{formatRupiah(laporan.penarikan)}</td>
                     <td className="fw-bold">{formatRupiah(totalSaldo)}</td>
                   </tr>
                 );
               })}
-              <tr className="table-light">
-                <td colSpan={4} className="text-center fw-bold">
-                  Jumlah Simpanan Tahun {selectedYear}
-                </td>
-                <td className="no-print" />
-                <td className="no-print" />
-                <td className="no-print" />
+            </tbody>
+            <tfoot className="table-light">
+              <tr>
+                {selectedYear ? (
+                  <td colSpan={4} className="text-center fw-bold">
+                    Jumlah Simpanan Tahun {selectedYear}
+                  </td>
+                ) : (
+                  <td colSpan={4} className="text-center fw-bold">
+                    Jumlah Simpanan Tahun ...
+                  </td>
+                )}
+                <td />
+                <td />
+                <td />
                 <td className="fw-bold">{formatRupiah(totalSaldoAllRows)}</td>
               </tr>
-            </tbody>
+            </tfoot>
           </Table>
         </Stack>
       </Stack>

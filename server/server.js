@@ -787,20 +787,14 @@ app.put("/put/transaksi/:id", async (req, res) => {
 
 app.get("/get/lapSimpan", (req, res) => {
   const sqlQuery = `
-    SELECT 
-      a.kodeAnggota, 
-      a.nama,
-      a.jenisAnggota,
-      YEAR(s.tanggalSimpan) AS tahunSimpan,
-      SUM(CASE WHEN s.jenisSimpan = 'Simpanan Pokok' THEN s.saldo ELSE 0 END) AS simpananPokok,
-      SUM(CASE WHEN s.jenisSimpan = 'Simpanan Wajib' THEN s.saldo ELSE 0 END) AS simpananWajib,
-      SUM(CASE WHEN s.jenisSimpan = 'Simpanan Sukarela' THEN s.saldo ELSE 0 END) AS simpananSukarela,
-      SUM(CASE WHEN s.jenisSimpan = 'Ambil Simpanan' THEN s.saldo ELSE 0 END) AS penarikan
-    FROM tbl_anggota a
-    LEFT JOIN tbl_simpan s ON a.kodeAnggota = s.kodeAnggota
-    LEFT JOIN tbl_keanggotaan k ON a.jenisAnggota = k.jenisAnggota
-    GROUP BY a.kodeAnggota, tahunSimpan
-    ORDER BY a.kodeAnggota, tahunSimpan
+    SELECT
+      YEAR(tanggalSimpan) AS tahunSimpan
+    FROM
+      tbl_simpan
+    GROUP BY
+      tahunSimpan
+    ORDER BY
+      tahunSimpan DESC
   `;
 
   db.query(sqlQuery, (err, results) => {
@@ -847,10 +841,8 @@ app.get("/get/lapSimpan/:year", (req, res) => {
 app.get("/get/lapAngsuran", (req, res) => {
   const sqlQuery = `
     SELECT 
-      YEAR(s.tanggalTransaksi) AS tahunPinjam
-    FROM tbl_anggota a
-    LEFT JOIN tbl_pinjam s ON a.kodeAnggota = s.kodeAnggota
-    LEFT JOIN tbl_angsuran k ON s.id = k.idPinjam
+      YEAR(tanggalTransaksi) AS tahunPinjam
+    FROM tbl_pinjam
     GROUP BY tahunPinjam
     ORDER BY tahunPinjam DESC
   `;
@@ -881,7 +873,7 @@ app.get("/get/lapAngsuran/:year", (req, res) => {
       SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.uangAngsuran ELSE 0 END) AS bayarAngsuranPokok,
       SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.jasaUang ELSE 0 END) AS bayarAngsuranJasa,
       SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.totalBayar ELSE 0 END) AS bayarTagihan,
-      (CASE WHEN (s.angsuranPokok - SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.uangAngsuran ELSE 0 END)) = 0 THEN 'Lunas' ELSE 'Belum Lunas' END) AS statusPinjaman
+      (CASE WHEN (s.angsuranPokok - SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.uangAngsuran ELSE 0 END)) <= 0 THEN 'Lunas' ELSE 'Belum Lunas' END) AS statusPinjaman
     FROM tbl_anggota a
     LEFT JOIN tbl_pinjam s ON a.kodeAnggota = s.kodeAnggota
     LEFT JOIN tbl_angsuran k ON s.id = k.idPinjam
@@ -908,24 +900,19 @@ app.get("/get/lapAngsuran/:year", (req, res) => {
   );
 });
 
-app.get("/get/pembagianSHU", (req, res) => {
-  const year = req.params.year; // Ambil nilai tahun dari parameter URL
-
+app.get("/get/lapSHU", (req, res) => {
   const sqlQuery = `
-    SELECT 
-      SUM(CASE WHEN s.jenisTransaksi = 'Pinjam' THEN s.tanggalTransaksi) AS totalSimpanan,
-      (CASE WHEN s.jenisTransaksi = 'Pinjam' THEN s.angsuranPokok) AS jumlahPinjaman,
-      (CASE WHEN s.jenisTransaksi = 'Pinjam' THEN s.angsuran) AS angsuran,
-      (CASE WHEN s.jenisTransaksi = 'Pinjam' THEN s.angsuraJasa ELSE 0 END) AS angsuranPokok_mendatang
-    FROM tbl_anggota a
-    LEFT JOIN tbl_simpan s ON a.kodeAnggota = s.kodeAnggota
-    LEFT JOIN tbl_pinjam s ON a.kodeAnggota = s.kodeAnggota
-    LEFT JOIN tbl_angsuran k ON a.jenisAnggota = k.jenisAnggota
-    GROUP BY a.kodeAnggota, tanggalPinjam
-    ORDER BY a.kodeAnggota
+    SELECT
+      YEAR(tanggalBayar) AS tahunAngsuran
+    FROM
+      tbl_angsuran
+    GROUP BY
+      tahunAngsuran
+    ORDER BY
+      tahunAngsuran DESC
   `;
 
-  db.query(sqlQuery, [year, year, year, year], (err, results) => {
+  db.query(sqlQuery, (err, results) => {
     if (err) {
       console.error("Error fetching data: " + err.sqlMessage);
       res.status(500).json({ error: "Internal Server Error" });
@@ -933,6 +920,58 @@ app.get("/get/pembagianSHU", (req, res) => {
       res.status(200).json(results);
     }
   });
+});
+
+app.get("/get/lapSHU/:year", async (req, res) => {
+  const year = req.params.year;
+
+  try {
+    const totalBayarAngsuranPerTahun = await getQueryResult(`
+      SELECT
+        IFNULL(SUM(CASE WHEN (tanggalBayar IS NOT NULL AND tanggalBayar != '') THEN jasaUang ELSE 0 END), 0) AS totalBayarAngsuranPerTahun
+      FROM
+        tbl_angsuran
+      WHERE
+        YEAR(tanggalBayar) = ${year}
+    `);
+
+    const totalPengeluaranKasPerTahun = await getQueryResult(`
+      SELECT
+        IFNULL(SUM(CASE WHEN jenisTransaksi = 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END), 0) AS totalPengeluaranKasPerTahun
+      FROM
+        tbl_transaksi
+      WHERE
+        YEAR(tanggalTransaksi) = ${year}
+    `);
+
+    const totalSimpananPerTahun = await getQueryResult(`
+      SELECT
+        IFNULL(
+          SUM(
+            CASE
+              WHEN jenisSimpan IN ('Simpanan Pokok', 'Simpanan Wajib', 'Simpanan Sukarela') THEN saldo
+              ELSE 0
+            END
+          ),
+          0
+        ) AS totalSimpananPerTahun
+      FROM
+        tbl_simpan
+      WHERE
+        YEAR(tanggalSimpan) = ${year}
+    `);
+
+    res.status(200).json({
+      totalBayarAngsuranPerTahun:
+        totalBayarAngsuranPerTahun.totalBayarAngsuranPerTahun,
+      totalPengeluaranKasPerTahun:
+        totalPengeluaranKasPerTahun.totalPengeluaranKasPerTahun,
+      totalSimpananPerTahun: totalSimpananPerTahun.totalSimpananPerTahun,
+    });
+  } catch (error) {
+    console.error("Error fetching data: " + error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // API ENDPOINT LAPORAN <<< END
@@ -977,6 +1016,25 @@ app.put("/put/pengaturan", (req, res) => {
       }
     }
   );
+});
+
+app.get("/get/keanggotaan", (req, res) => {
+  const sqlQuery = `
+    SELECT
+      *
+    FROM
+      tbl_keanggotaan
+    ORDER BY
+      id`;
+
+  db.query(sqlQuery, (err, results) => {
+    if (err) {
+      console.error("Error fetching data: " + err.sqlMessage);
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      res.status(200).json(results);
+    }
+  });
 });
 
 // API ENDPOINT PENGATURAN <<< END
