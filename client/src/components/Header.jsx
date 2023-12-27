@@ -19,7 +19,7 @@ export default function Header() {
         className="custom-navbar-color"
       >
         <Container fluid>
-          <Navbar.Brand href="/" className="print-only">
+          <Navbar.Brand href="/kpgansel" className="print-only">
             <img alt="Logo Gansel" src="/kpgansel/logo-gansel.png" width="50" />{" "}
             <span className="fw-bold text-uppercase">Gandaria Selatan</span>
           </Navbar.Brand>

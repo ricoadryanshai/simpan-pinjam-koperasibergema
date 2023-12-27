@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Card, Stack, Form, Table } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrint } from "@fortawesome/free-solid-svg-icons";
@@ -54,12 +54,11 @@ export const LaporanPinjaman = () => {
     }
   };
 
-  React,
-    useEffect(() => {
-      if (selectedYear !== "") {
-        fetchedDataByYear(selectedYear);
-      }
-    }, [selectedYear]);
+  React.useEffect(() => {
+    if (selectedYear !== "") {
+      fetchedDataByYear(selectedYear);
+    }
+  }, [selectedYear]);
 
   const totalAngsuranPokok = lapByYear.reduce((total, laporan) => {
     const jumlah = laporan.bayarAngsuranPokok;
@@ -189,7 +188,7 @@ export const LaporanPinjaman = () => {
       </Stack>
 
       <LaporanPinjamanPrintOut
-        componentRef={componentRef}
+        componentReference={componentRef}
         selectedYear={selectedYear}
         lapByYear={lapByYear}
         totalJumlahAngsuran={totalJumlahAngsuran}

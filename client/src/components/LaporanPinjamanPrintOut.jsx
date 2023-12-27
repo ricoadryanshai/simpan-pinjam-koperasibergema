@@ -4,13 +4,13 @@ import { formatRupiah } from "../utils/format";
 import { Stack, Card, Table } from "react-bootstrap";
 
 export const LaporanPinjamanPrintOut = ({
-  componentRef,
+  componentReference,
   selectedYear,
   lapByYear,
   totalJumlahAngsuran,
 }) => {
   return (
-    <div className="no-display print-only" ref={componentRef}>
+    <div className="no-display print-only" ref={componentReference}>
       <Stack
         direction="horizontal"
         className="justify-content-center border-bottom border-3 mb-3"

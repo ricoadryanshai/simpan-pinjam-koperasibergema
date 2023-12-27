@@ -1,9 +1,8 @@
-// eslint-disable-next-line no-unused-vars
 import React from "react";
 import { PengaturanSimpan } from "../components/PengaturanSimpan";
 import { Container } from "react-bootstrap";
 
-export const Pengaturan = () => {
+export default function Pengaturan() {
   return (
     <>
       <Container fluid>
@@ -11,4 +10,4 @@ export const Pengaturan = () => {
       </Container>
     </>
   );
-};
+}

@@ -32,7 +32,6 @@ export default function SimpanTable() {
   const [showTambahModal, setShowTambahModal] = React.useState(false);
   const [showAmbilModal, setShowAmbilModal] = React.useState(false);
   const [modalData, setModalData] = React.useState([]);
-  const [input, setInput] = React.useState("");
   const [activePage, setActivePage] = React.useState(1);
   const [filteredData, setFilteredData] = React.useState([]);
   const [sortConfig /* setSortConfig */] = React.useState({

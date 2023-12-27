@@ -3,7 +3,11 @@ import React from "react";
 import { Container, Table, Row, Col } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
 
-export const PinjamPrintOut = ({ componentRef, selectedRow, fetchData }) => {
+export const PinjamPrintOut = ({
+  componentReference,
+  selectedRow,
+  fetchData,
+}) => {
   const kodeAnggota = selectedRow?.kodeAnggota || "";
   const nama = selectedRow?.nama || "";
   const tanggalDaftar = selectedRow?.tanggalDaftar || "";
@@ -12,7 +16,7 @@ export const PinjamPrintOut = ({ componentRef, selectedRow, fetchData }) => {
   const sisaHutang = jumlahHutang - jumlahBayar;
 
   return (
-    <div className="no-display print-only" ref={componentRef}>
+    <div className="no-display print-only" ref={componentReference}>
       <Container fluid className="p-3">
         <Row className="border-bottom border-2 mb-1">
           <Col sm={2} className="fw-bold">

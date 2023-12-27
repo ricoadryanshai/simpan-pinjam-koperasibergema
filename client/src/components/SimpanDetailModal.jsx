@@ -1,23 +1,17 @@
-/* eslint-disable react/prop-types */
 import React from "react";
 import { Col, Container, Modal, Row, Table } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
-import { deleteSimpanan } from "../utils/handle";
-// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { FaSearch } from "react-icons/fa";
 import { IMG_SERVER_PORT } from "../utils/server_port";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPrint } from "@fortawesome/free-solid-svg-icons";
+import { faFileExport, faPrint } from "@fortawesome/free-solid-svg-icons";
 import { useReactToPrint } from "react-to-print";
 import { SimpanPrintOut } from "./SimpanPrintOut";
 
 export default function SimpanDetailModal(props) {
-  const { show, onClose, rowData, modalData, updateModalData, clearModalData } =
-    props;
+  const { show, onClose, rowData, modalData, clearModalData } = props;
 
-  const [isDeleting, setIsDeleting] = React.useState(false);
-  const [headerData, setHeaderData] = React.useState({
+  const [, /* headerData */ setHeaderData] = React.useState({
     kodeAnggota: "",
     nama: "",
     tanggalDaftar: "",
@@ -28,19 +22,6 @@ export default function SimpanDetailModal(props) {
   const handleClose = () => {
     onClose();
     clearModalData();
-  };
-
-  const handleDelete = (transactionToDelete) => {
-    deleteSimpanan(
-      rowData.kodeAnggota,
-      transactionToDelete.id,
-      modalData,
-      setHeaderData,
-      updateModalData,
-      setIsDeleting,
-      formatRupiah,
-      headerData
-    );
   };
 
   const componentRef = React.useRef();
@@ -96,11 +77,15 @@ export default function SimpanDetailModal(props) {
                 <Row>{formatDate(tanggalRowData)}</Row>
                 <Row>{formatRupiah(saldoRowData)}</Row>
               </Col>
-              <Col className="d-flex flex-row-reverse align-items-end">
+              <Col className="d-flex flex-row-reverse align-items-end flex-gap-1">
+                <FontAwesomeIcon
+                  icon={faFileExport}
+                  className="custom-icon-pointer"
+                />
                 <FontAwesomeIcon
                   icon={faPrint}
                   onClick={handlePrint}
-                  className="custom-icon-pointer flex-shrink-1"
+                  className="custom-icon-pointer"
                 />
               </Col>
             </Row>
@@ -128,7 +113,6 @@ export default function SimpanDetailModal(props) {
                 <th>Jenis Transaksi</th>
                 <th>Nominal</th>
                 <th>Bukti Transfer</th>
-                {/* <th>Aksi</th> */}
               </tr>
             </thead>
             <tbody>
@@ -173,14 +157,6 @@ export default function SimpanDetailModal(props) {
                         <span>Tidak ada bukti transfer</span>
                       )}
                     </td>
-                    {/* <td>
-                      <FontAwesomeIcon
-                        onClick={() => handleDelete(transaction)}
-                        disabled={isDeleting}
-                        icon={faTrashCan}
-                        style={{ cursor: "pointer", color: "red" }}
-                      />
-                    </td> */}
                   </tr>
                 ))}
             </tbody>
@@ -190,7 +166,7 @@ export default function SimpanDetailModal(props) {
 
       <SimpanPrintOut
         rowData={rowData}
-        componentRef={componentRef}
+        componentReference={componentRef}
         modalData={modalData}
       />
     </>

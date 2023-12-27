@@ -58,7 +58,7 @@ export const LaporanSHU = ({ keanggotaan }) => {
   };
 
   React.useEffect(() => {
-    if (selectedYear != "" || selectedYear != null) {
+    if (selectedYear !== "" || selectedYear != null) {
       fetchLapSHU(selectedYear);
     }
   }, [selectedYear]);
@@ -148,7 +148,7 @@ export const LaporanSHU = ({ keanggotaan }) => {
       </Stack>
 
       <LaporanSHUPrintOut
-        componentRef={componentRef}
+        componentReference={componentRef}
         selectedYear={selectedYear}
         keanggotaan={keanggotaan}
         lapSHUByYear={lapSHUByYear}

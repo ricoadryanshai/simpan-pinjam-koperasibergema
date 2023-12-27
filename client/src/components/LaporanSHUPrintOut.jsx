@@ -4,13 +4,13 @@ import { Container, Card, Stack, Row, Col } from "react-bootstrap";
 import { formatRupiah } from "../utils/format";
 
 export const LaporanSHUPrintOut = ({
-  componentRef,
+  componentReference,
   selectedYear,
   keanggotaan,
   lapSHUByYear,
 }) => {
   return (
-    <div className="no-display print-only" ref={componentRef}>
+    <div className="no-display print-only" ref={componentReference}>
       <Container fluid className="p-3">
         <Card.Title className="fw-bold text-uppercase text-center mb-3">
           {selectedYear ? (

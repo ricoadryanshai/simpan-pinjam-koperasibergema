@@ -3,14 +3,14 @@ import React from "react";
 import { Table, Row, Col, Container } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
 
-export const SimpanPrintOut = ({ rowData, componentRef, modalData }) => {
+export const SimpanPrintOut = ({ rowData, componentReference, modalData }) => {
   const kodeRowData = rowData ? rowData.kodeAnggota : "";
   const namaRowData = rowData ? rowData.nama : "";
   const tanggalRowData = rowData ? rowData.tanggalDaftar : "";
   const saldoRowData = rowData ? rowData.totalSaldo : "";
 
   return (
-    <div className="no-display print-only" ref={componentRef}>
+    <div className="no-display print-only" ref={componentReference}>
       <Container fluid className="p-3">
         <Row className="border-bottom border-2 mb-1">
           <Col sm={2} className="fw-bold">

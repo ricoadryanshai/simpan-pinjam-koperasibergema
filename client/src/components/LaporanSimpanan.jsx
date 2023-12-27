@@ -120,6 +120,7 @@ export const LaporanSimpanan = () => {
                 <th>Simpanan Pokok</th>
                 <th>Simpanan Wajib</th>
                 <th>Simpanan Sukarela</th>
+                <th>SHU</th>
                 <th>Penarikan</th>
                 <th>Total Simpanan</th>
               </tr>
@@ -145,6 +146,7 @@ export const LaporanSimpanan = () => {
                     <td>{formatRupiah(laporan.simpananPokok)}</td>
                     <td>{formatRupiah(laporan.simpananWajib)}</td>
                     <td>{formatRupiah(laporan.simpananSukarela)}</td>
+                    <td>{formatRupiah(sisaHasilUsaha)}</td>
                     <td>{formatRupiah(laporan.penarikan)}</td>
                     <td className="fw-bold">{formatRupiah(totalSaldo)}</td>
                   </tr>
@@ -173,7 +175,7 @@ export const LaporanSimpanan = () => {
       </Stack>
 
       <LaporanSimpananPrintOut
-        componentRef={componentRef}
+        componentReference={componentRef}
         lapByYear={lapByYear}
         jumlahSimpananAllRows={jumlahSimpananAllRows}
         selectedYear={selectedYear}

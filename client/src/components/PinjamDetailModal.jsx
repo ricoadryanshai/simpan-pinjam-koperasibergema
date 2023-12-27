@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React from "react";
-import { Col, Container, Modal, Pagination, Row, Table } from "react-bootstrap";
+import { Col, Container, Modal, Row, Table } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
 import { getPinjamByKodeAnggota } from "../utils/api";
 import { FaSearch } from "react-icons/fa";
@@ -164,7 +164,7 @@ export const PinjamDetailModal = (props) => {
       <PinjamPrintOut
         selectedRow={selectedRow}
         fetchData={fetchData}
-        componentRef={componentRef}
+        componentReference={componentRef}
       />
     </>
   );

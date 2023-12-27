@@ -1,5 +1,3 @@
-// eslint-disable-next-line no-unused-vars
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -10,8 +8,8 @@ import {
   Pinjaman,
   Laporan,
   Transaksi,
+  Pengaturan,
 } from "./pages/index";
-import { Pengaturan } from "./pages/Pengaturan";
 
 function App() {
   return (

@@ -30,7 +30,6 @@ export default function PinjamTable() {
   const [showPinjam, setShowPinjam] = React.useState(false);
   const [showBayar, setShowBayar] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState(null);
-  const [input, setInput] = React.useState("");
   const [activePage, setActivePage] = React.useState(1);
   const [filteredData, setFilteredData] = React.useState([]);
   const [sortConfig /* setSortConfig */] = React.useState({
