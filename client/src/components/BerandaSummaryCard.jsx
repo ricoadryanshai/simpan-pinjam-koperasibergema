@@ -30,7 +30,11 @@ export const BerandaSummaryCard = () => {
   return (
     <>
       <Stack direction="horizontal" gap={3} className="flex-wrap">
-        <Card bg="danger" text="white" className="p-2 position-relative">
+        <Card
+          bg="danger"
+          text="white"
+          className="p-2 position-relative custom-card"
+        >
           <Container className="p-1">
             <Card.Title className="pb-2 text-uppercase fw-bold border-bottom border-2">
               Pinjaman
@@ -56,11 +60,11 @@ export const BerandaSummaryCard = () => {
           </Container>
           <FontAwesomeIcon icon={faLandmark} className="floating-icon" />
         </Card>
+
         <Card
           bg="success"
           text="white"
-          className="p-2 position-relative"
-          style={{ minWidth: "421.33px" }}
+          className="p-2 position-relative custom-card"
         >
           <Container className="p-1">
             <Card.Title className="pb-2 text-uppercase fw-bold border-bottom border-2">
@@ -87,11 +91,11 @@ export const BerandaSummaryCard = () => {
           </Container>
           <FontAwesomeIcon icon={faPiggyBank} className="floating-icon" />
         </Card>
+
         <Card
           bg="primary"
           text="white"
-          className="p-2 position-relative"
-          style={{ minWidth: "421.33px" }}
+          className="p-2 position-relative custom-card"
         >
           <Container className="p-1">
             <Card.Title className="pb-2 text-uppercase fw-bold border-bottom border-2">

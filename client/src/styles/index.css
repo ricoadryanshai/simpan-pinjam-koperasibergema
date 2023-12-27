@@ -16,6 +16,10 @@ body {
 .flex-gap-1 {
   gap: 1rem;
 }
+.custom-card {
+  width: 400px;
+  height: 200px;
+}
 .custom-width-card {
   min-width: 1200px;
 }
