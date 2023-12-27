@@ -192,8 +192,6 @@ export const LaporanPinjaman = () => {
         componentRef={componentRef}
         selectedYear={selectedYear}
         lapByYear={lapByYear}
-        totalAngsuranPokok={totalAngsuranPokok}
-        totalAngsuranJasa={totalAngsuranJasa}
         totalJumlahAngsuran={totalJumlahAngsuran}
       />
     </>

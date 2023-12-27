@@ -1,14 +1,12 @@
 /* eslint-disable react/prop-types */
 import React from "react";
-import { formatDate, formatRupiah } from "../utils/format";
+import { formatRupiah } from "../utils/format";
 import { Stack, Card, Table } from "react-bootstrap";
 
 export const LaporanPinjamanPrintOut = ({
   componentRef,
   selectedYear,
   lapByYear,
-  totalAngsuranPokok,
-  totalAngsuranJasa,
   totalJumlahAngsuran,
 }) => {
   return (
