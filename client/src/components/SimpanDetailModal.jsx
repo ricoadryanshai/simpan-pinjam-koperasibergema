@@ -1,14 +1,16 @@
 /* eslint-disable react/prop-types */
 import React from "react";
-import { Col, Container, Modal, Pagination, Row, Table } from "react-bootstrap";
+import { Col, Container, Modal, Row, Table } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
 import { deleteSimpanan } from "../utils/handle";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
+// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { FaSearch } from "react-icons/fa";
 import { IMG_SERVER_PORT } from "../utils/server_port";
-
-const ITEMS_PER_PAGE = 10;
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPrint } from "@fortawesome/free-solid-svg-icons";
+import { useReactToPrint } from "react-to-print";
+import { SimpanPrintOut } from "./SimpanPrintOut";
 
 export default function SimpanDetailModal(props) {
   const { show, onClose, rowData, modalData, updateModalData, clearModalData } =
@@ -22,7 +24,6 @@ export default function SimpanDetailModal(props) {
     totalSaldo: "",
   });
   const [input, setInput] = React.useState("");
-  const [activePage, setActivePage] = React.useState(1);
 
   const handleClose = () => {
     onClose();
@@ -42,6 +43,12 @@ export default function SimpanDetailModal(props) {
     );
   };
 
+  const componentRef = React.useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
+
   React.useEffect(() => {
     if (rowData) {
       const { kodeAnggota, nama, tanggalDaftar, totalSaldo } = rowData;
@@ -59,33 +66,6 @@ export default function SimpanDetailModal(props) {
   const tanggalRowData = rowData ? rowData.tanggalDaftar : "";
   const saldoRowData = rowData ? rowData.totalSaldo : "";
 
-  const handlePageChange = (pageNumber) => {
-    setActivePage(pageNumber);
-  };
-
-  const goToFirstPage = () => {
-    setActivePage(1);
-  };
-
-  const goToLastPage = () => {
-    setActivePage(Math.ceil(modalData.length / ITEMS_PER_PAGE));
-  };
-
-  const goToPrevPage = () => {
-    setActivePage((prevPage) => Math.max(prevPage - 1, 1));
-  };
-
-  const goToNextPage = () => {
-    setActivePage((prevPage) =>
-      Math.min(prevPage + 1, Math.ceil(modalData.length / ITEMS_PER_PAGE))
-    );
-  };
-
-  const indexOfLastEntry = activePage * ITEMS_PER_PAGE;
-  const indexOfFirstEntry = indexOfLastEntry - ITEMS_PER_PAGE;
-  const currentEntries = modalData.slice(indexOfFirstEntry, indexOfLastEntry);
-
-  const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
   return (
     <>
       <Modal
@@ -116,7 +96,13 @@ export default function SimpanDetailModal(props) {
                 <Row>{formatDate(tanggalRowData)}</Row>
                 <Row>{formatRupiah(saldoRowData)}</Row>
               </Col>
-              <Col />
+              <Col className="d-flex flex-row-reverse align-items-end">
+                <FontAwesomeIcon
+                  icon={faPrint}
+                  onClick={handlePrint}
+                  className="custom-icon-pointer flex-shrink-1"
+                />
+              </Col>
             </Row>
           </Container>
           <hr className="mt-2 mb-2" />
@@ -142,11 +128,11 @@ export default function SimpanDetailModal(props) {
                 <th>Jenis Transaksi</th>
                 <th>Nominal</th>
                 <th>Bukti Transfer</th>
-                <th>Aksi</th>
+                {/* <th>Aksi</th> */}
               </tr>
             </thead>
             <tbody>
-              {currentEntries
+              {modalData
                 .filter((transaction) => {
                   const inputString = input.toString().toLowerCase();
                   return (
@@ -162,7 +148,7 @@ export default function SimpanDetailModal(props) {
                 })
                 .map((transaction, index) => (
                   <tr className="text-center align-middle" key={index}>
-                    <td>{index + startIndex}</td>
+                    <td>{index + 1}</td>
                     <td>{formatDate(transaction.tanggalSimpan)}</td>
                     <td>{transaction.jenisSimpan}</td>
                     <td
@@ -187,39 +173,26 @@ export default function SimpanDetailModal(props) {
                         <span>Tidak ada bukti transfer</span>
                       )}
                     </td>
-                    <td>
+                    {/* <td>
                       <FontAwesomeIcon
                         onClick={() => handleDelete(transaction)}
                         disabled={isDeleting}
                         icon={faTrashCan}
                         style={{ cursor: "pointer", color: "red" }}
                       />
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
             </tbody>
           </Table>
-          <div className="d-flex justify-content-center">
-            <Pagination>
-              <Pagination.First onClick={goToFirstPage} />
-              <Pagination.Prev onClick={goToPrevPage} />
-              {[...Array(Math.ceil(modalData.length / ITEMS_PER_PAGE))].map(
-                (_, index) => (
-                  <Pagination.Item
-                    key={index + 1}
-                    active={index + 1 === activePage}
-                    onClick={() => handlePageChange(index + 1)}
-                  >
-                    {index + 1}
-                  </Pagination.Item>
-                )
-              )}
-              <Pagination.Next onClick={goToNextPage} />
-              <Pagination.Last onClick={goToLastPage} />
-            </Pagination>
-          </div>
         </Modal.Body>
       </Modal>
+
+      <SimpanPrintOut
+        rowData={rowData}
+        componentRef={componentRef}
+        modalData={modalData}
+      />
     </>
   );
 }

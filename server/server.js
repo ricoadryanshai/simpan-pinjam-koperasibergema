@@ -75,6 +75,27 @@ function getQueryResult(query) {
   });
 }
 
+function findAvailableID(db) {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT MIN(t1.kodeAnggota + 1) AS nextID
+      FROM tbl_anggota t1
+      LEFT JOIN your_table t2 ON t1.id + 1 = t2.id
+      WHERE t2.id IS NULL;
+    `;
+
+    db.query(query, (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Jika tidak ada ID yang tersedia, kembalikan ID awal (misalnya 1)
+        const nextID = result[0].nextID || 1;
+        resolve(nextID);
+      }
+    });
+  });
+}
+
 // START >>> API ENDPOINT BERANDA
 
 app.get("/get/statistik", async (req, res) => {
@@ -232,20 +253,29 @@ app.delete("/delete/anggota/:id", (req, res) => {
   });
 });
 
-app.post("/post/anggota", (req, res) => {
-  const { kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP } =
-    req.body;
+app.post("/post/anggota", async (req, res) => {
+  const {
+    kodeAnggota,
+    nama,
+    jenisAnggota,
+    jenKel,
+    tempatLahir,
+    tanggalLahir,
+    alamat,
+    noHP,
+  } = req.body;
 
   const currentDate = new Date();
   const tanggalDaftar = `${currentDate.getFullYear()}/${
     currentDate.getMonth() + 1
   }/${currentDate.getDate()}`;
 
-  const insertQuery = `INSERT INTO tbl_anggota (kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP, tanggalDaftar) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+  const insertQuery = `INSERT INTO tbl_anggota (kodeAnggota, nama, jenisAnggota, jenKel, tempatLahir, tanggalLahir, alamat, noHP, tanggalDaftar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   const values = [
     kodeAnggota,
     nama,
+    jenisAnggota,
     jenKel,
     tempatLahir,
     tanggalLahir,
@@ -279,10 +309,11 @@ app.get("/get/simpan", (req, res) => {
       WHEN SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN -tbl_simpan.saldo ELSE tbl_simpan.saldo END) = 0 THEN 0
       ELSE SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN -tbl_simpan.saldo ELSE tbl_simpan.saldo END)
     END AS totalSaldo
-  FROM tbl_anggota
-  LEFT JOIN tbl_simpan ON tbl_anggota.kodeAnggota = tbl_simpan.kodeAnggota
-  GROUP BY tbl_anggota.kodeAnggota, tbl_anggota.nama
-  ORDER BY totalSaldo DESC, kodeAnggota ASC;
+    FROM tbl_anggota
+    LEFT JOIN tbl_simpan ON tbl_anggota.kodeAnggota = tbl_simpan.kodeAnggota
+    WHERE tbl_anggota.jenisAnggota != 'Non-Benefit'
+    GROUP BY tbl_anggota.kodeAnggota, tbl_anggota.nama
+    ORDER BY kodeAnggota ASC
   `;
 
   db.query(sqlQuery, (err, results) => {
@@ -525,9 +556,27 @@ app.post("/post/pinjam", async (req, res) => {
       });
     });
 
+    // Get bungaAngsuran from tbl_pengaturan
+    const bungaAngsuranQuery = `SELECT bungaAngsuran FROM tbl_pengaturan WHERE idPengaturan = 1`;
+
+    const bungaAngsuranFromDB = await new Promise((resolve, reject) => {
+      db.query(bungaAngsuranQuery, (err, result) => {
+        if (err) {
+          console.error("Error retrieving bungaAngsuran: " + err.sqlMessage);
+          reject(err);
+        } else {
+          if (result.length > 0) {
+            resolve(parseFloat(result[0].bungaAngsuran));
+          } else {
+            reject(new Error("No data found for idPengaturan = 1"));
+          }
+        }
+      });
+    });
+
     // Calculate values for tbl_angsuran
     const uangAngsuran = angsuranPokok / angsuran;
-    const jasaUang = angsuranPokok * 0.02;
+    const jasaUang = angsuranPokok * (parseInt(bungaAngsuranFromDB) / 100);
     const totalBayar = uangAngsuran + jasaUang;
 
     // Create an array to hold values for multiple rows insertion into tbl_angsuran
@@ -580,10 +629,12 @@ app.delete("/delete/pinjam/:kodeAnggota/:id", (req, res) => {
 app.put("/put/pinjam/:id", async (req, res) => {
   const { id } = req.params;
 
-  const today = new Date()
-    .toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
-    .split(", ")[0];
-  const formattedDate = today.split("/").reverse().join("-");
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  const formattedDate = `${year}-${month}-${day}`;
 
   const updateQuery = `
     UPDATE tbl_angsuran
@@ -604,10 +655,12 @@ app.put("/put/pinjam/:id", async (req, res) => {
 app.put("/put/angsuran/:idPinjam", async (req, res) => {
   const { idPinjam } = req.params;
 
-  const today = new Date()
-    .toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
-    .split(", ")[0];
-  const formattedDate = today.split("/").reverse().join("-");
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  const formattedDate = `${year}-${month}-${day}`;
 
   const updateQuery = `
     UPDATE tbl_angsuran
@@ -808,7 +861,7 @@ app.get("/get/lapSimpan", (req, res) => {
 });
 
 app.get("/get/lapSimpan/:year", (req, res) => {
-  const year = req.params.year;
+  const year = parseInt(req.params.year);
 
   const sqlQuery = `
     SELECT 
@@ -819,11 +872,11 @@ app.get("/get/lapSimpan/:year", (req, res) => {
       SUM(CASE WHEN s.jenisSimpan = 'Simpanan Pokok' THEN s.saldo ELSE 0 END) AS simpananPokok,
       SUM(CASE WHEN s.jenisSimpan = 'Simpanan Wajib' THEN s.saldo ELSE 0 END) AS simpananWajib,
       SUM(CASE WHEN s.jenisSimpan = 'Simpanan Sukarela' THEN s.saldo ELSE 0 END) AS simpananSukarela,
-      SUM(CASE WHEN s.jenisSimpan = 'Ambil Simpanan' THEN s.saldo ELSE 0 END) AS penarikan
+      SUM(CASE WHEN s.jenisSimpan = 'Ambil Simpanan' AND YEAR(s.tanggalSimpan) = ${year} THEN s.saldo ELSE 0 END) AS penarikan
     FROM tbl_anggota a
     LEFT JOIN tbl_simpan s ON a.kodeAnggota = s.kodeAnggota
     LEFT JOIN tbl_keanggotaan k ON a.jenisAnggota = k.jenisAnggota
-    WHERE YEAR(s.tanggalSimpan) = ? 
+    WHERE YEAR(s.tanggalSimpan) = ${year} 
     GROUP BY a.kodeAnggota, tahunSimpan
     ORDER BY a.kodeAnggota
   `;
@@ -867,13 +920,15 @@ app.get("/get/lapAngsuran/:year", (req, res) => {
       s.tanggalTransaksi,
       s.angsuranPokok AS nominalPinjam,
       s.angsuran,
-      (s.angsuranPokok / s.angsuran) AS angsuranPokok,
-      (s.angsuranPokok * (SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100) AS angsuranJasa,
-      ((s.angsuranPokok / s.angsuran) + (s.angsuranPokok * (SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100)) AS angsuranPerBulan,
-      SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.uangAngsuran ELSE 0 END) AS bayarAngsuranPokok,
-      SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.jasaUang ELSE 0 END) AS bayarAngsuranJasa,
-      SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.totalBayar ELSE 0 END) AS bayarTagihan,
-      (CASE WHEN (s.angsuranPokok - SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.uangAngsuran ELSE 0 END)) <= 0 THEN 'Lunas' ELSE 'Belum Lunas' END) AS statusPinjaman
+      s.angsuranPerBulan AS nominalTagihan,
+      s.angsuranJasa AS nominalJasa,
+      ROUND((s.angsuranPokok / s.angsuran), 2) AS angsuranPokok,
+      ROUND((s.angsuranPokok * (SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100), 2) AS angsuranJasa,
+      ROUND(((s.angsuranPokok / s.angsuran) + (s.angsuranPokok * (SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100)), 2) AS angsuranPerBulan,
+      ROUND(SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.uangAngsuran ELSE 0 END), 2) AS bayarAngsuranPokok,
+      ROUND(SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.jasaUang ELSE 0 END), 2) AS bayarAngsuranJasa,
+      ROUND(SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.totalBayar ELSE 0 END), 2) AS bayarTagihan,
+      (CASE WHEN (s.angsuranPokok - ROUND(SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.uangAngsuran ELSE 0 END), 2)) <= 0 THEN 'Lunas' ELSE 'Belum Lunas' END) AS statusPinjaman
     FROM tbl_anggota a
     LEFT JOIN tbl_pinjam s ON a.kodeAnggota = s.kodeAnggota
     LEFT JOIN tbl_angsuran k ON s.id = k.idPinjam
@@ -902,14 +957,11 @@ app.get("/get/lapAngsuran/:year", (req, res) => {
 
 app.get("/get/lapSHU", (req, res) => {
   const sqlQuery = `
-    SELECT
-      YEAR(tanggalBayar) AS tahunAngsuran
-    FROM
-      tbl_angsuran
-    GROUP BY
-      tahunAngsuran
-    ORDER BY
-      tahunAngsuran DESC
+    SELECT 
+      YEAR(tanggalTransaksi) AS tahunPinjam
+    FROM tbl_pinjam
+    GROUP BY tahunPinjam
+    ORDER BY tahunPinjam DESC
   `;
 
   db.query(sqlQuery, (err, results) => {

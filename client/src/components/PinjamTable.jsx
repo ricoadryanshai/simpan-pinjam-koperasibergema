@@ -32,6 +32,11 @@ export default function PinjamTable() {
   const [selectedRow, setSelectedRow] = React.useState(null);
   const [input, setInput] = React.useState("");
   const [activePage, setActivePage] = React.useState(1);
+  const [filteredData, setFilteredData] = React.useState([]);
+  const [sortConfig /* setSortConfig */] = React.useState({
+    key: "nama",
+    direction: "asc",
+  });
 
   const handleModalShow = async (modalType, pinjam) => {
     switch (modalType) {
@@ -88,7 +93,7 @@ export default function PinjamTable() {
   };
 
   const goToLastPage = () => {
-    setActivePage(Math.ceil(pinjamData.length / ITEMS_PER_PAGE));
+    setActivePage(Math.ceil(filteredData.length / ITEMS_PER_PAGE));
   };
 
   const goToPrevPage = () => {
@@ -97,19 +102,83 @@ export default function PinjamTable() {
 
   const goToNextPage = () => {
     setActivePage((prevPage) =>
-      Math.min(prevPage + 1, Math.ceil(pinjamData.length / ITEMS_PER_PAGE))
+      Math.min(prevPage + 1, Math.ceil(filteredData.length / ITEMS_PER_PAGE))
     );
   };
 
+  const handleInputChange = (e) => {
+    const inputValue = e.target.value.toLowerCase();
+
+    const filteredResult = sortedData.filter((pinjam) => {
+      const kodeAnggota = pinjam.kodeAnggota.toLowerCase();
+      const nama = pinjam.nama.toLowerCase();
+
+      return kodeAnggota.includes(inputValue) || nama.includes(inputValue);
+    });
+
+    // Update state filteredData dengan hasil pencarian
+    setFilteredData(filteredResult);
+
+    // Set activePage kembali ke halaman pertama setelah melakukan pencarian
+    setActivePage(1);
+  };
+
+  const customSort = (data, sortConfig) => {
+    const sortedData = [...data];
+    sortedData.sort((a, b) => {
+      const debtA = a.jumlahHutang - a.jumlahBayar;
+      const debtB = b.jumlahHutang - b.jumlahBayar;
+
+      if (debtA > 0 && debtB > 0) {
+        return sortConfig.direction === "asc"
+          ? a.kodeAnggota.localeCompare(b.kodeAnggota)
+          : b.kodeAnggota.localeCompare(a.kodeAnggota);
+      }
+
+      if (debtA > 0 && debtB <= 0) {
+        return sortConfig.direction === "asc" ? -1 : 1;
+      }
+
+      if (debtA <= 0 && debtB > 0) {
+        return sortConfig.direction === "asc" ? 1 : -1;
+      }
+
+      if (debtA === 0 && debtB === 0) {
+        return sortConfig.direction === "asc"
+          ? a.kodeAnggota.localeCompare(b.kodeAnggota)
+          : b.kodeAnggota.localeCompare(a.kodeAnggota);
+      }
+
+      return sortConfig.direction === "asc" ? debtA - debtB : debtB - debtA;
+    });
+    return sortedData;
+  };
+
+  const sortedData = React.useMemo(() => {
+    if (sortConfig !== null) {
+      return customSort(pinjamData, sortConfig);
+    }
+    return [...pinjamData]; // Jika tidak ada konfigurasi pengurutan, kembalikan data asli
+  }, [pinjamData, sortConfig]);
+
   const indexOfLastEntry = activePage * ITEMS_PER_PAGE;
   const indexOfFirstEntry = indexOfLastEntry - ITEMS_PER_PAGE;
-  const currentEntries = pinjamData.slice(indexOfFirstEntry, indexOfLastEntry);
+  const currentEntries = filteredData.slice(
+    indexOfFirstEntry,
+    indexOfLastEntry
+  );
 
   const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
 
   React.useEffect(() => {
     fetchedData();
   }, []);
+
+  React.useEffect(() => {
+    if (sortedData.length > 0) {
+      setFilteredData(sortedData);
+    }
+  }, [sortedData]);
   return (
     <>
       <div className="d-flex justify-content-center">
@@ -127,7 +196,7 @@ export default function PinjamTable() {
                     <FaSearch id="search-icon" />
                     <input
                       placeholder="Ketika untuk mencari data..."
-                      onChange={(e) => setInput(e.target.value)}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -144,92 +213,47 @@ export default function PinjamTable() {
                 </tr>
               </thead>
               <tbody>
-                {currentEntries
-                  .filter((pinjam) => {
-                    const inputString = input.toString().toLowerCase();
-                    return (
-                      (pinjam.kodeAnggota &&
-                        pinjam.kodeAnggota
-                          .toLowerCase()
-                          .includes(inputString)) ||
-                      (pinjam.nama &&
-                        pinjam.nama.toLowerCase().includes(inputString))
-                    );
-                  })
-                  .sort((a, b) => {
-                    const debtA = a.jumlahHutang - a.jumlahBayar;
-                    const debtB = b.jumlahHutang - b.jumlahBayar;
-
-                    // Urutan jika sisa tagihan lebih dari 0, dari kecil ke besar kode anggota
-                    if (debtA > 0 && debtB > 0) {
-                      return a.kodeAnggota.localeCompare(b.kodeAnggota);
-                    }
-
-                    // Urutan jika sisa tagihan lebih dari 0 harus diurutkan terlebih dahulu
-                    if (debtA > 0 && debtB <= 0) {
-                      return -1;
-                    }
-
-                    // Urutan jika sisa tagihan lebih dari 0 harus diurutkan terlebih dahulu
-                    if (debtA <= 0 && debtB > 0) {
-                      return 1;
-                    }
-
-                    // Jika kedua nilai hutang-bayar sama-sama 0, maka urutkan berdasarkan kode anggota
-                    if (debtA === 0 && debtB === 0) {
-                      return a.kodeAnggota.localeCompare(b.kodeAnggota);
-                    }
-
-                    // Jika salah satu dari nilai hutang-bayar adalah 0, urutkan yang 0 terlebih dahulu
-                    return debtB - debtA;
-                  })
-                  .map((pinjam, index) => (
-                    <tr key={index} className="text-center align-middle">
-                      <td>{index + startIndex}</td>
-                      <td>{pinjam.kodeAnggota}</td>
-                      <td className="text-start">{pinjam.nama}</td>
-                      <td className="text-start">
-                        {formatRupiah(pinjam.jumlahHutang - pinjam.jumlahBayar)}
-                      </td>
-                      <td className="text-center">
+                {currentEntries.map((pinjam, index) => (
+                  <tr key={index} className="text-center align-middle">
+                    <td>{index + startIndex}</td>
+                    <td>{pinjam.kodeAnggota}</td>
+                    <td className="text-start">{pinjam.nama}</td>
+                    <td className="text-start">
+                      {formatRupiah(pinjam.jumlahHutang - pinjam.jumlahBayar)}
+                    </td>
+                    <td className="text-center">
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleModalShow("detail", pinjam)}
+                      >
+                        <FontAwesomeIcon icon={faCircleInfo} className="me-1" />
+                        Detail
+                      </Button>
+                    </td>
+                    <td className="text-center">
+                      {pinjam.jumlahHutang - pinjam.jumlahBayar <= 0 ? (
                         <Button
-                          variant="secondary"
-                          onClick={() => handleModalShow("detail", pinjam)}
+                          variant="warning"
+                          onClick={() => handleModalShow("pinjam", pinjam)}
+                        >
+                          <FontAwesomeIcon icon={faLandmark} className="me-1" />
+                          Pinjam
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="success"
+                          onClick={() => handleModalShow("bayar", pinjam)}
                         >
                           <FontAwesomeIcon
-                            icon={faCircleInfo}
+                            icon={faMoneyBill}
                             className="me-1"
                           />
-                          Detail
+                          Bayar
                         </Button>
-                      </td>
-                      <td className="text-center">
-                        {pinjam.jumlahHutang - pinjam.jumlahBayar <= 0 ? (
-                          <Button
-                            variant="warning"
-                            onClick={() => handleModalShow("pinjam", pinjam)}
-                          >
-                            <FontAwesomeIcon
-                              icon={faLandmark}
-                              className="me-1"
-                            />
-                            Pinjam
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="success"
-                            onClick={() => handleModalShow("bayar", pinjam)}
-                          >
-                            <FontAwesomeIcon
-                              icon={faMoneyBill}
-                              className="me-1"
-                            />
-                            Bayar
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                      )}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </Table>
           </Container>
@@ -264,6 +288,7 @@ export default function PinjamTable() {
         show={showPinjam}
         onHide={() => handleModalClose("pinjam")}
         selectedRow={selectedRow}
+        setShowPinjam={setShowPinjam}
       />
       <PinjamBayarModal
         show={showBayar}

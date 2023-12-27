@@ -46,14 +46,13 @@ export default function SimpanAmbilModal(props) {
         return;
       }
 
-      const response = await tambahSimpan(
+      await tambahSimpan(
         rowData.kodeAnggota,
         document.getElementById("inputTanggalTransaksi").value,
         document.getElementById("formPlaintextJenisSimpanan").value,
         inputNominal,
         selectedFile
       );
-      console.log(response);
 
       onClose();
       fetchData();

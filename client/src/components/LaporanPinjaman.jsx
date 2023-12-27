@@ -5,12 +5,19 @@ import { faPrint } from "@fortawesome/free-solid-svg-icons";
 import { formatDate, formatRupiah } from "../utils/format";
 import { useReactToPrint } from "react-to-print";
 import { getLapAngsuran, getLapAngsuranByYear } from "../utils/api";
+import { LaporanPinjamanPrintOut } from "./LaporanPinjamanPrintOut";
 
 export const LaporanPinjaman = () => {
   const [lapAngsuran, setLapAngsuran] = React.useState([]);
   const [lapByYear, setByYear] = React.useState([]);
   const [selectedYear, setSelectedYear] = React.useState("");
   const [uniqueYears, setUniqueYears] = React.useState([]);
+
+  const componentRef = React.useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
 
   const fetchData = async () => {
     try {
@@ -89,7 +96,11 @@ export const LaporanPinjaman = () => {
             </Card.Title>
           </Stack>
           <Stack direction="horizontal" className="justify-content-end">
-            <FontAwesomeIcon icon={faPrint} style={{ cursor: "pointer" }} />
+            <FontAwesomeIcon
+              icon={faPrint}
+              onClick={handlePrint}
+              style={{ cursor: "pointer" }}
+            />
           </Stack>
         </Stack>
         <Stack gap={3}>
@@ -117,6 +128,7 @@ export const LaporanPinjaman = () => {
                 <th className="text-center">Nama</th>
                 <th className="text-center">Tanggal Pinjam</th>
                 <th>Nominal Pinjaman</th>
+                <th>Angsuran</th>
                 <th>Angsuran Pokok</th>
                 <th>Angsuran Jasa</th>
                 <th>Angsuran/Bulan</th>
@@ -135,10 +147,11 @@ export const LaporanPinjaman = () => {
                     {formatDate(laporan.tanggalTransaksi)}
                   </td>
                   <td>{formatRupiah(laporan.nominalPinjam)}</td>
+                  <td>{laporan.angsuran}</td>
                   <td>{formatRupiah(laporan.angsuranPokok)}</td>
                   <td>{formatRupiah(laporan.angsuranJasa)}</td>
                   <td>{formatRupiah(laporan.angsuranPerBulan)}</td>
-                  <td className="fw-bold">
+                  <td className="fw-bold border-start">
                     {formatRupiah(laporan.bayarAngsuranPokok)}
                   </td>
                   <td className="fw-bold">
@@ -174,6 +187,15 @@ export const LaporanPinjaman = () => {
           </Table>
         </Stack>
       </Stack>
+
+      <LaporanPinjamanPrintOut
+        componentRef={componentRef}
+        selectedYear={selectedYear}
+        lapByYear={lapByYear}
+        totalAngsuranPokok={totalAngsuranPokok}
+        totalAngsuranJasa={totalAngsuranJasa}
+        totalJumlahAngsuran={totalJumlahAngsuran}
+      />
     </>
   );
 };

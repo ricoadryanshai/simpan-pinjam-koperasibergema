@@ -1,9 +1,15 @@
-export const formatDate = (dateString) => {
-  const inputDate = new Date(dateString);
+export const formatDate = (dateInput) => {
+  let inputDate = dateInput;
+
+  // Jika data yang diterima bukan string, konversi ke string terlebih dahulu
+  if (!(dateInput instanceof Date)) {
+    inputDate = new Date(dateInput);
+  }
+
   const isInvalidDate = isNaN(inputDate.getTime());
 
   if (isInvalidDate) {
-    return "dd/mm/yyyy";
+    return "dd-mm-yyyy";
   }
 
   const options = {

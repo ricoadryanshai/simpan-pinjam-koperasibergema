@@ -11,14 +11,12 @@ import {
   updateLunasAngsuran,
 } from "../utils/api";
 
-const today = new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" });
-const [month, date, year] = new Date(today)
-  .toLocaleDateString("en-US", { timeZone: "Asia/Jakarta" })
-  .split("/");
-const formattedDate = `${year}-${month.padStart(2, "0")}-${date.padStart(
-  2,
-  "0"
-)}`;
+const today = new Date();
+const year = today.getFullYear();
+const month = String(today.getMonth() + 1).padStart(2, "0");
+const day = String(today.getDate()).padStart(2, "0");
+
+const formattedDate = `${year}-${month}-${day}`;
 
 export const PinjamBayarModal = (props) => {
   const { show, onHide, selectedRow } = props;
@@ -109,35 +107,34 @@ export const PinjamBayarModal = (props) => {
     }
   };
 
-  const handleLunasClick = async (tagihan) => {
+  const handleLunasClick = async (tagihan, index) => {
     try {
       const filteredBayarPinjam = fetchTagihan.filter(
         (bayar) => bayar.tanggalBayar === null || bayar.tanggalBayar === ""
       );
 
       const totalUangAngsuran = filteredBayarPinjam.reduce(
-        (total, bayar) => total + parseInt(bayar.uangAngsuran || 0), // Jumlahkan nilai 'uangAngsuran'
+        (total, bayar) => total + parseFloat(bayar.uangAngsuran || 0), // Jumlahkan nilai 'uangAngsuran'
         0 // Nilai awal untuk penghitungan
       );
 
       const totalJasaUang = filteredBayarPinjam.reduce(
-        (total, bayar) => total + parseInt(bayar.jasaUang || 0), // Jumlahkan nilai 'jasaUang'
+        (total, bayar) => total + parseFloat(bayar.jasaUang || 0), // Jumlahkan nilai 'jasaUang'
         0 // Nilai awal untuk penghitungan
       );
       const totalBayarFiltered = filteredBayarPinjam.reduce(
-        (total, bayar) => total + parseInt(bayar.totalBayar), // Jumlahkan nilai 'totalBayar', pastikan diubah menjadi tipe angka jika tidak berupa angka
+        (total, bayar) => total + parseFloat(bayar.totalBayar || 0), // Jumlahkan nilai 'totalBayar', pastikan diubah menjadi tipe angka jika tidak berupa angka
         0 // Nilai awal untuk penghitungan
       );
 
       const inputTagihan = {
         kodeAnggota: kodeAnggota,
         jenisTransaksi: "Bayar",
-        angsuran:
-          filteredBayarPinjam.length > 1 ? filteredBayarPinjam.length : 0,
+        angsuran: index,
         tanggalTransaksi: formattedDate,
-        angsuranPokok: totalUangAngsuran,
-        angsuranJasa: totalJasaUang,
-        angsuranPerBulan: totalBayarFiltered,
+        angsuranPokok: totalUangAngsuran.toFixed(2),
+        angsuranJasa: totalJasaUang.toFixed(2),
+        angsuranPerBulan: totalBayarFiltered.toFixed(2),
       };
 
       await updateLunasAngsuran(tagihan.idPinjam);
@@ -177,7 +174,7 @@ export const PinjamBayarModal = (props) => {
             <Col>
               <Row className="mb-1">
                 <Col>Tanggal Pinjam</Col>
-                <Col>{formatDate(tanggalTransaksi)}</Col>
+                <Col>{tanggalTransaksi}</Col>
               </Row>
               <Row className="mb-1">
                 <Col>Jumlah Pinjam</Col>
@@ -220,7 +217,7 @@ export const PinjamBayarModal = (props) => {
                           </Button>
                           <Button
                             variant="success"
-                            onClick={() => handleLunasClick(tagihan)}
+                            onClick={() => handleLunasClick(tagihan, index + 1)}
                           >
                             Lunas
                           </Button>

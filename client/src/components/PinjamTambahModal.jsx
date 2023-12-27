@@ -6,7 +6,7 @@ import { handleInputChange } from "../utils/handle";
 import { PinjamProsesModal } from "./PinjamProsesModal";
 
 export const PinjamTambahModal = (props) => {
-  const { show, onHide, selectedRow } = props;
+  const { show, onHide, selectedRow, setShowPinjam } = props;
 
   const [selectedDate, setSelectedDate] = React.useState("");
   const [inputNominalPinjam, setInputNominalPinjam] = React.useState("");
@@ -72,8 +72,8 @@ export const PinjamTambahModal = (props) => {
   const handleModalClose = (modalType) => {
     switch (modalType) {
       case "proses":
-        show();
         setModalProses(false);
+        setShowPinjam(true);
         break;
       default:
         break;

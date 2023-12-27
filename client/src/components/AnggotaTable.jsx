@@ -141,7 +141,7 @@ export default function AnggotaTable() {
         <Card className="custom-border-box">
           <Container fluid>
             <Card.Title className="fw-bold text-uppercase my-2">
-              Data Anggota
+              Data Nasabah
             </Card.Title>
 
             <hr className="my-2" />
@@ -151,7 +151,7 @@ export default function AnggotaTable() {
                   className="no-print"
                   onClick={() => handleModalShow("tambah")}
                 >
-                  Tambah Anggota
+                  Tambah Nasabah
                   <FontAwesomeIcon icon={faSquarePlus} className="ms-1" />
                 </Button>
               </Col>
@@ -173,7 +173,7 @@ export default function AnggotaTable() {
                   <th>No.</th>
                   <th>Kode Anggota</th>
                   <th>Nama</th>
-                  <th colSpan={3}>Aksi</th>
+                  <th>Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -220,7 +220,7 @@ export default function AnggotaTable() {
                         {highlightSearchText(anggota.nama)}
                       </td>
 
-                      <td>
+                      <td className="d-flex justify-content-center flex-gap-1">
                         <Button
                           variant="secondary"
                           onClick={() => handleModalShow("detail", anggota)}
@@ -231,8 +231,6 @@ export default function AnggotaTable() {
                           />
                           Detail
                         </Button>
-                      </td>
-                      <td>
                         <Button
                           variant="warning"
                           onClick={() => handleModalShow("edit", anggota)}
@@ -243,8 +241,6 @@ export default function AnggotaTable() {
                           />
                           Edit
                         </Button>
-                      </td>
-                      <td>
                         <Button
                           variant="danger"
                           onClick={() => handleDeleteClick(anggota.id)}

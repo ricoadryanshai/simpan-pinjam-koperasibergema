@@ -5,6 +5,7 @@ import { formatRupiah } from "../utils/format";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrint } from "@fortawesome/free-solid-svg-icons";
 import { useReactToPrint } from "react-to-print";
+import { LaporanSimpananPrintOut } from "./LaporanSimpananPrintOut";
 
 export const LaporanSimpanan = () => {
   const [lapSimpanan, setLapSimpanan] = React.useState([]);
@@ -76,7 +77,7 @@ export const LaporanSimpanan = () => {
   }, 0);
   return (
     <>
-      <Stack gap={3} ref={componentRef}>
+      <Stack gap={3}>
         <Stack className="justify-content-center py-3 border-bottom border-3 judul-cetak">
           <Stack direction="horizontal" className="justify-content-center">
             <Card.Title className="fw-bold text-uppercase text-center">
@@ -170,6 +171,14 @@ export const LaporanSimpanan = () => {
           </Table>
         </Stack>
       </Stack>
+
+      <LaporanSimpananPrintOut
+        componentRef={componentRef}
+        lapByYear={lapByYear}
+        jumlahSimpananAllRows={jumlahSimpananAllRows}
+        selectedYear={selectedYear}
+        totalSaldoAllRows={totalSaldoAllRows}
+      />
     </>
   );
 };

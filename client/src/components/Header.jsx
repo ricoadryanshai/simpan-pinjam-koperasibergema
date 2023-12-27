@@ -50,7 +50,7 @@ export default function Header() {
                   Beranda
                 </Nav.Link>
                 <Nav.Link as={NavLink} to="/anggota">
-                  Anggota
+                  Nasabah
                 </Nav.Link>
                 <Nav.Link as={NavLink} to="/simpanan">
                   Simpanan

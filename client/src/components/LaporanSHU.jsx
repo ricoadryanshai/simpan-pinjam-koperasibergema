@@ -5,12 +5,20 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrint } from "@fortawesome/free-solid-svg-icons";
 import { getLapSHU, getLapSHUByYear } from "../utils/api";
 import { formatRupiah } from "../utils/format";
+import { LaporanSHUPrintOut } from "./LaporanSHUPrintOut";
+import { useReactToPrint } from "react-to-print";
 
 export const LaporanSHU = ({ keanggotaan }) => {
   const [lapSHUBy, setlapSHUBy] = React.useState([]);
   const [selectedYear, setSelectedYear] = React.useState("");
   const [uniqueYears, setUniqueYears] = React.useState([]);
   const [lapSHUByYear, setLapSHUByYear] = React.useState([]);
+
+  const componentRef = React.useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
 
   const fetchedData = async () => {
     try {
@@ -29,7 +37,7 @@ export const LaporanSHU = ({ keanggotaan }) => {
     if (lapSHUBy.length > 0) {
       // Mendapatkan nilai unik dari properti tahunSimpan
       const uniqueYears = Array.from(
-        new Set(lapSHUBy.map((item) => item.tahunAngsuran))
+        new Set(lapSHUBy.map((item) => item.tahunPinjam))
       );
       // Mengatur nilai-nilai unik tersebut sebagai pilihan dropdown
       setUniqueYears(uniqueYears);
@@ -76,7 +84,11 @@ export const LaporanSHU = ({ keanggotaan }) => {
             </Card.Title>
           </Stack>
           <Stack direction="horizontal" className="justify-content-end">
-            <FontAwesomeIcon icon={faPrint} style={{ cursor: "pointer" }} />
+            <FontAwesomeIcon
+              icon={faPrint}
+              onClick={handlePrint}
+              style={{ cursor: "pointer" }}
+            />
           </Stack>
         </Stack>
         <Stack gap={3}>
@@ -121,17 +133,26 @@ export const LaporanSHU = ({ keanggotaan }) => {
                   <Col>{anggota.jenisAnggota}</Col>
                   <Col>{anggota.persentaseSHU}%</Col>
                   <Col className="fw-bold">
-                    {formatRupiah(
-                      (anggota.persentaseSHU / 100) *
-                        (lapSHUByYear.totalBayarAngsuranPerTahun -
-                          lapSHUByYear.totalPengeluaranKasPerTahun)
-                    )}
+                    {selectedYear
+                      ? formatRupiah(
+                          (anggota.persentaseSHU / 100) *
+                            (lapSHUByYear.totalBayarAngsuranPerTahun -
+                              lapSHUByYear.totalPengeluaranKasPerTahun)
+                        )
+                      : formatRupiah(0)}
                   </Col>
                 </Row>
               ))}
           </Stack>
         </Stack>
       </Stack>
+
+      <LaporanSHUPrintOut
+        componentRef={componentRef}
+        selectedYear={selectedYear}
+        keanggotaan={keanggotaan}
+        lapSHUByYear={lapSHUByYear}
+      />
     </>
   );
 };
