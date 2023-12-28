@@ -5,9 +5,11 @@ import { formatDate, formatRupiah } from "../utils/format";
 import { getPinjamByKodeAnggota } from "../utils/api";
 import { FaSearch } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPrint } from "@fortawesome/free-solid-svg-icons";
+import { faFileExport, faPrint } from "@fortawesome/free-solid-svg-icons";
 import { useReactToPrint } from "react-to-print";
+import { useDownloadExcel } from "react-export-table-to-excel";
 import { PinjamPrintOut } from "./PinjamPrintOut";
+import PinjamExport from "./PinjamExport";
 
 export const PinjamDetailModal = (props) => {
   const { show, onHide, selectedRow } = props;
@@ -26,15 +28,6 @@ export const PinjamDetailModal = (props) => {
     setFetchData(await getPinjamByKodeAnggota(kodeAnggota));
   };
 
-  // const handleDelete = async (kodeAnggota, id) => {
-  //   try {
-  //     await deletePinjamByKodeAnggota(kodeAnggota, id);
-  //     fetchedData();
-  //   } catch (error) {
-  //     console.error("Error deleting data:", error);
-  //   }
-  // };
-
   const componentRef = React.useRef();
 
   const handlePrint = useReactToPrint({
@@ -44,6 +37,14 @@ export const PinjamDetailModal = (props) => {
   React.useEffect(() => {
     fetchedData(kodeAnggota);
   }, [show, kodeAnggota]);
+
+  const tableRef = React.useRef(null);
+
+  const { onDownload } = useDownloadExcel({
+    currentTableRef: tableRef.current,
+    filename: `Pinjaman_${nama}`,
+    sheet: "Tabel Pinjaman",
+  });
   return (
     <>
       <Modal
@@ -72,7 +73,12 @@ export const PinjamDetailModal = (props) => {
                 <Row>{formatDate(tanggalDaftar)}</Row>
                 <Row>{formatRupiah(sisaHutang)}</Row>
               </Col>
-              <Col className="d-flex flex-row-reverse align-items-end">
+              <Col className="d-flex flex-row-reverse align-items-end gap-3">
+                <FontAwesomeIcon
+                  icon={faFileExport}
+                  onClick={onDownload}
+                  className="custom-icon-pointer"
+                />
                 <FontAwesomeIcon
                   icon={faPrint}
                   onClick={handlePrint}
@@ -165,6 +171,15 @@ export const PinjamDetailModal = (props) => {
         selectedRow={selectedRow}
         fetchData={fetchData}
         componentReference={componentRef}
+      />
+
+      <PinjamExport
+        tableReference={tableRef}
+        fetchData={fetchData}
+        kodeAnggota={kodeAnggota}
+        nama={nama}
+        tanggalDaftar={tanggalDaftar}
+        sisaHutang={sisaHutang}
       />
     </>
   );

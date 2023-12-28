@@ -2,11 +2,13 @@
 import React from "react";
 import { Card, Stack, Form, Row, Col } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPrint } from "@fortawesome/free-solid-svg-icons";
+import { faFileExport, faPrint } from "@fortawesome/free-solid-svg-icons";
 import { getLapSHU, getLapSHUByYear } from "../utils/api";
 import { formatRupiah } from "../utils/format";
 import { LaporanSHUPrintOut } from "./LaporanSHUPrintOut";
 import { useReactToPrint } from "react-to-print";
+import { useDownloadExcel } from "react-export-table-to-excel";
+import LaporanSHUExport from "./LaporanSHUExport";
 
 export const LaporanSHU = ({ keanggotaan }) => {
   const [lapSHUBy, setlapSHUBy] = React.useState([]);
@@ -62,6 +64,14 @@ export const LaporanSHU = ({ keanggotaan }) => {
       fetchLapSHU(selectedYear);
     }
   }, [selectedYear]);
+
+  const tableRef = React.useRef(null);
+
+  const { onDownload } = useDownloadExcel({
+    currentTableRef: tableRef.current,
+    filename: `Laporan_Pembagian_SHU_${selectedYear ? selectedYear : "YYYY"}`,
+    sheet: "Laporan SHU",
+  });
   return (
     <>
       <Stack gap={3}>
@@ -83,11 +93,16 @@ export const LaporanSHU = ({ keanggotaan }) => {
               )}
             </Card.Title>
           </Stack>
-          <Stack direction="horizontal" className="justify-content-end">
+          <Stack direction="horizontal" className="justify-content-end gap-3">
             <FontAwesomeIcon
               icon={faPrint}
               onClick={handlePrint}
               style={{ cursor: "pointer" }}
+            />
+            <FontAwesomeIcon
+              icon={faFileExport}
+              onClick={onDownload}
+              className="custom-icon-pointer"
             />
           </Stack>
         </Stack>
@@ -152,6 +167,13 @@ export const LaporanSHU = ({ keanggotaan }) => {
         selectedYear={selectedYear}
         keanggotaan={keanggotaan}
         lapSHUByYear={lapSHUByYear}
+      />
+
+      <LaporanSHUExport
+        tableReference={tableRef}
+        lapSHUByYear={lapSHUByYear}
+        selectedYear={selectedYear}
+        keanggotaan={keanggotaan}
       />
     </>
   );

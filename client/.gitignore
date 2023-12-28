@@ -72,4 +72,5 @@ yarn-error.log*
 
 client/build/
 client/node_modules/
-client/.env
+client/.envc
+client/.gitignore

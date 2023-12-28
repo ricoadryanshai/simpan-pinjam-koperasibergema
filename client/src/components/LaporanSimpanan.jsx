@@ -3,9 +3,11 @@ import { Card, Table, Stack, Form } from "react-bootstrap";
 import { getLapSimpanan, getLapSimpananByYear } from "../utils/api";
 import { formatRupiah } from "../utils/format";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPrint } from "@fortawesome/free-solid-svg-icons";
+import { faFileExport, faPrint } from "@fortawesome/free-solid-svg-icons";
 import { useReactToPrint } from "react-to-print";
+import { useDownloadExcel } from "react-export-table-to-excel";
 import { LaporanSimpananPrintOut } from "./LaporanSimpananPrintOut";
+import LaporanSimpananExport from "./LaporanSimpananExport";
 
 export const LaporanSimpanan = () => {
   const [lapSimpanan, setLapSimpanan] = React.useState([]);
@@ -75,6 +77,14 @@ export const LaporanSimpanan = () => {
       laporan.simpananPokok + laporan.simpananWajib + laporan.simpananSukarela;
     return total + simpanan;
   }, 0);
+
+  const tableRef = React.useRef(null);
+
+  const { onDownload } = useDownloadExcel({
+    currentTableRef: tableRef.current,
+    filename: `Laporan_Simpanan_Tahun_${selectedYear ? selectedYear : "YYYY"}`,
+    sheet: "Laporan Simpanan",
+  });
   return (
     <>
       <Stack gap={3}>
@@ -85,10 +95,15 @@ export const LaporanSimpanan = () => {
               Kelurahan Gandaria Selatan
             </Card.Title>
           </Stack>
-          <Stack direction="horizontal" className="justify-content-end">
+          <Stack direction="horizontal" className="justify-content-end gap-3">
             <FontAwesomeIcon
               icon={faPrint}
               onClick={handlePrint}
+              className="custom-icon-pointer"
+            />
+            <FontAwesomeIcon
+              icon={faFileExport}
+              onClick={onDownload}
               className="custom-icon-pointer"
             />
           </Stack>
@@ -127,17 +142,14 @@ export const LaporanSimpanan = () => {
             </thead>
             <tbody className="align-middle">
               {lapByYear.map((laporan, index) => {
-                const totalSaldo =
-                  laporan.simpananPokok +
-                  laporan.simpananWajib +
-                  laporan.simpananSukarela -
-                  laporan.penarikan;
                 const jumlahSimpanan =
                   laporan.simpananPokok +
                   laporan.simpananWajib +
                   laporan.simpananSukarela;
                 const sisaHasilUsaha =
                   (jumlahSimpanan / jumlahSimpananAllRows) * 160000;
+                const totalSaldo =
+                  jumlahSimpanan + sisaHasilUsaha - laporan.penarikan;
                 return (
                   <tr key={index}>
                     <td className="text-center">{index + 1}</td>
@@ -155,18 +167,9 @@ export const LaporanSimpanan = () => {
             </tbody>
             <tfoot className="table-light">
               <tr>
-                {selectedYear ? (
-                  <td colSpan={4} className="text-center fw-bold">
-                    Jumlah Simpanan Tahun {selectedYear}
-                  </td>
-                ) : (
-                  <td colSpan={4} className="text-center fw-bold">
-                    Jumlah Simpanan Tahun ...
-                  </td>
-                )}
-                <td />
-                <td />
-                <td />
+                <td colSpan={8} className="text-center fw-bold">
+                  Jumlah Simpanan Tahun {selectedYear ? selectedYear : "..."}
+                </td>
                 <td className="fw-bold">{formatRupiah(totalSaldoAllRows)}</td>
               </tr>
             </tfoot>
@@ -176,6 +179,14 @@ export const LaporanSimpanan = () => {
 
       <LaporanSimpananPrintOut
         componentReference={componentRef}
+        lapByYear={lapByYear}
+        jumlahSimpananAllRows={jumlahSimpananAllRows}
+        selectedYear={selectedYear}
+        totalSaldoAllRows={totalSaldoAllRows}
+      />
+
+      <LaporanSimpananExport
+        tableReference={tableRef}
         lapByYear={lapByYear}
         jumlahSimpananAllRows={jumlahSimpananAllRows}
         selectedYear={selectedYear}

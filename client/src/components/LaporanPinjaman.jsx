@@ -1,11 +1,13 @@
 import React from "react";
 import { Card, Stack, Form, Table } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPrint } from "@fortawesome/free-solid-svg-icons";
+import { faFileExport, faPrint } from "@fortawesome/free-solid-svg-icons";
 import { formatDate, formatRupiah } from "../utils/format";
 import { useReactToPrint } from "react-to-print";
+import { useDownloadExcel } from "react-export-table-to-excel";
 import { getLapAngsuran, getLapAngsuranByYear } from "../utils/api";
 import { LaporanPinjamanPrintOut } from "./LaporanPinjamanPrintOut";
+import LaporanPinjamExport from "./LaporanPinjamExport";
 
 export const LaporanPinjaman = () => {
   const [lapAngsuran, setLapAngsuran] = React.useState([]);
@@ -72,33 +74,37 @@ export const LaporanPinjaman = () => {
     const jumlah = laporan.bayarTagihan;
     return total + jumlah;
   }, 0);
+
+  const tableRef = React.useRef(null);
+
+  const { onDownload } = useDownloadExcel({
+    currentTableRef: tableRef.current,
+    filename: `Laporan_Angsuran_Tahun_${selectedYear ? selectedYear : "YYYY"}`,
+    sheet: "Laporan Angsuran",
+  });
   return (
     <>
       <Stack gap={3}>
         <Stack className="justify-content-center py-3 border-bottom border-3 judul-cetak">
           <Stack direction="horizontal" className="justify-content-center">
             <Card.Title className="fw-bold text-uppercase text-center">
-              {selectedYear ? (
-                <>
-                  Laporan Angsuran Pinjaman Tahun {selectedYear - 2} SD{" "}
-                  {selectedYear}
-                  <br />
-                  Kelurahan Gandaria Selatan
-                </>
-              ) : (
-                <>
-                  Laporan Angsuran Pinjaman Tahun ... SD ...
-                  <br />
-                  Kelurahan Gandaria Selatan
-                </>
-              )}
+              Laporan Angsuran Pinjaman Tahun{" "}
+              {selectedYear ? selectedYear - 2 : "..."} SD{" "}
+              {selectedYear ? selectedYear : "..."}
+              <br />
+              Kelurahan Gandaria Selatan
             </Card.Title>
           </Stack>
-          <Stack direction="horizontal" className="justify-content-end">
+          <Stack direction="horizontal" className="justify-content-end gap-3">
             <FontAwesomeIcon
               icon={faPrint}
               onClick={handlePrint}
               style={{ cursor: "pointer" }}
+            />
+            <FontAwesomeIcon
+              icon={faFileExport}
+              onClick={onDownload}
+              className="custom-icon-pointer"
             />
           </Stack>
         </Stack>
@@ -174,7 +180,7 @@ export const LaporanPinjaman = () => {
             </tbody>
             <tfoot className="table-light">
               <tr>
-                <td colSpan={7} className="text-center fw-bold">
+                <td colSpan={8} className="text-center fw-bold">
                   Jumlah Bayar Angsuran
                 </td>
                 <td className="fw-bold">{formatRupiah(totalAngsuranPokok)}</td>
@@ -192,6 +198,15 @@ export const LaporanPinjaman = () => {
         selectedYear={selectedYear}
         lapByYear={lapByYear}
         totalJumlahAngsuran={totalJumlahAngsuran}
+      />
+
+      <LaporanPinjamExport
+        tableReference={tableRef}
+        lapByYear={lapByYear}
+        totalAngsuranPokok={totalAngsuranPokok}
+        totalAngsuranJasa={totalAngsuranJasa}
+        totalJumlahAngsuran={totalJumlahAngsuran}
+        selectedYear={selectedYear}
       />
     </>
   );

@@ -6,7 +6,9 @@ import { IMG_SERVER_PORT } from "../utils/server_port";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileExport, faPrint } from "@fortawesome/free-solid-svg-icons";
 import { useReactToPrint } from "react-to-print";
+import { useDownloadExcel } from "react-export-table-to-excel";
 import { SimpanPrintOut } from "./SimpanPrintOut";
+import SimpanExport from "./SimpanExport";
 
 export default function SimpanDetailModal(props) {
   const { show, onClose, rowData, modalData, clearModalData } = props;
@@ -47,6 +49,13 @@ export default function SimpanDetailModal(props) {
   const tanggalRowData = rowData ? rowData.tanggalDaftar : "";
   const saldoRowData = rowData ? rowData.totalSaldo : "";
 
+  const tableRef = React.useRef(null);
+
+  const { onDownload } = useDownloadExcel({
+    currentTableRef: tableRef.current,
+    filename: `Simpanan_${kodeRowData}_${namaRowData}`,
+    sheet: "Tabel Simpanan",
+  });
   return (
     <>
       <Modal
@@ -80,6 +89,7 @@ export default function SimpanDetailModal(props) {
               <Col className="d-flex flex-row-reverse align-items-end flex-gap-1">
                 <FontAwesomeIcon
                   icon={faFileExport}
+                  onClick={onDownload}
                   className="custom-icon-pointer"
                 />
                 <FontAwesomeIcon
@@ -163,11 +173,19 @@ export default function SimpanDetailModal(props) {
           </Table>
         </Modal.Body>
       </Modal>
-
       <SimpanPrintOut
         rowData={rowData}
         componentReference={componentRef}
         modalData={modalData}
+      />
+
+      <SimpanExport
+        tableReference={tableRef}
+        modalData={modalData}
+        kodeRowData={kodeRowData}
+        namaRowData={namaRowData}
+        tanggalRowData={tanggalRowData}
+        saldoRowData={saldoRowData}
       />
     </>
   );
