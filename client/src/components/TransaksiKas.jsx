@@ -105,7 +105,7 @@ export default function TransaksiKas() {
                   <div className="input-wrapper">
                     <FaSearch id="search-icon" />
                     <input
-                      placeholder="Ketika untuk mencari data..."
+                      placeholder="Ketik untuk mencari data..."
                       onChange={(e) => setInput(e.target.value)}
                     />
                   </div>
