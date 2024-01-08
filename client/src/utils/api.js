@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_ENDPOINT = "http://localhost:3023";
+const API_ENDPOINT = "http://192.168.1.18:3023";
 
 // START >>> API ENDPOINT BERANDA
 
@@ -156,11 +156,6 @@ export const getPinjamAnggota = async () => {
 export const getPinjamByKodeAnggota = async (kodeAnggota) => {
   try {
     const res = await axios.get(`${API_ENDPOINT}/get/pinjam/${kodeAnggota}`);
-
-    if (res.status === 404) {
-      return [];
-    }
-
     return res.data;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -178,9 +173,11 @@ export const getBayarByKodeAnggota = async (kodeAnggota) => {
   }
 };
 
-export const deletePinjamByKodeAnggota = async (id) => {
+export const deletePinjamByKodeAnggota = async (kodeAnggota, id) => {
   try {
-    const response = await axios.delete(`${API_ENDPOINT}/delete/pinjam/${id}`);
+    const response = await axios.delete(
+      `${API_ENDPOINT}/delete/pinjam/${kodeAnggota}/${id}`
+    );
     return response.data;
   } catch (error) {
     console.error("Error deleting data:", error);
@@ -254,19 +251,7 @@ export const getTransaksi = async () => {
 
 export const tambahTransaksi = async (transaksiData) => {
   try {
-    const response = await axios.post(
-      `${API_ENDPOINT}/post/transaksi`,
-      transaksiData
-    );
-
-    console.log(response);
-
-    if (response.status === 200) {
-      console.log("Data added successfully");
-      return response.data;
-    } else {
-      throw new Error("Failed to add data");
-    }
+    await axios.post(`${API_ENDPOINT}/post/transaksi`, transaksiData);
   } catch (error) {
     console.error("Error adding data:", error.message);
     throw new Error("Internal Server Error");
@@ -278,13 +263,7 @@ export const deleteTransaksi = async (transaksiId) => {
     const deleteResponse = await axios.delete(
       `${API_ENDPOINT}/delete/transaksi/${transaksiId}`
     );
-
-    if (deleteResponse.status === 200) {
-      console.log("Data deleted successfully");
-      return deleteResponse.data;
-    } else {
-      throw new Error("Failed to delete data");
-    }
+    return deleteResponse.data;
   } catch (error) {
     console.error("Error deleting data:", error.message);
     throw new Error("Internal Server Error");
@@ -310,7 +289,57 @@ export const editTransaksi = async (id, data) => {
 
 export const getLapSimpanan = async () => {
   try {
-    const response = await axios.get(`${API_ENDPOINT}/get/lap_simpan`);
+    const response = await axios.get(`${API_ENDPOINT}/get/lapSimpan`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getLapSimpananByYear = async (year) => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/lapSimpan/${year}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getLapAngsuran = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/lapAngsuran`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getLapAngsuranByYear = async (year) => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/lapAngsuran/${year}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getLapSHU = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/lapSHU`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getLapSHUByYear = async (year) => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/lapSHU/${year}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -341,6 +370,16 @@ export const editPengaturan = async (updatedData) => {
     return response.data;
   } catch (error) {
     console.error("Error editing data:", error);
+    throw error;
+  }
+};
+
+export const getKeanggotaan = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/keanggotaan`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
     throw error;
   }
 };

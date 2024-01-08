@@ -15,6 +15,12 @@ import { formatRupiah } from "../utils/format";
 import { PinjamTambahModal } from "./PinjamTambahModal";
 import { PinjamBayarModal } from "./PinjamBayarModal";
 import { getPinjamAnggota } from "../utils/api";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCircleInfo,
+  faLandmark,
+  faMoneyBill,
+} from "@fortawesome/free-solid-svg-icons";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -24,55 +30,58 @@ export default function PinjamTable() {
   const [showPinjam, setShowPinjam] = React.useState(false);
   const [showBayar, setShowBayar] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState(null);
-  const [input, setInput] = React.useState("");
   const [activePage, setActivePage] = React.useState(1);
+  const [filteredData, setFilteredData] = React.useState([]);
+  const [sortConfig /* setSortConfig */] = React.useState({
+    key: "nama",
+    direction: "asc",
+  });
 
-  const handleDetailClick = (pinjam) => {
-    setSelectedRow(pinjam);
-    setShowDetail(true);
-  };
-
-  const handlePinjamClick = (pinjam) => {
-    setSelectedRow(pinjam);
-    setShowPinjam(true);
-  };
-
-  const handleBayarClick = (pinjam) => {
-    setSelectedRow(pinjam);
-    setShowBayar(true);
-  };
-
-  const handleModalClose = (modalType) => {
+  const handleModalShow = async (modalType, pinjam) => {
     switch (modalType) {
       case "detail":
-        setShowDetail(false);
-        fungsiLoad();
+        setShowDetail(true);
+        setSelectedRow(pinjam);
         break;
       case "pinjam":
-        setShowPinjam(false);
-        fungsiLoad();
+        setShowPinjam(true);
+        setSelectedRow(pinjam);
         break;
       case "bayar":
-        setShowBayar(false);
-        fungsiLoad();
+        setShowBayar(true);
+        setSelectedRow(pinjam);
         break;
       default:
         break;
     }
   };
 
-  const fungsiLoad = async () => {
-    const data = await getPinjamAnggota();
-    if (data) {
-      setPinjamData(data);
-    } else {
-      console.log("Error fungsiLoad() di PinjamTable.jsx");
+  const handleModalClose = (modalType) => {
+    switch (modalType) {
+      case "detail":
+        setShowDetail(false);
+        fetchedData();
+        break;
+      case "pinjam":
+        setShowPinjam(false);
+        fetchedData();
+        break;
+      case "bayar":
+        setShowBayar(false);
+        fetchedData();
+        break;
+      default:
+        break;
     }
   };
 
-  React.useEffect(() => {
-    fungsiLoad();
-  }, []);
+  const fetchedData = async () => {
+    try {
+      setPinjamData(await getPinjamAnggota());
+    } catch (error) {
+      console.log("Error fetching data pinjam :", error);
+    }
+  };
 
   const handlePageChange = (pageNumber) => {
     setActivePage(pageNumber);
@@ -83,7 +92,7 @@ export default function PinjamTable() {
   };
 
   const goToLastPage = () => {
-    setActivePage(Math.ceil(pinjamData.length / ITEMS_PER_PAGE));
+    setActivePage(Math.ceil(filteredData.length / ITEMS_PER_PAGE));
   };
 
   const goToPrevPage = () => {
@@ -92,15 +101,83 @@ export default function PinjamTable() {
 
   const goToNextPage = () => {
     setActivePage((prevPage) =>
-      Math.min(prevPage + 1, Math.ceil(pinjamData.length / ITEMS_PER_PAGE))
+      Math.min(prevPage + 1, Math.ceil(filteredData.length / ITEMS_PER_PAGE))
     );
   };
 
+  const handleInputChange = (e) => {
+    const inputValue = e.target.value.toLowerCase();
+
+    const filteredResult = sortedData.filter((pinjam) => {
+      const kodeAnggota = pinjam.kodeAnggota.toLowerCase();
+      const nama = pinjam.nama.toLowerCase();
+
+      return kodeAnggota.includes(inputValue) || nama.includes(inputValue);
+    });
+
+    // Update state filteredData dengan hasil pencarian
+    setFilteredData(filteredResult);
+
+    // Set activePage kembali ke halaman pertama setelah melakukan pencarian
+    setActivePage(1);
+  };
+
+  const customSort = (data, sortConfig) => {
+    const sortedData = [...data];
+    sortedData.sort((a, b) => {
+      const debtA = a.jumlahHutang - a.jumlahBayar;
+      const debtB = b.jumlahHutang - b.jumlahBayar;
+
+      if (debtA > 0 && debtB > 0) {
+        return sortConfig.direction === "asc"
+          ? a.kodeAnggota.localeCompare(b.kodeAnggota)
+          : b.kodeAnggota.localeCompare(a.kodeAnggota);
+      }
+
+      if (debtA > 0 && debtB <= 0) {
+        return sortConfig.direction === "asc" ? -1 : 1;
+      }
+
+      if (debtA <= 0 && debtB > 0) {
+        return sortConfig.direction === "asc" ? 1 : -1;
+      }
+
+      if (debtA === 0 && debtB === 0) {
+        return sortConfig.direction === "asc"
+          ? a.kodeAnggota.localeCompare(b.kodeAnggota)
+          : b.kodeAnggota.localeCompare(a.kodeAnggota);
+      }
+
+      return sortConfig.direction === "asc" ? debtA - debtB : debtB - debtA;
+    });
+    return sortedData;
+  };
+
+  const sortedData = React.useMemo(() => {
+    if (sortConfig !== null) {
+      return customSort(pinjamData, sortConfig);
+    }
+    return [...pinjamData]; // Jika tidak ada konfigurasi pengurutan, kembalikan data asli
+  }, [pinjamData, sortConfig]);
+
   const indexOfLastEntry = activePage * ITEMS_PER_PAGE;
   const indexOfFirstEntry = indexOfLastEntry - ITEMS_PER_PAGE;
-  const currentEntries = pinjamData.slice(indexOfFirstEntry, indexOfLastEntry);
+  const currentEntries = filteredData.slice(
+    indexOfFirstEntry,
+    indexOfLastEntry
+  );
 
   const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
+
+  React.useEffect(() => {
+    fetchedData();
+  }, []);
+
+  React.useEffect(() => {
+    if (sortedData.length > 0) {
+      setFilteredData(sortedData);
+    }
+  }, [sortedData]);
   return (
     <>
       <div className="d-flex justify-content-center">
@@ -117,8 +194,8 @@ export default function PinjamTable() {
                   <div className="input-wrapper">
                     <FaSearch id="search-icon" />
                     <input
-                      placeholder="Ketik untuk mencari data..."
-                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="Ketika untuk mencari data..."
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -135,53 +212,47 @@ export default function PinjamTable() {
                 </tr>
               </thead>
               <tbody>
-                {currentEntries
-                  .filter((pinjam) => {
-                    const inputString = input.toString().toLowerCase();
-                    return (
-                      (pinjam.kodeAnggota &&
-                        pinjam.kodeAnggota
-                          .toLowerCase()
-                          .includes(inputString)) ||
-                      (pinjam.nama &&
-                        pinjam.nama.toLowerCase().includes(inputString))
-                    );
-                  })
-                  .map((pinjam, index) => (
-                    <tr key={index} className="text-center align-middle">
-                      <td>{index + startIndex}</td>
-                      <td>{pinjam.kodeAnggota}</td>
-                      <td className="text-start">{pinjam.nama}</td>
-                      <td className="text-start">
-                        {formatRupiah(pinjam.sisaHutang)}
-                      </td>
-                      <td className="text-center">
+                {currentEntries.map((pinjam, index) => (
+                  <tr key={index} className="text-center align-middle">
+                    <td>{index + startIndex}</td>
+                    <td>{pinjam.kodeAnggota}</td>
+                    <td className="text-start">{pinjam.nama}</td>
+                    <td className="text-start">
+                      {formatRupiah(pinjam.jumlahHutang - pinjam.jumlahBayar)}
+                    </td>
+                    <td className="text-center">
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleModalShow("detail", pinjam)}
+                      >
+                        <FontAwesomeIcon icon={faCircleInfo} className="me-1" />
+                        Detail
+                      </Button>
+                    </td>
+                    <td className="text-center">
+                      {pinjam.jumlahHutang - pinjam.jumlahBayar <= 0 ? (
                         <Button
-                          variant="secondary"
-                          onClick={() => handleDetailClick(pinjam)}
+                          variant="warning"
+                          onClick={() => handleModalShow("pinjam", pinjam)}
                         >
-                          Detail
+                          <FontAwesomeIcon icon={faLandmark} className="me-1" />
+                          Pinjam
                         </Button>
-                      </td>
-                      <td className="text-center">
-                        {pinjam.sisaHutang <= 0 ? (
-                          <Button
-                            variant="warning"
-                            onClick={() => handlePinjamClick(pinjam)}
-                          >
-                            Pinjam
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="success"
-                            onClick={() => handleBayarClick(pinjam)}
-                          >
-                            Bayar
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                      ) : (
+                        <Button
+                          variant="success"
+                          onClick={() => handleModalShow("bayar", pinjam)}
+                        >
+                          <FontAwesomeIcon
+                            icon={faMoneyBill}
+                            className="me-1"
+                          />
+                          Bayar
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </Table>
           </Container>
@@ -217,8 +288,6 @@ export default function PinjamTable() {
         onHide={() => handleModalClose("pinjam")}
         selectedRow={selectedRow}
         setShowPinjam={setShowPinjam}
-        setSelectedRow={setSelectedRow}
-        fungsiLoad={fungsiLoad}
       />
       <PinjamBayarModal
         show={showBayar}

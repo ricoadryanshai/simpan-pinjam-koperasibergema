@@ -26,7 +26,8 @@ export default function AnggotaEditModal(props) {
       const updatedData = {
         kodeAnggota: document.getElementById("kodeAnggota")?.value || "",
         nama: document.getElementById("nama")?.value || "",
-        jenKel: document.getElementById("jenKel")?.value || "",
+        jenKel:
+          document.querySelector('input[name="jenKel"]:checked')?.value || "",
         tempatLahir: document.getElementById("tempatLahir")?.value || "",
         tanggalLahir: document.getElementById("tanggalLahir")?.value || "",
         alamat: document.getElementById("alamat")?.value || "",
@@ -62,13 +63,12 @@ export default function AnggotaEditModal(props) {
                   defaultValue={kodeAnggota}
                   disabled
                   required
-                  className=""
                 />
               </Col>
             </Form.Group>
             <Form.Group as={Row} className="mb-3">
               <Col sm={4}>
-                <Form.Label className="">Nama</Form.Label>
+                <Form.Label>Nama</Form.Label>
               </Col>
               <Col>
                 <Form.Control
@@ -77,13 +77,12 @@ export default function AnggotaEditModal(props) {
                   id="nama"
                   defaultValue={nama}
                   required
-                  className=""
                 />
               </Col>
             </Form.Group>
             <Form.Group as={Row} className="mb-3">
               <Col sm={4}>
-                <Form.Label className="">Jenis Kelamin</Form.Label>
+                <Form.Label>Jenis Kelamin</Form.Label>
               </Col>
               <Col className="d-flex flex-gap-1">
                 <Form.Check
@@ -94,7 +93,6 @@ export default function AnggotaEditModal(props) {
                   value="Pria"
                   defaultChecked={jenKel === "Pria"}
                   required
-                  className=""
                 />
                 <Form.Check
                   type="radio"
@@ -104,13 +102,12 @@ export default function AnggotaEditModal(props) {
                   value="Wanita"
                   defaultChecked={jenKel === "Wanita"}
                   required
-                  className=""
                 />
               </Col>
             </Form.Group>
             <Form.Group as={Row} className="mb-3">
               <Col sm={4}>
-                <Form.Label className="">Tempat Lahir</Form.Label>
+                <Form.Label>Tempat Lahir</Form.Label>
               </Col>
               <Col>
                 <Form.Control
@@ -119,13 +116,12 @@ export default function AnggotaEditModal(props) {
                   id="tempatLahir"
                   defaultValue={tempatLahir}
                   required
-                  className=""
                 />
               </Col>
             </Form.Group>
             <Form.Group as={Row} className="mb-3">
               <Col sm={4}>
-                <Form.Label className="">Tanggal Lahir</Form.Label>
+                <Form.Label>Tanggal Lahir</Form.Label>
               </Col>
               <Col>
                 <Form.Control
@@ -134,13 +130,12 @@ export default function AnggotaEditModal(props) {
                   id="tanggalLahir"
                   defaultValue={tanggalLahir}
                   required
-                  className=""
                 />
               </Col>
             </Form.Group>
             <Form.Group as={Row} className="mb-3">
               <Col sm={4}>
-                <Form.Label className="">Alamat</Form.Label>
+                <Form.Label>Alamat</Form.Label>
               </Col>
               <Col>
                 <Form.Control
@@ -149,13 +144,12 @@ export default function AnggotaEditModal(props) {
                   id="alamat"
                   defaultValue={alamat}
                   required
-                  className=""
                 />
               </Col>
             </Form.Group>
             <Form.Group as={Row} className="mb-3">
               <Col sm={4}>
-                <Form.Label className="">No. Mobile Phone</Form.Label>
+                <Form.Label>No. Mobile Phone</Form.Label>
               </Col>
               <Col>
                 <Form.Control
@@ -165,7 +159,6 @@ export default function AnggotaEditModal(props) {
                   value={noHpData}
                   onChange={(e) => handleInputChange(e)}
                   required
-                  className=""
                 />
               </Col>
             </Form.Group>

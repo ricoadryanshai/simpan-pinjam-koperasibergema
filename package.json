@@ -9,5 +9,8 @@
     "client:build": "cd client && npm run build-all",
     "dev:server": "cd server && nodemon server.js",
     "server:build": "cd server && npm run build-all"
+  },
+  "dependencies": {
+    "react-to-print": "^2.14.15"
   }
 }

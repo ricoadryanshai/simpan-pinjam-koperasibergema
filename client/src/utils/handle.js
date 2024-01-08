@@ -1,19 +1,4 @@
-import { deleteSimpan, deleteTransaksi } from "./api";
-
-export const handleEdit = (item, setSelectedItem, setShowEditModal) => {
-  setSelectedItem(item);
-  setShowEditModal(true);
-};
-
-export const deleteTransaction = async (id, setData) => {
-  try {
-    await deleteTransaksi(id);
-    setData((prevTransaksi) => prevTransaksi.filter((item) => item.id !== id));
-    console.log("Data deleted successfully");
-  } catch (error) {
-    console.error("Error deleting data:", error.message);
-  }
-};
+import { deleteSimpan } from "./api";
 
 export const deleteSimpanan = async (
   kodeAnggota,

@@ -1,12 +1,14 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import { Button, Modal, Row, Col, Form } from "react-bootstrap";
-import { tambahAnggota } from "../utils/api";
+import { getKeanggotaan, tambahAnggota } from "../utils/api";
 
 export default function AnggotaTambahModal(props) {
   const { show, onHide } = props;
 
   const [inputNoHp, setInputNoHp] = React.useState("");
+  const [dropdown, setDropdown] = React.useState("");
+  const [keanggotaan, setKeanggotaan] = React.useState([]);
 
   const handleInputChange = (event) => {
     const value = event.target?.value;
@@ -19,6 +21,7 @@ export default function AnggotaTambahModal(props) {
     const inputData = {
       kodeAnggota: document.getElementById("kodeAnggota")?.value || "",
       nama: document.getElementById("nama")?.value || "",
+      jenisAnggota: dropdown || "",
       jenKel: document.getElementById("jenKel")?.value || "",
       tempatLahir: document.getElementById("tempatLahir")?.value || "",
       tanggalLahir: document.getElementById("tanggalLahir")?.value || "",
@@ -29,20 +32,47 @@ export default function AnggotaTambahModal(props) {
     try {
       if (inputData) {
         await tambahAnggota(inputData);
+        setInputNoHp("");
+        setDropdown("");
         onHide();
-        console.log(inputData);
       }
     } catch (error) {
       console.log("Handle submit erro: ", error);
     }
   };
 
+  const handleCloseModal = () => {
+    setDropdown("");
+    setInputNoHp("");
+    onHide();
+  };
+
+  React.useEffect(() => {
+    const keanggotaan = async () => {
+      try {
+        setKeanggotaan(await getKeanggotaan());
+      } catch (error) {
+        console.log(
+          "Error fetching jenis anggota from tbl_keanggotaan: ",
+          error
+        );
+      }
+    };
+    keanggotaan();
+  }, [show]);
+
   return (
     <>
-      <Modal show={show} onHide={onHide} backdrop="static" keyboard={false}>
+      <Modal
+        show={show}
+        onHide={() => handleCloseModal()}
+        backdrop="static"
+        keyboard={false}
+        scrollable
+      >
         <Modal.Header closeButton>
           <Modal.Title className="fw-bold text-uppercase">
-            Tambah Anggota
+            Tambah Nasabah
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -66,6 +96,26 @@ export default function AnggotaTambahModal(props) {
               </Col>
               <Col>
                 <Form.Control type="text" name="nama" id="nama" required />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Col sm={4}>
+                <Form.Label>Keanggotaan</Form.Label>
+              </Col>
+              <Col>
+                <Form.Select
+                  value={dropdown}
+                  onChange={(e) => setDropdown(e.target.value)}
+                >
+                  <option value={""} disabled>
+                    Pilih Keanggotaan
+                  </option>
+                  {keanggotaan.map((anggota) => (
+                    <option key={anggota.id} value={anggota.jenisAnggota}>
+                      {anggota.jenisAnggota}
+                    </option>
+                  ))}
+                </Form.Select>
               </Col>
             </Form.Group>
             <Form.Group as={Row} className="mb-3">
@@ -148,7 +198,7 @@ export default function AnggotaTambahModal(props) {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={onHide}>
+          <Button variant="secondary" onClick={() => handleCloseModal()}>
             Close
           </Button>
           <Button variant="primary" onClick={() => handleSubmit()}>

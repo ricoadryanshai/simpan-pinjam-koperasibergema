@@ -16,6 +16,12 @@ import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
 import { fetchSimpanan } from "../utils/fetch";
 import { formatRupiah } from "../utils/format";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCircleInfo,
+  faMoneyBillTransfer,
+  faPiggyBank,
+} from "@fortawesome/free-solid-svg-icons";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -26,8 +32,12 @@ export default function SimpanTable() {
   const [showTambahModal, setShowTambahModal] = React.useState(false);
   const [showAmbilModal, setShowAmbilModal] = React.useState(false);
   const [modalData, setModalData] = React.useState([]);
-  const [input, setInput] = React.useState("");
   const [activePage, setActivePage] = React.useState(1);
+  const [filteredData, setFilteredData] = React.useState([]);
+  const [sortConfig /* setSortConfig */] = React.useState({
+    key: "nama",
+    direction: "asc",
+  });
 
   const fetchData = async () => {
     await fetchSimpanan(setSimpananData);
@@ -39,7 +49,21 @@ export default function SimpanTable() {
   };
 
   const handleInputChange = (e) => {
-    setInput(e.target.value);
+    const inputValue = e.target.value.toLowerCase();
+
+    // Lakukan filtering pada seluruh dataset (simpananData)
+    const filteredResult = sortedData.filter((simpan) => {
+      const kodeAnggota = simpan.kodeAnggota.toLowerCase();
+      const nama = simpan.nama.toLowerCase();
+
+      return kodeAnggota.includes(inputValue) || nama.includes(inputValue);
+    });
+
+    // Update state filteredData dengan hasil pencarian
+    setFilteredData(filteredResult);
+
+    // Set activePage kembali ke halaman pertama setelah melakukan pencarian
+    setActivePage(1);
   };
 
   const handleDetailClick = (rowData) => {
@@ -71,7 +95,7 @@ export default function SimpanTable() {
   };
 
   const goToLastPage = () => {
-    setActivePage(Math.ceil(simpananData.length / ITEMS_PER_PAGE));
+    setActivePage(Math.ceil(filteredData.length / ITEMS_PER_PAGE));
   };
 
   const goToPrevPage = () => {
@@ -80,13 +104,44 @@ export default function SimpanTable() {
 
   const goToNextPage = () => {
     setActivePage((prevPage) =>
-      Math.min(prevPage + 1, Math.ceil(simpananData.length / ITEMS_PER_PAGE))
+      Math.min(prevPage + 1, Math.ceil(filteredData.length / ITEMS_PER_PAGE))
     );
   };
 
+  const customSort = (a, b) => {
+    const saldoA = a.totalSaldo;
+    const saldoB = b.totalSaldo;
+
+    if (saldoA > 0 && saldoB > 0) {
+      return a.kodeAnggota.localeCompare(b.kodeAnggota);
+    }
+
+    if (saldoA > 0 && saldoB <= 0) {
+      return -1;
+    }
+
+    if (saldoA <= 0 && saldoB > 0) {
+      return 1;
+    }
+
+    if (saldoA === 0 && saldoB === 0) {
+      return a.kodeAnggota.localeCompare(b.kodeAnggota);
+    }
+
+    return saldoA - saldoB;
+  };
+
+  const sortedData = React.useMemo(() => {
+    let sortableData = [...simpananData];
+    if (sortConfig !== null) {
+      sortableData.sort((a, b) => customSort(a, b));
+    }
+    return sortableData;
+  }, [simpananData, sortConfig]);
+
   const indexOfLastEntry = activePage * ITEMS_PER_PAGE;
   const indexOfFirstEntry = indexOfLastEntry - ITEMS_PER_PAGE;
-  const currentEntries = simpananData.slice(
+  const currentEntries = filteredData.slice(
     indexOfFirstEntry,
     indexOfLastEntry
   );
@@ -96,6 +151,12 @@ export default function SimpanTable() {
   React.useEffect(() => {
     fetchData();
   }, []);
+
+  React.useEffect(() => {
+    if (sortedData.length > 0) {
+      setFilteredData(sortedData);
+    }
+  }, [sortedData]);
   return (
     <>
       <div className="d-flex justify-content-center">
@@ -112,7 +173,7 @@ export default function SimpanTable() {
                   <div className="input-wrapper">
                     <FaSearch id="search-icon" />
                     <input
-                      placeholder="Ketik untuk mencari data..."
+                      placeholder="Ketika untuk mencari data..."
                       onChange={handleInputChange}
                     />
                   </div>
@@ -130,54 +191,48 @@ export default function SimpanTable() {
                 </tr>
               </thead>
               <tbody>
-                {currentEntries
-                  .filter((simpan) => {
-                    const inputString = input.toString().toLowerCase();
-                    return (
-                      (simpan.kodeAnggota &&
-                        simpan.kodeAnggota
-                          .toLowerCase()
-                          .includes(inputString)) ||
-                      (simpan.nama &&
-                        simpan.nama.toLowerCase().includes(inputString))
-                    );
-                  })
-                  .map((simpan, index) => (
-                    <tr className="text-center align-middle" key={index}>
-                      <td>{index + startIndex}</td>
-                      <td>{simpan.kodeAnggota}</td>
-                      <td className="text-start">{simpan.nama}</td>
-                      <td className="text-start">
-                        {formatRupiah(simpan.totalSaldo)}
-                      </td>
-                      <td>
+                {currentEntries.map((simpan, index) => (
+                  <tr className="text-center align-middle" key={index}>
+                    <td>{index + startIndex}</td>
+                    <td>{simpan.kodeAnggota}</td>
+                    <td className="text-start">{simpan.nama}</td>
+                    <td className="text-start">
+                      {formatRupiah(simpan.totalSaldo)}
+                    </td>
+                    <td>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleDetailClick(simpan)}
+                      >
+                        <FontAwesomeIcon icon={faCircleInfo} className="me-1" />
+                        Detail
+                      </Button>
+                    </td>
+                    <td>
+                      <Button
+                        variant="success"
+                        onClick={() => handleTambahClick(simpan)}
+                      >
+                        <FontAwesomeIcon icon={faPiggyBank} className="me-1" />
+                        Simpan
+                      </Button>
+                    </td>
+                    <td>
+                      {simpan.totalSaldo > 0 ? (
                         <Button
-                          variant="secondary"
-                          onClick={() => handleDetailClick(simpan)}
+                          variant="primary"
+                          onClick={() => handleAmbilClick(simpan)}
                         >
-                          Detail
+                          <FontAwesomeIcon
+                            icon={faMoneyBillTransfer}
+                            className="me-1"
+                          />
+                          Ambil
                         </Button>
-                      </td>
-                      <td>
-                        <Button
-                          variant="success"
-                          onClick={() => handleTambahClick(simpan)}
-                        >
-                          Simpan
-                        </Button>
-                      </td>
-                      <td>
-                        {simpan.totalSaldo > 0 ? (
-                          <Button
-                            variant="primary"
-                            onClick={() => handleAmbilClick(simpan)}
-                          >
-                            Ambil
-                          </Button>
-                        ) : null}
-                      </td>
-                    </tr>
-                  ))}
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </Table>
           </Container>

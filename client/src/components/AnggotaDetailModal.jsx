@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+// eslint-disable-next-line no-unused-vars
 import React from "react";
 import { Modal, Button, Row, Col } from "react-bootstrap";
 import { formatDate } from "../utils/format";
@@ -8,6 +9,7 @@ export default function AnggotaDetailModal(props) {
 
   const kodeAnggota = selectedRow?.kodeAnggota || "";
   const nama = selectedRow?.nama || "";
+  const jenisAnggota = selectedRow?.jenisAnggota || "";
   const jenKel = selectedRow?.jenKel || "";
   const tempatLahir = selectedRow?.tempatLahir || "";
   const tanggalLahir = selectedRow?.tanggalLahir || "";
@@ -20,6 +22,7 @@ export default function AnggotaDetailModal(props) {
       onHide={() => onHide()}
       backdrop="static"
       keyboard={false}
+      scrollable={true}
     >
       <Modal.Header closeButton>
         <Modal.Title className="text-uppercase fw-bold">
@@ -38,6 +41,12 @@ export default function AnggotaDetailModal(props) {
             Nama
           </Col>
           <Col>{nama}</Col>
+        </Row>
+        <Row className="mb-2">
+          <Col sm={4} className="fw-bold">
+            Keanggotaan
+          </Col>
+          <Col>{jenisAnggota}</Col>
         </Row>
         <Row className="mb-2">
           <Col sm={4} className="fw-bold">

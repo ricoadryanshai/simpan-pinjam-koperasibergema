@@ -7,8 +7,9 @@ export default function Footer() {
     <>
       <Navbar bg="dark" variant="dark" fixed="bottom">
         <NavbarText className="flex-grow-1 text-center no-print">
-          © {new Date().getFullYear()} Copyright: Koperasi Bergema - Gandaria
-          Selatan
+          <span className="px-3">
+            © 2023 Copyright: Koperasi Bergema - Gandaria Selatan
+          </span>
         </NavbarText>
       </Navbar>
     </>

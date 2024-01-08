@@ -6,7 +6,7 @@ import { handleInputChange } from "../utils/handle";
 import { PinjamProsesModal } from "./PinjamProsesModal";
 
 export const PinjamTambahModal = (props) => {
-  const { show, onHide, selectedRow, setShowPinjam, fungsiLoad } = props;
+  const { show, onHide, selectedRow, setShowPinjam } = props;
 
   const [selectedDate, setSelectedDate] = React.useState("");
   const [inputNominalPinjam, setInputNominalPinjam] = React.useState("");
@@ -29,25 +29,19 @@ export const PinjamTambahModal = (props) => {
     }
   };
 
-  const handleProsesClick = () => {
+  const handleModalShow = (modalType) => {
     let isFormInvalid = false;
 
     if (!selectedDate) {
       isFormInvalid = true;
-      // Tampilkan pesan kesalahan untuk Tanggal Transaksi
-      // (misalnya menggunakan state atau variabel lain untuk menyimpan pesan kesalahan)
     }
 
     if (!inputNominalPinjam) {
       isFormInvalid = true;
-      // Tampilkan pesan kesalahan untuk Nominal Pinjam
-      // (misalnya menggunakan state atau variabel lain untuk menyimpan pesan kesalahan)
     }
 
     if (!inputNominalAngsuran) {
       isFormInvalid = true;
-      // Tampilkan pesan kesalahan untuk Angsuran
-      // (misalnya menggunakan state atau variabel lain untuk menyimpan pesan kesalahan)
     }
 
     if (isFormInvalid) {
@@ -56,17 +50,34 @@ export const PinjamTambahModal = (props) => {
     }
 
     const newProsesPinjam = {
-      kodeAnggota: selectedRow?.kodeAnggota || "",
+      kodeAnggota: kodeAnggota,
       jenisTransaksi: "Pinjam",
-      nama: selectedRow?.nama || "",
+      nama: nama,
       nominalTransaksi: inputNominalPinjam,
       angsuran: inputNominalAngsuran,
       tanggalTransaksi: selectedDate,
     };
-    setSavedData(newProsesPinjam);
 
-    onHide();
-    setModalProses(true);
+    switch (modalType) {
+      case "proses":
+        setSavedData(newProsesPinjam);
+        onHide();
+        setModalProses(true);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleModalClose = (modalType) => {
+    switch (modalType) {
+      case "proses":
+        setModalProses(false);
+        setShowPinjam(true);
+        break;
+      default:
+        break;
+    }
   };
 
   const resetForm = () => {
@@ -74,6 +85,9 @@ export const PinjamTambahModal = (props) => {
     setInputNominalAngsuran("");
     setSelectedDate("");
   };
+
+  const kodeAnggota = selectedRow?.kodeAnggota || "";
+  const nama = selectedRow?.nama || "";
 
   return (
     <>
@@ -102,13 +116,7 @@ export const PinjamTambahModal = (props) => {
                 Kode Anggota
               </Form.Label>
               <Col>
-                <Form.Control
-                  plaintext
-                  readOnly
-                  value={
-                    selectedRow?.kodeAnggota ? selectedRow.kodeAnggota : ""
-                  }
-                />
+                <Form.Control plaintext readOnly value={kodeAnggota} />
               </Col>
             </Form.Group>
             <Form.Group as={Row} className="mb-2" controlId="formPlaintextNama">
@@ -116,11 +124,7 @@ export const PinjamTambahModal = (props) => {
                 Nama
               </Form.Label>
               <Col>
-                <Form.Control
-                  plaintext
-                  readOnly
-                  defaultValue={selectedRow?.nama ? selectedRow.nama : ""}
-                />
+                <Form.Control plaintext readOnly defaultValue={nama} />
               </Col>
             </Form.Group>
             <Form.Group
@@ -184,13 +188,13 @@ export const PinjamTambahModal = (props) => {
             <Button
               variant="secondary"
               onClick={() => {
-                resetForm();
                 onHide();
+                resetForm();
               }}
             >
               Close
             </Button>
-            <Button variant="primary" onClick={handleProsesClick}>
+            <Button variant="primary" onClick={() => handleModalShow("proses")}>
               Proses
             </Button>
           </Modal.Footer>
@@ -199,15 +203,13 @@ export const PinjamTambahModal = (props) => {
 
       <PinjamProsesModal
         show={modalProses}
-        onHide={() => {
-          setModalProses(false);
-          setShowPinjam(true);
-        }}
+        onHide={() => handleModalClose("proses")}
         savedData={savedData}
-        setModalProses={setModalProses}
-        setShowPinjam={setShowPinjam}
-        resetForm={resetForm}
-        fungsiLoad={fungsiLoad}
+        closeAllModal={() => {
+          onHide();
+          setModalProses(false);
+          resetForm();
+        }}
       />
     </>
   );

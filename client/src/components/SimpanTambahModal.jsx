@@ -8,6 +8,8 @@ import { handleInputChange } from "../utils/handle";
 export default function SimpanTambahModal(props) {
   const { show, onClose, rowData, clearModalData, fetchData } = props;
 
+  const yourFormRef = React.useRef(null);
+
   const [Dropdown, setDropdown] = React.useState("");
   const [inputNominal, setInputNominal] = React.useState("");
   const [selectedFile, setSelectedFile] = React.useState(null);
@@ -23,14 +25,13 @@ export default function SimpanTambahModal(props) {
 
   const handleSubmit = async () => {
     try {
-      const response = await tambahSimpan(
+      await tambahSimpan(
         rowData.kodeAnggota,
         document.getElementById("inputTanggalTransaksi").value,
         Dropdown,
         inputNominal,
         selectedFile
       );
-      console.log(response);
 
       onClose();
       fetchData();
@@ -78,6 +79,13 @@ export default function SimpanTambahModal(props) {
     }
   };
 
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   const isInputNominalReadOnly =
     Dropdown === "Simpanan Pokok" || Dropdown === "Simpanan Wajib";
 
@@ -93,6 +101,10 @@ export default function SimpanTambahModal(props) {
   React.useEffect(() => {
     fecthedData();
   }, [show]);
+
+  React.useEffect(() => {
+    yourFormRef.current && yourFormRef.current.focus();
+  }, [show]);
   return (
     <>
       <Modal
@@ -106,7 +118,7 @@ export default function SimpanTambahModal(props) {
         </Modal.Header>
 
         <Modal.Body>
-          <Form>
+          <Form ref={yourFormRef} onKeyDown={handleKeyPress}>
             <Form.Group
               as={Row}
               className="mb-2"
