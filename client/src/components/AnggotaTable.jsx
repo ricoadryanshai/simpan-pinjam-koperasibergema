@@ -19,12 +19,16 @@ const ITEMS_PER_PAGE = 10;
 
 export default function AnggotaTable() {
   const [anggotaData, setAnggotaData] = React.useState([]);
-  const [input, setInput] = React.useState("");
+  const [filteredData, setFilteredData] = React.useState([]);
   const [activePage, setActivePage] = React.useState(1);
   const [showTambah, setShowTambah] = React.useState(false);
   const [showDetail, setShowDetail] = React.useState(false);
   const [showEdit, setShowEdit] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState([]);
+  const [sortConfig /* setSortConfig */] = React.useState({
+    key: "nama",
+    direction: "asc",
+  });
 
   const fetchData = async () => {
     try {
@@ -82,10 +86,51 @@ export default function AnggotaTable() {
     try {
       await deleteAnggota(id);
       await fetchData();
-      console.log("Data deleted successfully");
     } catch (error) {
       console.error("Error deleting data:", error);
     }
+  };
+
+  const customSort = (a, b) => {
+    const kodeAnggotaA = a.kodeAnggota;
+    const kodeAnggotaB = b.kodeAnggota;
+
+    return kodeAnggotaA.localeCompare(kodeAnggotaB);
+  };
+
+  const sortedData = React.useMemo(() => {
+    let sortableData = [...anggotaData];
+    if (sortConfig !== null) {
+      sortableData.sort((a, b) => customSort(a, b));
+    }
+    return sortableData;
+  }, [anggotaData, sortConfig]);
+
+  const indexOfLastEntry = activePage * ITEMS_PER_PAGE;
+  const indexOfFirstEntry = indexOfLastEntry - ITEMS_PER_PAGE;
+  const currentEntries = filteredData.slice(
+    indexOfFirstEntry,
+    indexOfLastEntry
+  );
+
+  const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
+
+  const handleInputChange = (e) => {
+    const inputValue = e.target.value.toLowerCase();
+
+    // Lakukan filtering pada seluruh dataset (simpananData)
+    const filteredResult = sortedData.filter((simpan) => {
+      const kodeAnggota = simpan.kodeAnggota.toLowerCase();
+      const nama = simpan.nama.toLowerCase();
+
+      return kodeAnggota.includes(inputValue) || nama.includes(inputValue);
+    });
+
+    // Update state filteredData dengan hasil pencarian
+    setFilteredData(filteredResult);
+
+    // Set activePage kembali ke halaman pertama setelah melakukan pencarian
+    setActivePage(1);
   };
 
   const highlightSearchText = (text, search) => {
@@ -130,11 +175,11 @@ export default function AnggotaTable() {
     );
   };
 
-  const indexOfLastEntry = activePage * ITEMS_PER_PAGE;
-  const indexOfFirstEntry = indexOfLastEntry - ITEMS_PER_PAGE;
-  const currentEntries = anggotaData.slice(indexOfFirstEntry, indexOfLastEntry);
-
-  const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
+  React.useEffect(() => {
+    if (sortedData.length > 0) {
+      setFilteredData(sortedData);
+    }
+  }, [sortedData]);
   return (
     <>
       <div className="d-flex justify-content-center">
@@ -161,7 +206,7 @@ export default function AnggotaTable() {
                     <FaSearch id="search-icon" />
                     <input
                       placeholder="Ketika untuk mencari data..."
-                      onChange={(e) => setInput(e.target.value)}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -177,80 +222,42 @@ export default function AnggotaTable() {
                 </tr>
               </thead>
               <tbody>
-                {currentEntries
-                  .filter((anggota) => {
-                    const inputString = input.toString().toLowerCase();
+                {currentEntries.map((anggota, index) => (
+                  <tr key={anggota.id} className="align-middle text-center">
+                    <td>{startIndex + index}</td>
+                    <td>{highlightSearchText(anggota.kodeAnggota)}</td>
+                    <td className="text-start">
+                      {highlightSearchText(anggota.nama)}
+                    </td>
 
-                    return (
-                      (anggota.kodeAnggota &&
-                        anggota.kodeAnggota
-                          .toLowerCase()
-                          .includes(inputString)) ||
-                      (anggota.nama &&
-                        anggota.nama.toLowerCase().includes(inputString)) ||
-                      (anggota.jenKel &&
-                        anggota.jenKel.toLowerCase().includes(inputString)) ||
-                      (anggota.tanggalTransaksi &&
-                        anggota.tanggalTransaksi
-                          .toLowerCase()
-                          .includes(inputString)) ||
-                      (anggota.tempatLahir &&
-                        anggota.tempatLahir
-                          .toLowerCase()
-                          .includes(inputString)) ||
-                      (anggota.tanggalLahir &&
-                        anggota.tanggalLahir
-                          .toLowerCase()
-                          .includes(inputString)) ||
-                      (anggota.alamat &&
-                        anggota.alamat.toLowerCase().includes(inputString)) ||
-                      (anggota.noHP &&
-                        anggota.noHP.toLowerCase().includes(inputString)) ||
-                      (anggota.tanggalDaftar &&
-                        anggota.tanggalDaftar
-                          .toLowerCase()
-                          .includes(inputString))
-                    );
-                  })
-                  .map((anggota, index) => (
-                    <tr key={anggota.id} className="align-middle text-center">
-                      <td>{startIndex + index}</td>
-                      <td>{highlightSearchText(anggota.kodeAnggota)}</td>
-                      <td className="text-start">
-                        {highlightSearchText(anggota.nama)}
-                      </td>
-
-                      <td className="d-flex justify-content-center flex-gap-1">
-                        <Button
-                          variant="secondary"
-                          onClick={() => handleModalShow("detail", anggota)}
-                        >
-                          <FontAwesomeIcon
-                            icon={faCircleInfo}
-                            className="me-1"
-                          />
-                          Detail
-                        </Button>
-                        <Button
-                          variant="warning"
-                          onClick={() => handleModalShow("edit", anggota)}
-                        >
-                          <FontAwesomeIcon
-                            icon={faPenToSquare}
-                            className="me-1"
-                          />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="danger"
-                          onClick={() => handleDeleteClick(anggota.id)}
-                        >
-                          <FontAwesomeIcon icon={faTrashCan} className="me-1" />
-                          Delete
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                    <td className="d-flex justify-content-center flex-gap-1">
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleModalShow("detail", anggota)}
+                      >
+                        <FontAwesomeIcon icon={faCircleInfo} className="me-1" />
+                        Detail
+                      </Button>
+                      <Button
+                        variant="warning"
+                        onClick={() => handleModalShow("edit", anggota)}
+                      >
+                        <FontAwesomeIcon
+                          icon={faPenToSquare}
+                          className="me-1"
+                        />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="danger"
+                        onClick={() => handleDeleteClick(anggota.id)}
+                      >
+                        <FontAwesomeIcon icon={faTrashCan} className="me-1" />
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </Table>
           </Container>

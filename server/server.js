@@ -1,15 +1,17 @@
 /* eslint-disable no-undef */
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer");
 const bodyParser = require("body-parser");
 const mysql = require("mysql");
-const multer = require("multer");
-const crypto = require("crypto");
 const path = require("path");
+const chalk = require("chalk");
+const crypto = require("crypto");
 const fs = require("fs");
 
 const app = express();
 const port = process.env.PORT || 3023;
+const ip_address = "192.168.1.18";
 
 // Multer Configuration
 const storage = multer.diskStorage({
@@ -44,6 +46,11 @@ const upload = multer({
 app.use(cors());
 app.use(bodyParser.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// app.use(express.static(path.join(__dirname, "client/build")));
+
+// app.get("/*", function (req, res) {
+//   res.sendFile(path.join(__dirname, "../client/build", "index.html"));
+// });
 
 // MySQL Configuration
 const db = mysql.createConnection({
@@ -70,27 +77,6 @@ function getQueryResult(query) {
         reject(err);
       } else {
         resolve(results[0]);
-      }
-    });
-  });
-}
-
-function findAvailableID(db) {
-  return new Promise((resolve, reject) => {
-    const query = `
-      SELECT MIN(t1.kodeAnggota + 1) AS nextID
-      FROM tbl_anggota t1
-      LEFT JOIN your_table t2 ON t1.id + 1 = t2.id
-      WHERE t2.id IS NULL;
-    `;
-
-    db.query(query, (err, result) => {
-      if (err) {
-        reject(err);
-      } else {
-        // Jika tidak ada ID yang tersedia, kembalikan ID awal (misalnya 1)
-        const nextID = result[0].nextID || 1;
-        resolve(nextID);
       }
     });
   });
@@ -265,10 +251,12 @@ app.post("/post/anggota", async (req, res) => {
     noHP,
   } = req.body;
 
-  const currentDate = new Date();
-  const tanggalDaftar = `${currentDate.getFullYear()}/${
-    currentDate.getMonth() + 1
-  }/${currentDate.getDate()}`;
+  const today = new Date();
+  const date = today.getDate();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const year = today.getFullYear();
+
+  const currentDate = `${year}-${month}-${date}`;
 
   const insertQuery = `INSERT INTO tbl_anggota (kodeAnggota, nama, jenisAnggota, jenKel, tempatLahir, tanggalLahir, alamat, noHP, tanggalDaftar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
@@ -281,7 +269,7 @@ app.post("/post/anggota", async (req, res) => {
     tanggalLahir,
     alamat,
     noHP,
-    tanggalDaftar,
+    currentDate,
   ];
 
   db.query(insertQuery, values, (err, result) => {
@@ -330,7 +318,7 @@ app.get("/get/simpan/:kodeAnggota", (req, res) => {
   const kodeAnggota = req.params.kodeAnggota;
 
   const selectQuery = `
-    SELECT id, tanggalSimpan, jenisSimpan, saldo, uploadFile
+    SELECT id, tanggalSimpan, jenisSimpan, saldo
     FROM tbl_simpan
     WHERE kodeAnggota = ?
     ORDER BY tanggalSimpan DESC;
@@ -875,7 +863,7 @@ app.get("/get/lapSimpan/:year", (req, res) => {
       SUM(CASE WHEN s.jenisSimpan = 'Ambil Simpanan' AND YEAR(s.tanggalSimpan) = ${year} THEN s.saldo ELSE 0 END) AS penarikan
     FROM tbl_anggota a
     LEFT JOIN tbl_simpan s ON a.kodeAnggota = s.kodeAnggota
-    LEFT JOIN tbl_keanggotaan k ON a.jenisAnggota = k.jenisAnggota
+    LEFT JOIN tbl_pembagian_shu k ON a.jenisAnggota = k.jenisAnggota
     WHERE YEAR(s.tanggalSimpan) = ${year} 
     GROUP BY a.kodeAnggota, tahunSimpan
     ORDER BY a.kodeAnggota
@@ -1077,7 +1065,8 @@ app.get("/get/keanggotaan", (req, res) => {
     FROM
       tbl_keanggotaan
     ORDER BY
-      id`;
+      namaKeanggotaan
+    `;
 
   db.query(sqlQuery, (err, results) => {
     if (err) {
@@ -1144,5 +1133,15 @@ processFiles();
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(
+    `${chalk.bold("Local:")} \t\t\t http://localhost:${chalk.bold(port)}`
+  );
+});
+
+app.listen(port, ip_address, () => {
+  console.log(
+    `${chalk.bold("On Your Network:")} \t http://${ip_address}:${chalk.bold(
+      port
+    )}`
+  );
 });

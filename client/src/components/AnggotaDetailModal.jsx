@@ -30,57 +30,57 @@ export default function AnggotaDetailModal(props) {
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Row className="mb-2">
+        <Row className="mb-2 align-items-center">
           <Col sm={4} className="fw-bold">
             Kode Anggota
           </Col>
           <Col>{kodeAnggota}</Col>
         </Row>
-        <Row className="mb-2">
+        <Row className="mb-2 align-items-center">
           <Col sm={4} className="fw-bold">
             Nama
           </Col>
           <Col>{nama}</Col>
         </Row>
-        <Row className="mb-2">
+        <Row className="mb-2 align-items-center">
           <Col sm={4} className="fw-bold">
             Keanggotaan
           </Col>
           <Col>{jenisAnggota}</Col>
         </Row>
-        <Row className="mb-2">
+        <Row className="mb-2 align-items-center">
           <Col sm={4} className="fw-bold">
             Jenis Kelamin
           </Col>
           <Col>{jenKel}</Col>
         </Row>
-        <Row className="mb-2">
+        <Row className="mb-2 align-items-center">
           <Col sm={4} className="fw-bold">
             Tempat Lahir
           </Col>
           <Col>{tempatLahir}</Col>
         </Row>
-        <Row className="mb-2">
+        <Row className="mb-2 align-items-center">
           <Col sm={4} className="fw-bold">
             Tanggal Lahir
           </Col>
           <Col>{formatDate(tanggalLahir)}</Col>
         </Row>
-        <Row className="mb-2">
+        <Row className="mb-2 align-items-center">
           <Col sm={4} className="fw-bold">
             Alamat
           </Col>
           <Col>{alamat}</Col>
         </Row>
-        <Row className="mb-2">
+        <Row className="mb-2 align-items-center">
           <Col sm={4} className="fw-bold">
             No. HP
           </Col>
           <Col>{noHP}</Col>
         </Row>
-        <Row className="mb-2">
+        <Row className="mb-2 align-items-center">
           <Col sm={4} className="fw-bold">
-            Tanggal Daftar
+            Tanggal Bergabung
           </Col>
           <Col>{formatDate(tanggalDaftar)}</Col>
         </Row>

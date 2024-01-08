@@ -1,20 +1,45 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
-import { editAnggota } from "../utils/api";
+import { editAnggota, getKeanggotaan } from "../utils/api";
 
 export default function AnggotaEditModal(props) {
   const { show, onHide, selectedRow } = props;
-  const { kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP } =
-    selectedRow;
+  const {
+    kodeAnggota,
+    nama,
+    jenisAnggota,
+    jenKel,
+    tempatLahir,
+    tanggalLahir,
+    alamat,
+    noHP,
+  } = selectedRow;
 
   const [noHpData, setNoHp] = React.useState("");
+  const [dropdown, setDropdown] = React.useState("");
+  const [keanggotaan, setKeanggotaan] = React.useState([]);
 
   React.useEffect(() => {
     if (selectedRow && noHP) {
       setNoHp(noHP);
     }
   }, [selectedRow, noHP]);
+
+  React.useEffect(() => {
+    const keanggotaan = async () => {
+      try {
+        setKeanggotaan(await getKeanggotaan());
+      } catch (error) {
+        console.log(
+          "Error fetching jenis anggota from tbl_keanggotaan: ",
+          error
+        );
+      }
+    };
+    keanggotaan();
+    setDropdown(jenisAnggota);
+  }, [show, jenisAnggota]);
 
   const handleInputChange = (e) => {
     const formattedValue = e.target.value.replace(/[^0-9]/g, "");
@@ -26,6 +51,7 @@ export default function AnggotaEditModal(props) {
       const updatedData = {
         kodeAnggota: document.getElementById("kodeAnggota")?.value || "",
         nama: document.getElementById("nama")?.value || "",
+        jenisAnggota: dropdown || "",
         jenKel:
           document.querySelector('input[name="jenKel"]:checked')?.value || "",
         tempatLahir: document.getElementById("tempatLahir")?.value || "",
@@ -78,6 +104,26 @@ export default function AnggotaEditModal(props) {
                   defaultValue={nama}
                   required
                 />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Col sm={4}>
+                <Form.Label>Keanggotaan</Form.Label>
+              </Col>
+              <Col>
+                <Form.Select
+                  value={dropdown}
+                  onChange={(e) => setDropdown(e.target.value)}
+                >
+                  <option value={""} disabled>
+                    Pilih Keanggotaan
+                  </option>
+                  {keanggotaan.map((anggota) => (
+                    <option key={anggota.id} value={anggota.namaKeanggotaan}>
+                      {anggota.namaKeanggotaan}
+                    </option>
+                  ))}
+                </Form.Select>
               </Col>
             </Form.Group>
             <Form.Group as={Row} className="mb-3">
@@ -149,7 +195,7 @@ export default function AnggotaEditModal(props) {
             </Form.Group>
             <Form.Group as={Row} className="mb-3">
               <Col sm={4}>
-                <Form.Label>No. Mobile Phone</Form.Label>
+                <Form.Label>No. Telp</Form.Label>
               </Col>
               <Col>
                 <Form.Control

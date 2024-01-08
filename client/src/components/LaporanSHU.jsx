@@ -3,18 +3,17 @@ import React from "react";
 import { Card, Stack, Form, Row, Col } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileExport, faPrint } from "@fortawesome/free-solid-svg-icons";
-import { getLapSHU, getLapSHUByYear } from "../utils/api";
+import { getLapSHU } from "../utils/api";
 import { formatRupiah } from "../utils/format";
 import { LaporanSHUPrintOut } from "./LaporanSHUPrintOut";
 import { useReactToPrint } from "react-to-print";
 import { useDownloadExcel } from "react-export-table-to-excel";
 import LaporanSHUExport from "./LaporanSHUExport";
 
-export const LaporanSHU = ({ keanggotaan }) => {
+export const LaporanSHU = ({ keanggotaan, lapSHUByYear, fetchLapSHU }) => {
   const [lapSHUBy, setlapSHUBy] = React.useState([]);
   const [selectedYear, setSelectedYear] = React.useState("");
   const [uniqueYears, setUniqueYears] = React.useState([]);
-  const [lapSHUByYear, setLapSHUByYear] = React.useState([]);
 
   const componentRef = React.useRef();
 
@@ -50,20 +49,11 @@ export const LaporanSHU = ({ keanggotaan }) => {
     setSelectedYear(e.target.value);
   };
 
-  const fetchLapSHU = async (year) => {
-    try {
-      const data = await getLapSHUByYear(year);
-      setLapSHUByYear(data);
-    } catch (error) {
-      console.log("Error fetching laporan shu: ", error);
-    }
-  };
-
-  React.useEffect(() => {
-    if (selectedYear !== "" || selectedYear != null) {
-      fetchLapSHU(selectedYear);
-    }
-  }, [selectedYear]);
+  // React.useEffect(() => {
+  //   if (selectedYear !== "" || selectedYear != null) {
+  //     fetchLapSHU(selectedYear);
+  //   }
+  // }, [fetchLapSHU, selectedYear]);
 
   const tableRef = React.useRef(null);
 

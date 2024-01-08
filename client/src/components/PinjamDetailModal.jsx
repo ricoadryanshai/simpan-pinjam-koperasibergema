@@ -64,7 +64,7 @@ export const PinjamDetailModal = (props) => {
               <Col sm={3} className="fw-bold">
                 <Row>Kode Anggota</Row>
                 <Row>Nama Anggota</Row>
-                <Row>Tanggal Daftar</Row>
+                <Row>Tanggal Bergabung</Row>
                 <Row>Sisa Tagihan</Row>
               </Col>
               <Col>

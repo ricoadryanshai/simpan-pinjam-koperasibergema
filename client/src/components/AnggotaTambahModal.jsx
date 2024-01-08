@@ -1,7 +1,17 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import { Button, Modal, Row, Col, Form } from "react-bootstrap";
-import { getKeanggotaan, tambahAnggota } from "../utils/api";
+import {
+  getKeanggotaan,
+  getPengaturan,
+  tambahAnggota,
+  tambahSimpan,
+} from "../utils/api";
+
+const today = new Date();
+const date = String(today.getDate()).padStart(2, "0");
+const month = String(today.getMonth() + 1).padStart(2, "0");
+const year = today.getFullYear();
 
 export default function AnggotaTambahModal(props) {
   const { show, onHide } = props;
@@ -9,6 +19,7 @@ export default function AnggotaTambahModal(props) {
   const [inputNoHp, setInputNoHp] = React.useState("");
   const [dropdown, setDropdown] = React.useState("");
   const [keanggotaan, setKeanggotaan] = React.useState([]);
+  const [fetchPengaturan, setFetchPengaturan] = React.useState([]);
 
   const handleInputChange = (event) => {
     const value = event.target?.value;
@@ -23,21 +34,41 @@ export default function AnggotaTambahModal(props) {
       nama: document.getElementById("nama")?.value || "",
       jenisAnggota: dropdown || "",
       jenKel: document.getElementById("jenKel")?.value || "",
-      tempatLahir: document.getElementById("tempatLahir")?.value || "",
-      tanggalLahir: document.getElementById("tanggalLahir")?.value || "",
-      alamat: document.getElementById("alamat")?.value || "",
-      noHP: inputNoHp || "",
+      tempatLahir: document.getElementById("tempatLahir")?.value || "-",
+      tanggalLahir:
+        document.getElementById("tanggalLahir")?.value ||
+        `${year}-${month}-${date}`,
+      alamat: document.getElementById("alamat")?.value || "-",
+      noHP: inputNoHp || 0,
     };
 
     try {
       if (inputData) {
         await tambahAnggota(inputData);
+
         setInputNoHp("");
         setDropdown("");
         onHide();
       }
     } catch (error) {
-      console.log("Handle submit erro: ", error);
+      console.log("Handle submit anggota error: ", error);
+      alert(
+        `Gagal menambahkan nasabah ${
+          document.getElementById("nama")?.value || ""
+        }`
+      );
+    }
+
+    try {
+      await tambahSimpan(
+        document.getElementById("kodeAnggota")?.value || "",
+        `${year}-${month}-${date}`,
+        "Simpanan Pokok",
+        fetchPengaturan.length > 0 ? fetchPengaturan[0]?.simpananPokok || 0 : 0
+      );
+    } catch (error) {
+      console.log("Handle submit simpanan error: ", error);
+      alert(`Gagal input biaya bergabung`);
     }
   };
 
@@ -58,7 +89,16 @@ export default function AnggotaTambahModal(props) {
         );
       }
     };
+    const fecthedData = async () => {
+      try {
+        const data = await getPengaturan();
+        setFetchPengaturan(data);
+      } catch (error) {
+        console.log("Error fetching pengaturan: ", error);
+      }
+    };
     keanggotaan();
+    fecthedData();
   }, [show]);
 
   return (
@@ -111,8 +151,8 @@ export default function AnggotaTambahModal(props) {
                     Pilih Keanggotaan
                   </option>
                   {keanggotaan.map((anggota) => (
-                    <option key={anggota.id} value={anggota.jenisAnggota}>
-                      {anggota.jenisAnggota}
+                    <option key={anggota.id} value={anggota.namaKeanggotaan}>
+                      {anggota.namaKeanggotaan}
                     </option>
                   ))}
                 </Form.Select>
@@ -182,7 +222,7 @@ export default function AnggotaTambahModal(props) {
             </Form.Group>
             <Form.Group as={Row} className="mb-3">
               <Col sm={4}>
-                <Form.Label>No. Mobile Phone</Form.Label>
+                <Form.Label>No. Telp</Form.Label>
               </Col>
               <Col>
                 <Form.Control
