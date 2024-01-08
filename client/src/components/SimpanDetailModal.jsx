@@ -2,7 +2,6 @@ import React from "react";
 import { Col, Container, Modal, Row, Table } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
 import { FaSearch } from "react-icons/fa";
-import { IMG_SERVER_PORT } from "../utils/server_port";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileExport, faPrint } from "@fortawesome/free-solid-svg-icons";
 import { useReactToPrint } from "react-to-print";
@@ -77,7 +76,7 @@ export default function SimpanDetailModal(props) {
               <Col sm={3} className="fw-bold">
                 <Row>Kode Anggota</Row>
                 <Row>Nama Anggota</Row>
-                <Row>Tanggal Daftar</Row>
+                <Row>Tanggal Bergabung</Row>
                 <Row>Total Saldo</Row>
               </Col>
               <Col>
@@ -121,8 +120,8 @@ export default function SimpanDetailModal(props) {
                 <th>No.</th>
                 <th>Tanggal Transaksi</th>
                 <th>Jenis Transaksi</th>
-                <th>Nominal</th>
-                <th>Bukti Transfer</th>
+                <th className="text-start">Nominal</th>
+                {/* <th>Bukti Transfer</th> */}
               </tr>
             </thead>
             <tbody>
@@ -156,7 +155,7 @@ export default function SimpanDetailModal(props) {
                     >
                       {formatRupiah(transaction.saldo)}
                     </td>
-                    <td>
+                    {/* <td>
                       {transaction.uploadFile ? (
                         <img
                           src={`${IMG_SERVER_PORT}/${transaction.uploadFile}`}
@@ -166,7 +165,7 @@ export default function SimpanDetailModal(props) {
                       ) : (
                         <span>Tidak ada bukti transfer</span>
                       )}
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
             </tbody>

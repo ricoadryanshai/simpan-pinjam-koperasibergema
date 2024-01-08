@@ -12,16 +12,16 @@ export default function SimpanTambahModal(props) {
 
   const [Dropdown, setDropdown] = React.useState("");
   const [inputNominal, setInputNominal] = React.useState("");
-  const [selectedFile, setSelectedFile] = React.useState(null);
+  // const [selectedFile, setSelectedFile] = React.useState(null);
   const [fetchPengaturan, setFetchPengaturan] = React.useState([]);
 
   const handleInput = (event) => {
     handleInputChange(event, setInputNominal);
   };
 
-  const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
-  };
+  // const handleFileChange = (event) => {
+  //   setSelectedFile(event.target.files[0]);
+  // };
 
   const handleSubmit = async () => {
     try {
@@ -29,15 +29,15 @@ export default function SimpanTambahModal(props) {
         rowData.kodeAnggota,
         document.getElementById("inputTanggalTransaksi").value,
         Dropdown,
-        inputNominal,
-        selectedFile
+        inputNominal
+        // selectedFile
       );
 
       onClose();
       fetchData();
       setDropdown("");
       setInputNominal("");
-      setSelectedFile(null);
+      // setSelectedFile(null);
       clearModalData();
     } catch (error) {
       console.error("Error posting data:", error);
@@ -50,7 +50,7 @@ export default function SimpanTambahModal(props) {
     fetchData();
     setDropdown("");
     setInputNominal("");
-    setSelectedFile(null);
+    // setSelectedFile(null);
     clearModalData();
   };
 
@@ -193,7 +193,7 @@ export default function SimpanTambahModal(props) {
                 <Form.Control type="date" />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} controlId="formFile" className="mb-2">
+            {/* <Form.Group as={Row} controlId="formFile" className="mb-2">
               <Form.Label column sm="4">
                 Bukti Transfer
               </Form.Label>
@@ -204,7 +204,7 @@ export default function SimpanTambahModal(props) {
                   onChange={handleFileChange}
                 />
               </Col>
-            </Form.Group>
+            </Form.Group> */}
           </Form>
         </Modal.Body>
 

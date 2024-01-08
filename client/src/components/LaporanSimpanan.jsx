@@ -9,7 +9,7 @@ import { useDownloadExcel } from "react-export-table-to-excel";
 import { LaporanSimpananPrintOut } from "./LaporanSimpananPrintOut";
 import LaporanSimpananExport from "./LaporanSimpananExport";
 
-export const LaporanSimpanan = () => {
+export const LaporanSimpanan = ({ objectSHU, fetchLapSHU }) => {
   const [lapSimpanan, setLapSimpanan] = React.useState([]);
   const [lapByYear, setLapByYear] = React.useState([]);
   const [selectedYear, setSelectedYear] = React.useState("");
@@ -60,22 +60,36 @@ export const LaporanSimpanan = () => {
     }
   }, [lapSimpanan]);
 
+  React.useEffect(() => {
+    if (selectedYear !== "") {
+      fetchLapSHU(selectedYear);
+    }
+  }, [fetchLapSHU, selectedYear]);
+
   const handleYearChange = (e) => {
     setSelectedYear(e.target.value);
   };
 
-  const totalSaldoAllRows = lapByYear.reduce((total, laporan) => {
-    const saldo =
-      laporan.simpananPokok +
-      laporan.simpananWajib +
-      laporan.simpananSukarela -
-      laporan.penarikan;
-    return total + saldo;
-  }, 0);
   const jumlahSimpananAllRows = lapByYear.reduce((total, laporan) => {
     const simpanan =
       laporan.simpananPokok + laporan.simpananWajib + laporan.simpananSukarela;
     return total + simpanan;
+  }, 0);
+
+  const totalSHU =
+    objectSHU?.bagianInvestor ||
+    null + objectSHU?.bagianAdministrasi ||
+    null + objectSHU?.bagianPengurus ||
+    null;
+
+  const jumlahPenarikan = lapByYear.reduce((total, laporan) => {
+    const penarikan = laporan.penarikan;
+    return total + penarikan;
+  }, 0);
+
+  const totalSaldoAllRows = lapByYear.reduce(() => {
+    const saldo = jumlahSimpananAllRows + totalSHU - jumlahPenarikan;
+    return saldo;
   }, 0);
 
   const tableRef = React.useRef(null);
@@ -135,6 +149,7 @@ export const LaporanSimpanan = () => {
                 <th>Simpanan Pokok</th>
                 <th>Simpanan Wajib</th>
                 <th>Simpanan Sukarela</th>
+                <th>Jumlah Total</th>
                 <th>SHU</th>
                 <th>Penarikan</th>
                 <th>Total Simpanan</th>
@@ -146,8 +161,30 @@ export const LaporanSimpanan = () => {
                   laporan.simpananPokok +
                   laporan.simpananWajib +
                   laporan.simpananSukarela;
-                const sisaHasilUsaha =
-                  (jumlahSimpanan / jumlahSimpananAllRows) * 160000;
+
+                let sisaHasilUsaha = null;
+
+                switch (laporan.jenisAnggota) {
+                  case "Investor":
+                    sisaHasilUsaha =
+                      (jumlahSimpanan / jumlahSimpananAllRows) *
+                      objectSHU.bagianInvestor;
+                    break;
+                  case "Administrasi":
+                    sisaHasilUsaha =
+                      (jumlahSimpanan / jumlahSimpananAllRows) *
+                      objectSHU.bagianAdministrasi;
+                    break;
+                  case "Pengurus":
+                    sisaHasilUsaha =
+                      (jumlahSimpanan / jumlahSimpananAllRows) *
+                      objectSHU.bagianPengurus;
+                    break;
+                  default:
+                    sisaHasilUsaha = null;
+                    break;
+                }
+
                 const totalSaldo =
                   jumlahSimpanan + sisaHasilUsaha - laporan.penarikan;
                 return (
@@ -158,6 +195,7 @@ export const LaporanSimpanan = () => {
                     <td>{formatRupiah(laporan.simpananPokok)}</td>
                     <td>{formatRupiah(laporan.simpananWajib)}</td>
                     <td>{formatRupiah(laporan.simpananSukarela)}</td>
+                    <td>{formatRupiah(jumlahSimpanan)}</td>
                     <td>{formatRupiah(sisaHasilUsaha)}</td>
                     <td>{formatRupiah(laporan.penarikan)}</td>
                     <td className="fw-bold">{formatRupiah(totalSaldo)}</td>
@@ -167,9 +205,14 @@ export const LaporanSimpanan = () => {
             </tbody>
             <tfoot className="table-light">
               <tr>
-                <td colSpan={8} className="text-center fw-bold">
+                <td colSpan={6} className="text-center fw-bold">
                   Jumlah Simpanan Tahun {selectedYear ? selectedYear : "..."}
                 </td>
+                <td className="fw-bold">
+                  {formatRupiah(jumlahSimpananAllRows)}
+                </td>
+                <td className="fw-bold">{formatRupiah(totalSHU)}</td>
+                <td className="fw-bold">{formatRupiah(jumlahPenarikan)}</td>
                 <td className="fw-bold">{formatRupiah(totalSaldoAllRows)}</td>
               </tr>
             </tfoot>

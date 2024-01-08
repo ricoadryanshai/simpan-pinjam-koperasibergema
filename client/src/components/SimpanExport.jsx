@@ -1,5 +1,5 @@
 import React from "react";
-import { formatDate, formatNumber, formatRupiah } from "../utils/format";
+import { formatDate, formatNumber } from "../utils/format";
 
 const SimpanExport = ({
   tableReference,
