@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_ENDPOINT = "http://localhost:3023";
+const API_ENDPOINT = "http://192.168.1.18:3023";
 
 // START >>> API ENDPOINT BERANDA
 

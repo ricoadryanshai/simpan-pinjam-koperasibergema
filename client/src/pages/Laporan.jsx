@@ -1,6 +1,5 @@
 import React from "react";
 import { Tab, Tabs } from "react-bootstrap";
-import { LaporanSHU } from "../components/LaporanSHU";
 import { LaporanSimpanan } from "../components/LaporanSimpanan";
 import { LaporanPinjaman } from "../components/LaporanPinjaman";
 import { Container } from "react-bootstrap";
@@ -77,19 +76,6 @@ export default function Laporan() {
     <>
       <Container fluid>
         <Tabs defaultActiveKey="key-2" className="no-print" fill>
-          <Tab
-            eventKey="key-1"
-            title="Laporan Pembagian SHU"
-            className="border border-top-0 rounded-bottom"
-          >
-            <Container fluid className="p-3">
-              <LaporanSHU
-                keanggotaan={keanggotaan}
-                lapSHUByYear={lapSHUByYear}
-                fetchLapSHU={fetchLapSHU}
-              />
-            </Container>
-          </Tab>
           <Tab
             eventKey="key-2"
             title="Laporan Simpanan"

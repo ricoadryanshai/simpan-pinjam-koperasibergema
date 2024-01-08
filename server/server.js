@@ -293,10 +293,12 @@ app.get("/get/simpan", (req, res) => {
     tbl_anggota.kodeAnggota,
     tbl_anggota.nama,
     tbl_anggota.tanggalDaftar,
-    CASE
-      WHEN SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN -tbl_simpan.saldo ELSE tbl_simpan.saldo END) = 0 THEN 0
-      ELSE SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN -tbl_simpan.saldo ELSE tbl_simpan.saldo END)
-    END AS totalSaldo
+    (SUM(CASE WHEN jenisSimpan = 'Simpanan Pokok' THEN saldo ELSE 0 END) +
+     SUM(CASE WHEN jenisSimpan = 'Simpanan Wajib' THEN saldo ELSE 0 END) +
+     SUM(CASE WHEN jenisSimpan = 'Simpanan Sukarela' THEN saldo ELSE 0 END)) - 
+    SUM(CASE WHEN jenisSimpan = 'Ambil Simpanan' THEN saldo ELSE 0 END) AS totalSaldo,
+    (SUM(CASE WHEN jenisSimpan = 'Simpanan Sukarela' THEN saldo ELSE 0 END)) - 
+    SUM(CASE WHEN jenisSimpan = 'Ambil Simpanan' THEN saldo ELSE 0 END) AS bisaAmbil
     FROM tbl_anggota
     LEFT JOIN tbl_simpan ON tbl_anggota.kodeAnggota = tbl_simpan.kodeAnggota
     WHERE tbl_anggota.jenisAnggota != 'Non-Benefit'
