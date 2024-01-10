@@ -1,6 +1,5 @@
-/* eslint-disable react/prop-types */
 import React from "react";
-import { Col, Container, Modal, Row, Table } from "react-bootstrap";
+import { Col, Modal, Row, Table } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
 import { getPinjamByKodeAnggota } from "../utils/api";
 import { FaSearch } from "react-icons/fa";
@@ -59,35 +58,38 @@ export const PinjamDetailModal = (props) => {
           Detail Pinjaman dan Pembayaran {nama}
         </Modal.Header>
         <Modal.Body>
-          <Container>
-            <Row>
-              <Col sm={3} className="fw-bold">
-                <Row>Kode Anggota</Row>
-                <Row>Nama Anggota</Row>
-                <Row>Tanggal Bergabung</Row>
-                <Row>Sisa Tagihan</Row>
-              </Col>
-              <Col>
-                <Row>{kodeAnggota}</Row>
-                <Row>{nama}</Row>
-                <Row>{formatDate(tanggalDaftar)}</Row>
-                <Row>{formatRupiah(sisaHutang)}</Row>
-              </Col>
-              <Col className="d-flex flex-row-reverse align-items-end gap-3">
-                <FontAwesomeIcon
-                  icon={faFileExport}
-                  onClick={onDownload}
-                  className="custom-icon-pointer"
-                />
-                <FontAwesomeIcon
-                  icon={faPrint}
-                  onClick={handlePrint}
-                  className="custom-icon-pointer flex-shrink-1"
-                />
-              </Col>
-            </Row>
-          </Container>
-          <hr className="my-2" />
+          <Row>
+            <Col className="fw-bold">Kode Anggota</Col>
+            <Col>{kodeAnggota}</Col>
+            <Col></Col>
+          </Row>
+          <Row>
+            <Col className="fw-bold">Nama Anggota</Col>
+            <Col>{nama}</Col>
+            <Col></Col>
+          </Row>
+          <Row>
+            <Col className="fw-bold">Tanggal Bergabung</Col>
+            <Col>{formatDate(tanggalDaftar)}</Col>
+            <Col></Col>
+          </Row>
+          <Row>
+            <Col className="fw-bold">Sisa Tagihan</Col>
+            <Col>{formatRupiah(sisaHutang)}</Col>
+            <Col className="d-flex justify-content-end gap-3">
+              <FontAwesomeIcon
+                icon={faFileExport}
+                onClick={onDownload}
+                className="custom-icon-pointer"
+              />
+              <FontAwesomeIcon
+                icon={faPrint}
+                onClick={handlePrint}
+                className="custom-icon-pointer flex-shrink-1"
+              />
+            </Col>
+          </Row>
+          <hr className="my-2 border-2" />
           <Row className="mb-2">
             <Col />
             <Col>

@@ -29,6 +29,10 @@ export default function TransaksiKas() {
   const [selectedRow, setSelectedRow] = React.useState({});
   const [activePage, setActivePage] = React.useState(1);
   const [filteredData, setFilteredData] = React.useState([]);
+  const [sortConfig /* setSortConfig */] = React.useState({
+    key: "nama",
+    direction: "asc",
+  });
 
   const fetchedData = async () => {
     try {
@@ -123,6 +127,28 @@ export default function TransaksiKas() {
     setActivePage(1);
   };
 
+  const customSort = (data, sortConfig) => {
+    const sortedData = [...data];
+    sortedData.sort((a, b) => {
+      const dateA = new Date(a.tanggalTransaksi);
+      const dateB = new Date(b.tanggalTransaksi);
+
+      if (dateA.getTime() !== dateB.getTime()) {
+        return sortConfig.direction === "asc" ? dateA - dateB : dateB - dateA;
+      } else {
+        return sortConfig.direction === "asc" ? a.id - b.id : b.id - a.id;
+      }
+    });
+    return sortedData;
+  };
+
+  const sortedData = React.useMemo(() => {
+    if (sortConfig !== null) {
+      return customSort(transaksi, sortConfig);
+    }
+    return [...transaksi]; // Jika tidak ada konfigurasi pengurutan, kembalikan data asli
+  }, [transaksi, sortConfig]);
+
   const indexOfLastEntry = activePage * ITEMS_PER_PAGE;
   const indexOfFirstEntry = indexOfLastEntry - ITEMS_PER_PAGE;
   const currentEntries = filteredData.slice(
@@ -137,17 +163,17 @@ export default function TransaksiKas() {
   }, []);
 
   React.useEffect(() => {
-    if (transaksi.length > 0) {
-      setFilteredData(transaksi);
+    if (sortedData.length > 0) {
+      setFilteredData(sortedData);
     }
-  }, [transaksi]);
+  }, [sortedData]);
   return (
     <>
       <div className="d-flex justify-content-center">
         <Card className="custom-border-box">
           <Container className="pt-2 pb-2">
             <Card.Title className="text-uppercase fw-bold mb-2">
-              Data Transaksi Kas
+              Penggunaan Uang Kas
             </Card.Title>
             <hr className="mt-2 mb-2" />
             <Row className="mb-2">

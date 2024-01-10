@@ -112,12 +112,7 @@ export default function SimpanTambahModal(props) {
   }, [show]);
   return (
     <>
-      <Modal
-        show={show}
-        onHide={handleClose}
-        backdrop="static"
-        keyboard={false}
-      >
+      <Modal show={show} onHide={handleClose} backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Tambah Simpanan</Modal.Title>
         </Modal.Header>

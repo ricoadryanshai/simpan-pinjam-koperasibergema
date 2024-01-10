@@ -9,6 +9,7 @@ import {
   Laporan,
   Transaksi,
   Pengaturan,
+  Login,
 } from "./pages/index";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Header />
         <Routes>
           <Route path="/" element={<Beranda />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/anggota" element={<Anggota />} />
           <Route path="/simpanan" element={<Simpanan />} />
           <Route path="/pinjaman" element={<Pinjaman />} />

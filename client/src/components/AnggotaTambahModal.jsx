@@ -119,7 +119,6 @@ export default function AnggotaTambahModal(props) {
         show={show}
         onHide={() => handleCloseModal()}
         backdrop="static"
-        keyboard={false}
         scrollable
       >
         <Modal.Header closeButton>

@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
@@ -11,7 +10,8 @@ const fs = require("fs");
 
 const app = express();
 const port = process.env.PORT || 3023;
-const ip_address = "192.168.1.18";
+// const ip_address = "192.168.1.18";
+const ip_address = "192.168.43.225";
 
 // Multer Configuration
 const storage = multer.diskStorage({
@@ -293,12 +293,17 @@ app.get("/get/simpan", (req, res) => {
     tbl_anggota.kodeAnggota,
     tbl_anggota.nama,
     tbl_anggota.tanggalDaftar,
-    (SUM(CASE WHEN jenisSimpan = 'Simpanan Pokok' THEN saldo ELSE 0 END) +
-     SUM(CASE WHEN jenisSimpan = 'Simpanan Wajib' THEN saldo ELSE 0 END) +
-     SUM(CASE WHEN jenisSimpan = 'Simpanan Sukarela' THEN saldo ELSE 0 END)) - 
-    SUM(CASE WHEN jenisSimpan = 'Ambil Simpanan' THEN saldo ELSE 0 END) AS totalSaldo,
-    (SUM(CASE WHEN jenisSimpan = 'Simpanan Sukarela' THEN saldo ELSE 0 END)) - 
-    SUM(CASE WHEN jenisSimpan = 'Ambil Simpanan' THEN saldo ELSE 0 END) AS bisaAmbil
+    (
+      SUM(CASE WHEN jenisSimpan != 'Ambil Simpanan' THEN saldo ELSE 0 END) -
+      SUM(CASE WHEN jenisSimpan = 'Ambil Simpanan' THEN saldo ELSE 0 END)
+    ) AS totalSaldo,
+    (
+      SUM(CASE 
+        WHEN jenisSimpan NOT IN ('Simpanan Pokok', 'Simpanan Wajib', 'Ambil Simpanan') THEN saldo 
+        ELSE 0 
+      END) -
+      SUM(CASE WHEN jenisSimpan = 'Ambil Simpanan' THEN saldo ELSE 0 END)
+    ) AS bisaAmbil
     FROM tbl_anggota
     LEFT JOIN tbl_simpan ON tbl_anggota.kodeAnggota = tbl_simpan.kodeAnggota
     WHERE tbl_anggota.jenisAnggota != 'Non-Benefit'
@@ -718,7 +723,44 @@ app.post("/post/angsuran", async (req, res) => {
 
 // API ENDPOINT PINJAMAN <<< END
 
-// START >>> API ENDPOINT TRANSAKSI
+// START >>> API ENDPOINT TRANSAKSI KAS
+
+app.get("/get/kas", async (req, res) => {
+  try {
+    const queryKas = await getQueryResult(`
+      SELECT
+        SUM(CASE WHEN jenisTransaksi != 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END) AS totalTransaksiMasuk,
+        SUM(CASE WHEN jenisTransaksi = 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END) AS totalTransaksiKeluar,
+        SUM(CASE WHEN jenisTransaksi != 'Transaksi Keluar' THEN nominalTransaksi 
+                WHEN jenisTransaksi = 'Transaksi Keluar' THEN -1 * nominalTransaksi 
+                ELSE 0 
+            END) AS saldoKas
+      FROM tbl_transaksi
+    `);
+
+    const querySimpanan = await getQueryResult(`
+      SELECT
+        totalSimpananPokok,
+        totalSimpananWajib,
+        (totalSimpananPokok + totalSimpananWajib) AS saldoSimpanan
+      FROM (
+        SELECT
+          SUM(CASE WHEN jenisSimpan = 'Simpanan Pokok' THEN saldo ELSE 0 END) AS totalSimpananPokok,
+          SUM(CASE WHEN jenisSimpan = 'Simpanan Wajib' THEN saldo ELSE 0 END) AS totalSimpananWajib
+        FROM tbl_simpan
+      ) AS subqueryAlias
+    `);
+
+    res.status(200).json({
+      transaksiKas: queryKas.saldoKas,
+      sPokokWajib: querySimpanan.saldoSimpanan,
+      saldoKas: queryKas.saldoKas + querySimpanan.saldoSimpanan,
+    });
+  } catch (error) {
+    console.error("Error fetching data: " + error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 app.get("/get/transaksi", (req, res) => {
   sqlQuery = `SELECT * FROM tbl_transaksi ORDER BY tanggalTransaksi DESC`;
@@ -824,7 +866,7 @@ app.put("/put/transaksi/:id", async (req, res) => {
   }
 });
 
-// API ENDPOINT TRANSAKSI <<< END
+// API ENDPOINT TRANSAKSI KAS <<< END
 
 // START >>> API ENDPOINT LAPORAN
 

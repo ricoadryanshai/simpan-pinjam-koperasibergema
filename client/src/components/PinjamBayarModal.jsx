@@ -150,7 +150,6 @@ export const PinjamBayarModal = (props) => {
         show={show}
         onHide={onHide}
         backdrop="static"
-        keyboard={false}
         size="lg"
         scrollable={true}
       >
@@ -174,7 +173,7 @@ export const PinjamBayarModal = (props) => {
             <Col>
               <Row className="mb-1">
                 <Col>Tanggal Pinjam</Col>
-                <Col>{tanggalTransaksi}</Col>
+                <Col>{formatDate(tanggalTransaksi)}</Col>
               </Row>
               <Row className="mb-1">
                 <Col>Jumlah Pinjam</Col>

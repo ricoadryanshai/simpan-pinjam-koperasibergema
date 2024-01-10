@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_ENDPOINT = "http://192.168.1.18:3023";
+const API_ENDPOINT = "http://192.168.43.225:3023";
 
 // START >>> API ENDPOINT BERANDA
 
@@ -238,6 +238,16 @@ export const updateLunasAngsuran = async (idPinjam) => {
 // API ENDPOINT PINJAMAN <<< END
 
 // START >>> API ENDPOINT TRANSAKSI
+
+export const getKas = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/kas`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
 
 export const getTransaksi = async () => {
   try {

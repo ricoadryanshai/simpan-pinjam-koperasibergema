@@ -81,12 +81,7 @@ export default function SimpanAmbilModal(props) {
   }, [show]);
   return (
     <>
-      <Modal
-        show={show}
-        onHide={handleClose}
-        backdrop="static"
-        keyboard={false}
-      >
+      <Modal show={show} onHide={handleClose} backdrop="static">
         <Modal.Header>
           <Modal.Title>Ambil Simpanan</Modal.Title>
         </Modal.Header>
@@ -146,8 +141,8 @@ export default function SimpanAmbilModal(props) {
               </Form.Label>
               <Col>
                 <Form.Control
-                  type="text"
-                  disabled
+                  plaintext
+                  readOnly
                   defaultValue="Ambil Simpanan"
                 />
               </Col>

@@ -5,6 +5,11 @@ import { editTransaksi } from "../utils/api";
 import { handleInputChange } from "../utils/handle";
 import { formatNumber } from "../utils/format";
 
+const today = new Date();
+const date = String(today.getDate()).padStart(2, "0");
+const month = String(today.getMonth() + 1).padStart(2, "0");
+const year = today.getFullYear();
+
 export const TransaksiEditModal = (props) => {
   const { show, onHide, selectedRow } = props;
 
@@ -13,9 +18,11 @@ export const TransaksiEditModal = (props) => {
   const handleSubmitClick = async (id) => {
     const updatedData = {
       jenisTransaksi: document.getElementById("jenisTransaksi").value,
-      tanggalTransaksi: document.getElementById("tanggalTransaksi").value,
-      nominalTransaksi: input,
-      keterangan: document.getElementById("keterangan").value,
+      tanggalTransaksi:
+        document.getElementById("tanggalTransaksi").value ||
+        `${year}-${month}-${date}`,
+      nominalTransaksi: input || 0,
+      keterangan: document.getElementById("keterangan").value || "-",
     };
 
     try {
@@ -40,6 +47,18 @@ export const TransaksiEditModal = (props) => {
     setInput(nominalTransaksi);
   }, [show, nominalTransaksi]);
 
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmitClick();
+    }
+  };
+
+  const yourFormRef = React.useRef(null);
+
+  React.useEffect(() => {
+    yourFormRef.current && yourFormRef.current.focus();
+  }, [show]);
   return (
     <Modal show={show} onHide={onHide}>
       <Modal.Header closeButton>
@@ -47,7 +66,7 @@ export const TransaksiEditModal = (props) => {
           Ubah Transaksi
         </Modal.Title>
       </Modal.Header>
-      <Form>
+      <Form ref={yourFormRef} onKeyDown={handleKeyPress}>
         <Modal.Body>
           <Form.Group className="mb-2">
             <Form.Label>Tanggal Transaksi</Form.Label>

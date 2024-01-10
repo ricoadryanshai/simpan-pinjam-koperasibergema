@@ -1,0 +1,15 @@
+.wrapper {
+  height: 100 vh;
+}
+
+.login {
+  width: 300px;
+  padding: 20px;
+  height: min-content;
+  border-radius: 7px;
+  color: white;
+  background-color: #a11010;
+}
+.validText {
+  color: white;
+}

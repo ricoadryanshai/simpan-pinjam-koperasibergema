@@ -265,6 +265,7 @@ export default function SimpanTable() {
         modalData={modalData}
         updateModalData={setModalData}
         clearModalData={() => setModalData([])}
+        fetchData={() => fetchData()}
       />
 
       <SimpanTambahModal
