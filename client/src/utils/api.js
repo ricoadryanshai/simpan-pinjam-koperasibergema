@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_ENDPOINT = "http://192.168.43.225:3023";
+const API_ENDPOINT = "http://localhost:3023";
 
 // START >>> API ENDPOINT BERANDA
 
@@ -371,6 +371,64 @@ export const getPengaturan = async () => {
   }
 };
 
+export const getKeanggotaan = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/keanggotaan`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const postKeanggotaan = async (objectData) => {
+  try {
+    const response = await axios.post(
+      `${API_ENDPOINT}/post/keanggotaan`,
+      objectData
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const deleteKeanggotaan = async (id) => {
+  try {
+    const response = await axios.delete(
+      `${API_ENDPOINT}/delete/keanggotaan/${id}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getSHU = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/setSHU`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const postSHU = async (objectData) => {
+  try {
+    const response = await axios.post(
+      `${API_ENDPOINT}/post/setSHU`,
+      objectData
+    );
+    return response.data;
+  } catch (error) {
+    console.log("Error submitting data:", error);
+    throw error;
+  }
+};
+
 export const editPengaturan = async (updatedData) => {
   try {
     const response = await axios.put(
@@ -384,12 +442,25 @@ export const editPengaturan = async (updatedData) => {
   }
 };
 
-export const getKeanggotaan = async () => {
+export const editSHU = async (updatedData, id) => {
   try {
-    const response = await axios.get(`${API_ENDPOINT}/get/keanggotaan`);
+    const response = await axios.put(
+      `${API_ENDPOINT}/put/setSHU/${id}`,
+      updatedData
+    );
     return response.data;
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Error editing data:", error);
+    throw error;
+  }
+};
+
+export const deleteSHU = async (id) => {
+  try {
+    const response = await axios.delete(`${API_ENDPOINT}/delete/setSHU/${id}`);
+    return response.data;
+  } catch (error) {
+    console.log("Error deleting data: ", error);
     throw error;
   }
 };

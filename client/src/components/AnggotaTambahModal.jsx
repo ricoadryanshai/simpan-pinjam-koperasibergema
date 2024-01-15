@@ -13,9 +13,7 @@ const date = String(today.getDate()).padStart(2, "0");
 const month = String(today.getMonth() + 1).padStart(2, "0");
 const year = today.getFullYear();
 
-export default function AnggotaTambahModal(props) {
-  const { show, onHide } = props;
-
+export default function AnggotaTambahModal({ show, onHide, anggotaData }) {
   const [inputNoHp, setInputNoHp] = React.useState("");
   const [dropdown, setDropdown] = React.useState("");
   const [keanggotaan, setKeanggotaan] = React.useState([]);
@@ -29,46 +27,75 @@ export default function AnggotaTambahModal(props) {
   };
 
   const handleSubmit = async () => {
-    const inputData = {
-      kodeAnggota: document.getElementById("kodeAnggota")?.value || "",
-      nama: document.getElementById("nama")?.value || "-",
-      jenisAnggota: dropdown || "Anggota",
-      jenKel: document.getElementById("jenKel")?.value || "Pria",
-      tempatLahir: document.getElementById("tempatLahir")?.value || `-`,
-      tanggalLahir:
-        document.getElementById("tanggalLahir")?.value ||
-        `${year}-${month}-${date}`,
-      alamat: document.getElementById("alamat")?.value || "-",
-      noHP: inputNoHp || 0,
-    };
+    const kodeAnggota = document.getElementById("kodeAnggota").value;
+    const nama = document.getElementById("nama").value;
+    const jenisAnggota = dropdown || "Anggota";
+    const jenKel = document.getElementById("jenKel").value || "Pria";
+    const tempatLahir = document.getElementById("tempatLahir").value || `-`;
+    const tanggalLahir =
+      document.getElementById("tanggalLahir").value ||
+      `${year}-${month}-${date}`;
+    const alamat = document.getElementById("alamat").value || "-";
+    const noHP = inputNoHp || 0;
+
+    const kodeAnggotaArray = anggotaData.map((item) => item.kodeAnggota);
+
+    if (!kodeAnggota && !nama) {
+      alert("Kode Anggota dan Nama wajib di isi.");
+      document.getElementById("kodeAnggota").focus();
+      return;
+    }
+
+    if (!kodeAnggota) {
+      alert("Kode Anggota tidak boleh kosong.");
+      document.getElementById("kodeAnggota").focus();
+      return;
+    }
+
+    if (!nama) {
+      alert("Nama tidak boleh kosong.");
+      document.getElementById("nama").focus();
+      return;
+    }
+
+    if (kodeAnggotaArray.includes(kodeAnggota)) {
+      alert("Kode Anggota sudah ada, silahkan masukkan kode lain.");
+      document.getElementById("kodeAnggota").focus();
+      return;
+    }
 
     try {
-      if (inputData) {
-        await tambahAnggota(inputData);
+      const inputData = {
+        kodeAnggota: kodeAnggota,
+        nama: nama,
+        jenisAnggota: jenisAnggota,
+        jenKel: jenKel,
+        tempatLahir: tempatLahir,
+        tanggalLahir: tanggalLahir,
+        alamat: alamat,
+        noHP: noHP,
+      };
+
+      await tambahAnggota(inputData);
+
+      try {
+        await tambahSimpan(
+          kodeAnggota,
+          `${year}-${month}-${date}`,
+          "Simpanan Pokok",
+          fetchPengaturan.length > 0
+            ? fetchPengaturan[0]?.simpananPokok || 0
+            : 0
+        );
 
         setInputNoHp("");
         setDropdown("");
         onHide();
+      } catch (error) {
+        console.log("Handle submit simpanan error: ", error);
       }
     } catch (error) {
       console.log("Handle submit anggota error: ", error);
-      alert(
-        `Gagal menambahkan nasabah ${
-          document.getElementById("nama")?.value || ""
-        }`
-      );
-    }
-
-    try {
-      await tambahSimpan(
-        document.getElementById("kodeAnggota")?.value || "",
-        `${year}-${month}-${date}`,
-        "Simpanan Pokok",
-        fetchPengaturan.length > 0 ? fetchPengaturan[0]?.simpananPokok || 0 : 0
-      );
-    } catch (error) {
-      console.log("Handle submit simpanan error: ", error);
-      alert(`Gagal input biaya bergabung`);
     }
   };
 
@@ -128,25 +155,20 @@ export default function AnggotaTambahModal(props) {
         </Modal.Header>
         <Modal.Body>
           <Form ref={yourFormRef} onKeyDown={handleKeyPress}>
-            <Form.Group as={Row} className="mb-3">
+            <Form.Group as={Row} className="mb-3" controlId="kodeAnggota">
               <Col sm={4}>
                 <Form.Label>Kode Anggota</Form.Label>
               </Col>
               <Col>
-                <Form.Control
-                  type="text"
-                  name="kodeAnggota"
-                  id="kodeAnggota"
-                  required
-                />
+                <Form.Control type="text" name="kodeAnggota" required />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="mb-3">
+            <Form.Group as={Row} className="mb-3" controlId="nama">
               <Col sm={4}>
                 <Form.Label>Nama</Form.Label>
               </Col>
               <Col>
-                <Form.Control type="text" name="nama" id="nama" required />
+                <Form.Control type="text" name="nama" required />
               </Col>
             </Form.Group>
             <Form.Group as={Row} className="mb-3">
@@ -162,8 +184,8 @@ export default function AnggotaTambahModal(props) {
                     Pilih Keanggotaan
                   </option>
                   {keanggotaan.map((anggota) => (
-                    <option key={anggota.id} value={anggota.namaKeanggotaan}>
-                      {anggota.namaKeanggotaan}
+                    <option key={anggota.id} value={anggota.jenisSHU}>
+                      {anggota.jenisSHU}
                     </option>
                   ))}
                 </Form.Select>

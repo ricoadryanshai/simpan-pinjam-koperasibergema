@@ -8,8 +8,9 @@ import {
   Pinjaman,
   Laporan,
   Transaksi,
-  Pengaturan,
   Login,
+  PengaturanSimpan,
+  PengaturanSHU,
 } from "./pages/index";
 
 function App() {
@@ -25,7 +26,8 @@ function App() {
           <Route path="/pinjaman" element={<Pinjaman />} />
           <Route path="/transaksi" element={<Transaksi />} />
           <Route path="/laporan" element={<Laporan />} />
-          <Route path="/pengaturan/simpan" element={<Pengaturan />} />
+          <Route path="/pengaturan/simpan" element={<PengaturanSimpan />} />
+          <Route path="/pengaturan/shu" element={<PengaturanSHU />} />
         </Routes>
         <Footer />
       </Router>

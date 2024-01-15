@@ -3,7 +3,7 @@ import React from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { editTransaksi } from "../utils/api";
 import { handleInputChange } from "../utils/handle";
-import { formatNumber } from "../utils/format";
+import { formatNumber, formatRupiah } from "../utils/format";
 
 const today = new Date();
 const date = String(today.getDate()).padStart(2, "0");
@@ -11,7 +11,7 @@ const month = String(today.getMonth() + 1).padStart(2, "0");
 const year = today.getFullYear();
 
 export const TransaksiEditModal = (props) => {
-  const { show, onHide, selectedRow } = props;
+  const { show, onHide, selectedRow, saldoKas } = props;
 
   const [input, setInput] = React.useState("");
 
@@ -85,11 +85,21 @@ export const TransaksiEditModal = (props) => {
               name="jenisTransaksi"
               id="jenisTransaksi"
               defaultValue={jenisTransaksi}
+              disabled
             >
               <option disabled>Pilih Jenis Transaksi</option>
               <option value={"Transaksi Masuk"}>Transaksi Masuk</option>
               <option value={"Transaksi Keluar"}>Transaksi Keluar</option>
             </Form.Select>
+          </Form.Group>
+
+          <Form.Group className="mb-2">
+            <Form.Label>Saldo Kas</Form.Label>
+            <Form.Control
+              type="text"
+              disabled
+              defaultValue={formatRupiah(saldoKas.saldoKas)}
+            />
           </Form.Group>
 
           <Form.Group className="mb-2">
@@ -101,6 +111,7 @@ export const TransaksiEditModal = (props) => {
               id="nominalTransaksi"
               value={formatNumber(input)}
               onChange={handleInput}
+              disabled
             />
           </Form.Group>
 

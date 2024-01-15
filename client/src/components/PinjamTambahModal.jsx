@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
-import { formatNumber } from "../utils/format";
+import { formatNumber, formatRupiah } from "../utils/format";
 import { handleInputChange } from "../utils/handle";
 import { PinjamProsesModal } from "./PinjamProsesModal";
 
@@ -11,7 +11,7 @@ const month = String(today.getMonth() + 1).padStart(2, "0");
 const year = today.getFullYear();
 
 export const PinjamTambahModal = (props) => {
-  const { show, onHide, selectedRow, setShowPinjam } = props;
+  const { show, onHide, selectedRow, setShowPinjam, saldoKas } = props;
 
   const [selectedDate, setSelectedDate] = React.useState("");
   const [inputNominalPinjam, setInputNominalPinjam] = React.useState("");
@@ -54,12 +54,26 @@ export const PinjamTambahModal = (props) => {
       return;
     }
 
+    if (inputNominalPinjam > saldoKas.saldoKas) {
+      alert(
+        `Jumlah pinjaman melebihi saldo koperasi saat ini: ${formatRupiah(
+          saldoKas.saldoKas
+        )}`
+      );
+      document.getElementById("formNominalTransaksi").focus();
+      return;
+    }
+
+    if (inputNominalAngsuran === 0) {
+      return 1;
+    }
+
     const newProsesPinjam = {
       kodeAnggota: kodeAnggota,
       jenisTransaksi: "Pinjam",
       nama: nama,
       nominalTransaksi: inputNominalPinjam || 10000,
-      angsuran: inputNominalAngsuran || 1,
+      angsuran: inputNominalAngsuran < 1 ? 1 : inputNominalAngsuran,
       tanggalTransaksi: selectedDate || `${year}-${month}-${date}`,
     };
 
@@ -154,6 +168,18 @@ export const PinjamTambahModal = (props) => {
               </Form.Label>
               <Col>
                 <Form.Control plaintext readOnly value="Pinjam" />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-2" controlId="saldoKas">
+              <Form.Label column sm="4">
+                Saldo Kas
+              </Form.Label>
+              <Col>
+                <Form.Control
+                  type="text"
+                  disabled
+                  defaultValue={formatRupiah(saldoKas.saldoKas)}
+                />
               </Col>
             </Form.Group>
             <Form.Group

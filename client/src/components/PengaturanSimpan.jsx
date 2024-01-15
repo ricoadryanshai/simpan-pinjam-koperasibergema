@@ -2,9 +2,8 @@ import React from "react";
 import { Card, Form, Button, Row, Col } from "react-bootstrap";
 import { editPengaturan, getPengaturan } from "../utils/api";
 import { formatNumber } from "../utils/format";
-import { useNavigate } from "react-router-dom";
 
-export const PengaturanSimpan = () => {
+const PengaturanSimpan = () => {
   const [fetchData, setFetchData] = React.useState([]);
 
   const simpananPokok =
@@ -14,8 +13,6 @@ export const PengaturanSimpan = () => {
 
   const bungaAngsuran =
     fetchData.length > 0 ? fetchData[0]?.bungaAngsuran || 0 : 0;
-
-  const navigate = useNavigate();
 
   const fetchingData = async () => {
     try {
@@ -29,7 +26,9 @@ export const PengaturanSimpan = () => {
     fetchingData();
   }, []);
 
-  const handleResetClick = async () => {};
+  const handleResetClick = async () => {
+    fetchingData();
+  };
 
   const handleSubmitClick = async () => {
     try {
@@ -50,7 +49,8 @@ export const PengaturanSimpan = () => {
       };
 
       await editPengaturan(updatedPengaturan);
-      navigate("/");
+      alert("Pengaturan berhasil di update.");
+      fetchingData();
     } catch (error) {
       console.log("Error editing data pengaturan: ", error);
     }
@@ -58,10 +58,10 @@ export const PengaturanSimpan = () => {
   return (
     <>
       <div className="d-flex justify-content-center">
-        <Card className="custom-width">
-          <Card.Header>
-            <Card.Title>Pengaturan Simpanan</Card.Title>
-          </Card.Header>
+        <Card className="custom-width-card p-2">
+          <Card.Title className="border-bottom pb-2 border-2 text-uppercase fw-bold">
+            Pengaturan Simpanan
+          </Card.Title>
           <Card.Body>
             <Form>
               <Row className="mb-3">
@@ -102,13 +102,13 @@ export const PengaturanSimpan = () => {
               </Row>
             </Form>
           </Card.Body>
-          <Card.Header>
-            <Card.Title>Pengaturan Bunga</Card.Title>
-          </Card.Header>
+          <Card.Title className="border-bottom border-top py-2 border-2 text-uppercase fw-bold">
+            Pengaturan Angsuran
+          </Card.Title>
           <Card.Body>
             <Row className="mb-3">
               <Col>
-                <Form.Label>Bunga Angsuran</Form.Label>
+                <Form.Label>Bunga Angsuran Jasa</Form.Label>
               </Col>
               <Col>
                 <Form.Control
@@ -137,3 +137,5 @@ export const PengaturanSimpan = () => {
     </>
   );
 };
+
+export default PengaturanSimpan;

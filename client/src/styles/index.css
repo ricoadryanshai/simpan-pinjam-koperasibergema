@@ -21,7 +21,7 @@ body {
   height: 200px;
 }
 .custom-width-card {
-  min-width: 1200px;
+  max-width: 1200px;
 }
 .custom-border-box {
   min-width: 800px;

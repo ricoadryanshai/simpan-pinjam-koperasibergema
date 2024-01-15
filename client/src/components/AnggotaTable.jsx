@@ -285,6 +285,7 @@ export default function AnggotaTable() {
         show={showTambah}
         onHide={() => handleModalClose("tambah")}
         selectedRow={selectedRow}
+        anggotaData={anggotaData}
       />
 
       <AnggotaDetailModal

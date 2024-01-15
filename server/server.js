@@ -82,13 +82,40 @@ function getQueryResult(query) {
   });
 }
 
+function getArrayResult(query) {
+  return new Promise((resolve, reject) => {
+    db.query(query, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+}
+
+function executeQueryResult(query, values) {
+  return new Promise((resolve, reject) => {
+    db.query(query, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+}
+
 // START >>> API ENDPOINT BERANDA
 
 app.get("/get/statistik", async (req, res) => {
   try {
-    const jumlahAnggota = await getQueryResult(
-      "SELECT COUNT(*) AS jumlahAnggota FROM tbl_anggota"
-    );
+    const jumlahAnggota = await getQueryResult(`
+      SELECT
+        COUNT(*) AS jumlahAnggota
+      FROM
+        tbl_anggota
+    `);
 
     const jumlahSimpanan = await getQueryResult(`
       SELECT
@@ -729,32 +756,53 @@ app.get("/get/kas", async (req, res) => {
   try {
     const queryKas = await getQueryResult(`
       SELECT
-        SUM(CASE WHEN jenisTransaksi != 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END) AS totalTransaksiMasuk,
-        SUM(CASE WHEN jenisTransaksi = 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END) AS totalTransaksiKeluar,
-        SUM(CASE WHEN jenisTransaksi != 'Transaksi Keluar' THEN nominalTransaksi 
-                WHEN jenisTransaksi = 'Transaksi Keluar' THEN -1 * nominalTransaksi 
-                ELSE 0 
-            END) AS saldoKas
-      FROM tbl_transaksi
+        totalTransaksiMasuk,
+        totalTransaksiKeluar,
+        (totalTransaksiMasuk - totalTransaksiKeluar) AS saldoTransaksiKas
+      FROM (
+        SELECT
+          SUM(CASE WHEN jenisTransaksi != 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END) AS totalTransaksiMasuk,
+          SUM(CASE WHEN jenisTransaksi = 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END) AS totalTransaksiKeluar
+        FROM tbl_transaksi
+      ) AS subqueryAlias
     `);
 
     const querySimpanan = await getQueryResult(`
       SELECT
         totalSimpananPokok,
         totalSimpananWajib,
-        (totalSimpananPokok + totalSimpananWajib) AS saldoSimpanan
+        totalAmbilSimpanan,
+        (totalSimpananPokok + totalSimpananWajib) - totalAmbilSimpanan AS saldoSimpanan
       FROM (
         SELECT
           SUM(CASE WHEN jenisSimpan = 'Simpanan Pokok' THEN saldo ELSE 0 END) AS totalSimpananPokok,
-          SUM(CASE WHEN jenisSimpan = 'Simpanan Wajib' THEN saldo ELSE 0 END) AS totalSimpananWajib
+          SUM(CASE WHEN jenisSimpan = 'Simpanan Wajib' THEN saldo ELSE 0 END) AS totalSimpananWajib,
+          SUM(CASE WHEN jenisSimpan = 'Ambil Simpanan' THEN saldo ELSE 0 END) AS totalAmbilSimpanan
         FROM tbl_simpan
       ) AS subqueryAlias
     `);
 
+    const queryPinjaman = await getQueryResult(`
+        SELECT
+          jumlahPinjaman,
+          jumlahBayaran,
+          (jumlahBayaran - jumlahPinjaman) AS saldoPinjaman
+        FROM (
+          SELECT
+            SUM(CASE WHEN jenisTransaksi = 'Pinjam' THEN angsuranPokok ELSE 0 END) AS jumlahPinjaman,
+            SUM(CASE WHEN jenisTransaksi = 'Bayar' THEN angsuranPerBulan ELSE 0 END) AS jumlahBayaran
+          FROM tbl_pinjam
+        ) AS subqueryAlias
+    `);
+
     res.status(200).json({
-      transaksiKas: queryKas.saldoKas,
+      transaksiKas: queryKas.saldoTransaksiKas,
       sPokokWajib: querySimpanan.saldoSimpanan,
-      saldoKas: queryKas.saldoKas + querySimpanan.saldoSimpanan,
+      pinjaman: queryPinjaman.saldoPinjaman,
+      saldoKas:
+        queryKas.saldoTransaksiKas +
+        querySimpanan.saldoSimpanan +
+        queryPinjaman.saldoPinjaman,
     });
   } catch (error) {
     console.error("Error fetching data: " + error.message);
@@ -1065,7 +1113,14 @@ app.get("/get/lapSHU/:year", async (req, res) => {
 app.get("/get/pengaturan", (req, res) => {
   const id = 1;
 
-  const sqlQuery = `SELECT * FROM tbl_pengaturan WHERE idPengaturan = ?`;
+  const sqlQuery = `
+    SELECT
+      *
+    FROM
+      tbl_pengaturan
+    WHERE
+      idPengaturan = ?
+  `;
 
   db.query(sqlQuery, [id], (err, results) => {
     if (err) {
@@ -1082,9 +1137,14 @@ app.put("/put/pengaturan", (req, res) => {
   const { simpananPokok, simpananWajib, bungaAngsuran } = req.body;
 
   const updateQuery = `
-    UPDATE tbl_pengaturan
-    SET simpananPokok = ?, simpananWajib = ?, bungaAngsuran = ?
-    WHERE idPengaturan = ?
+    UPDATE
+      tbl_pengaturan
+    SET
+      simpananPokok = ?,
+      simpananWajib = ?,
+      bungaAngsuran = ?
+    WHERE
+      idPengaturan = ?
   `;
 
   db.query(
@@ -1109,7 +1169,7 @@ app.get("/get/keanggotaan", (req, res) => {
     FROM
       tbl_keanggotaan
     ORDER BY
-      namaKeanggotaan
+      jenisSHU, id
     `;
 
   db.query(sqlQuery, (err, results) => {
@@ -1120,6 +1180,119 @@ app.get("/get/keanggotaan", (req, res) => {
       res.status(200).json(results);
     }
   });
+});
+
+app.post("/post/keanggotaan", async (req, res) => {
+  const { jenisSHU } = req.body;
+
+  sqlQuery = `INSERT INTO tbl_keanggotaan (jenisSHU) VALUES (?)`;
+  try {
+    await executeQueryResult(sqlQuery, jenisSHU);
+    res.status(200).json({ success: "Insert Success From Server-side" });
+  } catch (error) {
+    console.log("Error submitting data to table keanggotaan:", error);
+    res.status(500).json({ error: "Insert Error From Server-side" });
+  }
+});
+
+app.delete("/delete/keanggotaan/:id", async (req, res) => {
+  const { id } = req.params;
+
+  const sqlQuery = `DELETE FROM tbl_keanggotaan WHERE tbl_keanggotaan.id = ?`;
+
+  try {
+    await executeQueryResult(sqlQuery, id);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.log("Delete Error From Server-side:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/get/setSHU", async (req, res) => {
+  const sqlQuery = `
+    SELECT
+      *
+    FROM
+      tbl_pembagian_shu
+    ORDER BY
+      persentaseSHU DESC, jenisSHU, id
+    `;
+
+  try {
+    const results = await getArrayResult(sqlQuery);
+    res.status(200).json(results);
+  } catch (error) {
+    console.error("Error fetching record:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.post("/post/setSHU", async (req, res) => {
+  const { jenisSHU, persentaseSHU } = req.body;
+
+  sqlQuery = `INSERT INTO tbl_pembagian_shu (jenisSHU, persentaseSHU) VALUES (?, ?)`;
+
+  const values = [jenisSHU, persentaseSHU];
+
+  try {
+    await executeQueryResult(sqlQuery, values);
+    res.status(200).json({ success: "Insert Success From Server-side" });
+  } catch (error) {
+    console.log("Error submitting data to table pengaturan SHU:", error);
+    res.status(500).json({ error: "Insert Error From Server-side" });
+  }
+});
+
+app.put("/put/setSHU/:id", async (req, res) => {
+  const { id } = req.params;
+  const { jenisSHU, persentaseSHU } = req.body;
+
+  const updateQuery = `
+    UPDATE
+      tbl_pembagian_shu
+    SET
+      jenisSHU = ?,
+      persentaseSHU = ?
+    WHERE
+      tbl_pembagian_shu.id = ?
+  `;
+
+  const values = [jenisSHU, persentaseSHU, id];
+
+  try {
+    const response = await executeQueryResult(updateQuery, values);
+    res.status(200).json(response);
+  } catch (error) {
+    console.error("Update Error From Server-side:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.delete("/delete/setSHU/:id", async (req, res) => {
+  const { id } = req.params;
+
+  const sqlQuery = `
+    DELETE
+    FROM
+      tbl_pembagian_shu
+    WHERE
+      tbl_pembagian_shu.id = ?
+  `;
+
+  values = [id];
+
+  try {
+    await executeQueryResult(sqlQuery, values);
+    res.status(200).json({
+      message: "Data deleted successfully",
+    });
+  } catch (error) {
+    console.log("Error deleting record:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
 });
 
 // API ENDPOINT PENGATURAN <<< END
