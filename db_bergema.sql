@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 10, 2024 at 10:21 AM
+-- Generation Time: Jan 17, 2024 at 10:47 AM
 -- Server version: 10.1.21-MariaDB
 -- PHP Version: 5.6.30
 
@@ -37,16 +37,7 @@ CREATE TABLE `tbl_anggota` (
   `alamat` varchar(200) DEFAULT NULL,
   `noHP` varchar(50) DEFAULT NULL,
   `tanggalDaftar` varchar(50) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `tbl_anggota`
---
-
-INSERT INTO `tbl_anggota` (`id`, `kodeAnggota`, `nama`, `jenisAnggota`, `jenKel`, `tempatLahir`, `tanggalLahir`, `alamat`, `noHP`, `tanggalDaftar`) VALUES
-(97, 'GS.001', 'Rico Adryan Shai, S.Kom', 'Anggota', 'Pria', '-', '1999-10-17', '-', '0', '2024-01-8'),
-(98, 'GS.002', 'oppa', 'Anggota', 'Pria', 'Sura', '2000-08-09', 'Jl. Cendana II No.25', '089888901234', '2024-01-8'),
-(99, 'GS.003', 'Rico , S.Kom', 'Pengurus', 'Pria', '-', '1999-10-17', '-', '0', '2024-01-8');
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 ROW_FORMAT=COMPACT;
 
 -- --------------------------------------------------------
 
@@ -62,18 +53,7 @@ CREATE TABLE `tbl_angsuran` (
   `totalBayar` decimal(65,10) DEFAULT NULL,
   `tanggalBayar` varchar(50) DEFAULT NULL,
   `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `tbl_angsuran`
---
-
-INSERT INTO `tbl_angsuran` (`id`, `idPinjam`, `uangAngsuran`, `jasaUang`, `totalBayar`, `tanggalBayar`, `updatedAt`) VALUES
-(136, 99, '200000.0000000000', '20000.0000000000', '220000.0000000000', '2024-01-08', '2024-01-08 08:34:41'),
-(137, 99, '200000.0000000000', '20000.0000000000', '220000.0000000000', '2024-01-08', '2024-01-08 08:34:42'),
-(138, 99, '200000.0000000000', '20000.0000000000', '220000.0000000000', NULL, '2024-01-08 08:32:34'),
-(139, 99, '200000.0000000000', '20000.0000000000', '220000.0000000000', NULL, '2024-01-08 08:32:34'),
-(140, 99, '200000.0000000000', '20000.0000000000', '220000.0000000000', NULL, '2024-01-08 08:32:34');
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 ROW_FORMAT=COMPACT;
 
 -- --------------------------------------------------------
 
@@ -83,7 +63,6 @@ INSERT INTO `tbl_angsuran` (`id`, `idPinjam`, `uangAngsuran`, `jasaUang`, `total
 
 CREATE TABLE `tbl_keanggotaan` (
   `id` int(11) NOT NULL,
-  `namaKeanggotaan` varchar(50) DEFAULT NULL,
   `jenisSHU` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -91,9 +70,9 @@ CREATE TABLE `tbl_keanggotaan` (
 -- Dumping data for table `tbl_keanggotaan`
 --
 
-INSERT INTO `tbl_keanggotaan` (`id`, `namaKeanggotaan`, `jenisSHU`) VALUES
-(1, 'Anggota', 'Member'),
-(2, 'Pengurus', 'Pengurus');
+INSERT INTO `tbl_keanggotaan` (`id`, `jenisSHU`) VALUES
+(14, 'Anggota'),
+(11, 'Pengurus');
 
 -- --------------------------------------------------------
 
@@ -112,12 +91,12 @@ CREATE TABLE `tbl_pembagian_shu` (
 --
 
 INSERT INTO `tbl_pembagian_shu` (`id`, `jenisSHU`, `persentaseSHU`) VALUES
-(1, 'Member', 20),
 (2, 'Pengurus', 30),
-(3, 'SHU Pinjaman', 30),
+(3, 'SHU Pinjam', 30),
 (4, 'Administrasi', 10),
 (5, 'SHU Penyerahan Modal', 10),
-(6, 'Non-Member', 0);
+(6, 'Non-Anggota', 0),
+(17, 'Anggota', 20);
 
 -- --------------------------------------------------------
 
@@ -155,16 +134,7 @@ CREATE TABLE `tbl_pinjam` (
   `angsuranJasa` decimal(65,10) DEFAULT NULL,
   `angsuranPerBulan` decimal(65,10) DEFAULT NULL,
   `createdAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `tbl_pinjam`
---
-
-INSERT INTO `tbl_pinjam` (`id`, `kodeAnggota`, `jenisTransaksi`, `angsuran`, `tanggalTransaksi`, `angsuranPokok`, `angsuranJasa`, `angsuranPerBulan`, `createdAt`) VALUES
-(99, 'GS.001', 'Pinjam', 5, '2024-01-08', '1000000.0000000000', '100000.0000000000', '1100000.0000000000', '2024-01-08 15:32:34'),
-(100, 'GS.001', 'Bayar', 1, '2024-01-08', '200000.0000000000', '20000.0000000000', '220000.0000000000', '2024-01-08 15:34:42'),
-(101, 'GS.001', 'Bayar', 2, '2024-01-08', '200000.0000000000', '20000.0000000000', '220000.0000000000', '2024-01-08 15:34:42');
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 ROW_FORMAT=COMPACT;
 
 -- --------------------------------------------------------
 
@@ -179,21 +149,7 @@ CREATE TABLE `tbl_simpan` (
   `jenisSimpan` varchar(50) DEFAULT NULL,
   `saldo` int(50) DEFAULT NULL,
   `uploadFile` varchar(225) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `tbl_simpan`
---
-
-INSERT INTO `tbl_simpan` (`id`, `kodeAnggota`, `tanggalSimpan`, `jenisSimpan`, `saldo`, `uploadFile`) VALUES
-(139, 'GS.001', '2024-01-08', 'Simpanan Pokok', 200000, NULL),
-(140, 'GS.001', '2024-01-09', 'Simpanan Wajib', 20000, NULL),
-(141, 'GS.001', '2024-01-09', 'Simpanan Sukarela', 500000, NULL),
-(142, 'GS.002', '2024-01-08', 'Simpanan Pokok', 200000, NULL),
-(143, 'GS.003', '2024-01-08', 'Simpanan Pokok', 200000, NULL),
-(145, 'GS.002', '2024-01-08', 'Simpanan Wajib', 20000, NULL),
-(146, 'GS.001', '2024-01-08', 'Ambil Simpanan', 250000, NULL),
-(149, 'GS.001', '2024-01-10', 'Simpanan Wajib', 20000, NULL);
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 ROW_FORMAT=COMPACT;
 
 -- --------------------------------------------------------
 
@@ -206,16 +162,9 @@ CREATE TABLE `tbl_transaksi` (
   `jenisTransaksi` enum('Transaksi Masuk','Transaksi Keluar') DEFAULT NULL,
   `tanggalTransaksi` varchar(50) DEFAULT NULL,
   `nominalTransaksi` varchar(255) DEFAULT NULL,
-  `keterangan` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `tbl_transaksi`
---
-
-INSERT INTO `tbl_transaksi` (`id`, `jenisTransaksi`, `tanggalTransaksi`, `nominalTransaksi`, `keterangan`) VALUES
-(24, 'Transaksi Masuk', '2024-01-08', '1000000', '-'),
-(25, 'Transaksi Keluar', '2024-01-09', '275000', 'Kebutuhan Sembako');
+  `keterangan` varchar(255) DEFAULT NULL,
+  `createdAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 ROW_FORMAT=COMPACT;
 
 -- --------------------------------------------------------
 
@@ -260,7 +209,6 @@ ALTER TABLE `tbl_angsuran`
 --
 ALTER TABLE `tbl_keanggotaan`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `namaKeanggotaan` (`namaKeanggotaan`),
   ADD KEY `jenisKeanggotaan` (`jenisSHU`);
 
 --
@@ -311,37 +259,37 @@ ALTER TABLE `tbl_user`
 -- AUTO_INCREMENT for table `tbl_anggota`
 --
 ALTER TABLE `tbl_anggota`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT for table `tbl_angsuran`
 --
 ALTER TABLE `tbl_angsuran`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=141;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT for table `tbl_keanggotaan`
 --
 ALTER TABLE `tbl_keanggotaan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 --
 -- AUTO_INCREMENT for table `tbl_pembagian_shu`
 --
 ALTER TABLE `tbl_pembagian_shu`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 --
 -- AUTO_INCREMENT for table `tbl_pinjam`
 --
 ALTER TABLE `tbl_pinjam`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT for table `tbl_simpan`
 --
 ALTER TABLE `tbl_simpan`
-  MODIFY `id` int(50) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=154;
+  MODIFY `id` int(50) NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT for table `tbl_transaksi`
 --
 ALTER TABLE `tbl_transaksi`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT for table `tbl_user`
 --
@@ -355,7 +303,7 @@ ALTER TABLE `tbl_user`
 -- Constraints for table `tbl_anggota`
 --
 ALTER TABLE `tbl_anggota`
-  ADD CONSTRAINT `tbl_anggota_ibfk_1` FOREIGN KEY (`jenisAnggota`) REFERENCES `tbl_keanggotaan` (`namaKeanggotaan`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `tbl_anggota_ibfk_1` FOREIGN KEY (`jenisAnggota`) REFERENCES `tbl_keanggotaan` (`jenisSHU`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `tbl_angsuran`
