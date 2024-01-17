@@ -5,10 +5,13 @@ import { getPengaturan, tambahSimpan } from "../utils/api";
 import { formatNumber } from "../utils/format";
 import { handleInputChange } from "../utils/handle";
 
+const today = new Date();
+const date = String(today.getDate()).padStart(2, "0");
+const month = String(today.getMonth() + 1).padStart(2, "0");
+const year = today.getFullYear();
+
 export default function SimpanTambahModal(props) {
   const { show, onClose, rowData, clearModalData, fetchData } = props;
-
-  const yourFormRef = React.useRef(null);
 
   const [Dropdown, setDropdown] = React.useState("");
   const [inputNominal, setInputNominal] = React.useState("");
@@ -27,10 +30,10 @@ export default function SimpanTambahModal(props) {
     try {
       await tambahSimpan(
         rowData.kodeAnggota,
-        document.getElementById("inputTanggalTransaksi").value,
+        document.getElementById("inputTanggalTransaksi").value ||
+          `${year}-${month}-${date}`,
         Dropdown,
-        inputNominal
-        // selectedFile
+        inputNominal || 0
       );
 
       onClose();
@@ -79,13 +82,6 @@ export default function SimpanTambahModal(props) {
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
-
   const isInputNominalReadOnly =
     Dropdown === "Simpanan Pokok" || Dropdown === "Simpanan Wajib";
 
@@ -102,17 +98,21 @@ export default function SimpanTambahModal(props) {
     fecthedData();
   }, [show]);
 
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const yourFormRef = React.useRef(null);
+
   React.useEffect(() => {
     yourFormRef.current && yourFormRef.current.focus();
   }, [show]);
   return (
     <>
-      <Modal
-        show={show}
-        onHide={handleClose}
-        backdrop="static"
-        keyboard={false}
-      >
+      <Modal show={show} onHide={handleClose} backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Tambah Simpanan</Modal.Title>
         </Modal.Header>

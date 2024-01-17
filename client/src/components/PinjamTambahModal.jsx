@@ -5,6 +5,11 @@ import { formatNumber } from "../utils/format";
 import { handleInputChange } from "../utils/handle";
 import { PinjamProsesModal } from "./PinjamProsesModal";
 
+const today = new Date();
+const date = String(today.getDate()).padStart(2, "0");
+const month = String(today.getMonth() + 1).padStart(2, "0");
+const year = today.getFullYear();
+
 export const PinjamTambahModal = (props) => {
   const { show, onHide, selectedRow, setShowPinjam } = props;
 
@@ -53,9 +58,9 @@ export const PinjamTambahModal = (props) => {
       kodeAnggota: kodeAnggota,
       jenisTransaksi: "Pinjam",
       nama: nama,
-      nominalTransaksi: inputNominalPinjam,
-      angsuran: inputNominalAngsuran,
-      tanggalTransaksi: selectedDate,
+      nominalTransaksi: inputNominalPinjam || 10000,
+      angsuran: inputNominalAngsuran || 1,
+      tanggalTransaksi: selectedDate || `${year}-${month}-${date}`,
     };
 
     switch (modalType) {
@@ -86,8 +91,21 @@ export const PinjamTambahModal = (props) => {
     setSelectedDate("");
   };
 
-  const kodeAnggota = selectedRow?.kodeAnggota || "";
-  const nama = selectedRow?.nama || "";
+  const kodeAnggota = selectedRow?.kodeAnggota || "GS.";
+  const nama = selectedRow?.nama || "-";
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleModalShow("proses");
+    }
+  };
+
+  const yourFormRef = React.useRef(null);
+
+  React.useEffect(() => {
+    yourFormRef.current && yourFormRef.current.focus();
+  }, [show]);
 
   return (
     <>
@@ -98,14 +116,13 @@ export const PinjamTambahModal = (props) => {
           resetForm();
         }}
         backdrop="static"
-        keyboard={false}
       >
         <Modal.Header closeButton>
           <Modal.Title className="fw-bold text-uppercase">
             Form Data Pinjaman
           </Modal.Title>
         </Modal.Header>
-        <Form>
+        <Form ref={yourFormRef} onKeyDown={handleKeyPress}>
           <Modal.Body>
             <Form.Group
               as={Row}

@@ -73,6 +73,8 @@ export default function Header() {
                   <NavDropdown.Item as={NavLink} to={"/pengaturan/simpan"}>
                     Pengaturan Simpan
                   </NavDropdown.Item>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item>Logout</NavDropdown.Item>
                 </NavDropdown>
               </Nav>
             </Offcanvas.Body>

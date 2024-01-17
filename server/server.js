@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
@@ -8,10 +7,11 @@ const path = require("path");
 const chalk = require("chalk");
 const crypto = require("crypto");
 const fs = require("fs");
+// const bcrypt = require("bcrypt");
 
 const app = express();
 const port = process.env.PORT || 3023;
-const ip_address = "192.168.1.18";
+// const ip_address = " 192.168.1.20";
 
 // Multer Configuration
 const storage = multer.diskStorage({
@@ -53,44 +53,60 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // });
 
 // MySQL Configuration
-const db = mysql.createConnection({
+const dbConfig = {
   host: "localhost",
   user: "root",
   password: "",
   database: "db_bergema",
-});
+};
 
 // Connect to the database
-db.connect((err) => {
-  if (err) {
-    console.error("Database connection failed: " + err);
-  } else {
-    console.log("Connected to the database");
-  }
-});
+function connectToDatabase() {
+  const db = mysql.createConnection(dbConfig);
 
-// Function to execute a query and return the result
-function getQueryResult(query) {
-  return new Promise((resolve, reject) => {
-    db.query(query, (err, results) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(results[0]);
-      }
-    });
+  // Connect to the database
+  db.connect((err) => {
+    if (err) {
+      console.error("Database connection failed: " + err);
+
+      // Retry the connection after a delay (e.g., 3 seconds)
+      setTimeout(() => {
+        console.log("Retrying database connection...");
+        connectToDatabase();
+      }, 3000); // Adjust the delay as needed
+      return;
+    }
+
+    console.log("Connected to the database");
+
+    // Set up API endpoints only after successful database connection
+    setupApiEndpoints(db);
   });
 }
 
-// START >>> API ENDPOINT BERANDA
+function setupApiEndpoints(db) {
+  // Function to execute a query and return the result
+  function getQueryResult(query) {
+    return new Promise((resolve, reject) => {
+      db.query(query, (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results[0]);
+        }
+      });
+    });
+  }
 
-app.get("/get/statistik", async (req, res) => {
-  try {
-    const jumlahAnggota = await getQueryResult(
-      "SELECT COUNT(*) AS jumlahAnggota FROM tbl_anggota"
-    );
+  // START >>> API ENDPOINT BERANDA
 
-    const jumlahSimpanan = await getQueryResult(`
+  app.get("/get/statistik", async (req, res) => {
+    try {
+      const jumlahAnggota = await getQueryResult(
+        "SELECT COUNT(*) AS jumlahAnggota FROM tbl_anggota"
+      );
+
+      const jumlahSimpanan = await getQueryResult(`
       SELECT
         SUM(CASE WHEN tbl_simpan.jenisSimpan <> 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS jumlahSimpanan
       FROM
@@ -99,7 +115,7 @@ app.get("/get/statistik", async (req, res) => {
         MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
         AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`);
 
-    const penarikanSimpanan = await getQueryResult(`
+      const penarikanSimpanan = await getQueryResult(`
       SELECT
         SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS penarikanSimpanan
       FROM
@@ -108,7 +124,7 @@ app.get("/get/statistik", async (req, res) => {
         MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
         AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`);
 
-    const jumlahSaldo = await getQueryResult(`
+      const jumlahSaldo = await getQueryResult(`
       SELECT
         SUM(CASE WHEN tbl_simpan.jenisSimpan <> 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) -
         SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN tbl_simpan.saldo ELSE 0 END) AS jumlahSaldo
@@ -118,7 +134,7 @@ app.get("/get/statistik", async (req, res) => {
         MONTH(tbl_simpan.tanggalSimpan) = MONTH(CURRENT_DATE())
         AND YEAR(tbl_simpan.tanggalSimpan) = YEAR(CURRENT_DATE())`);
 
-    const pinjamBulan = await getQueryResult(`
+      const pinjamBulan = await getQueryResult(`
       SELECT
         SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Pinjam' THEN angsuranPokok ELSE 0 END) AS pinjamBulan
       FROM
@@ -128,7 +144,7 @@ app.get("/get/statistik", async (req, res) => {
         AND YEAR(tbl_pinjam.tanggalTransaksi) = YEAR(CURRENT_DATE())
     `);
 
-    const tagihanPerTahun = await getQueryResult(`
+      const tagihanPerTahun = await getQueryResult(`
       SELECT
         SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Pinjam' THEN angsuranPerBulan ELSE 0 END) AS tagihanPerTahun
       FROM
@@ -137,7 +153,7 @@ app.get("/get/statistik", async (req, res) => {
         YEAR(tbl_pinjam.tanggalTransaksi) = YEAR(CURRENT_DATE())
     `);
 
-    const sisaTagihanPerTahun = await getQueryResult(`
+      const sisaTagihanPerTahun = await getQueryResult(`
       SELECT
         (total_pinjam - total_bayar) AS sisaTagihanPerTahun
       FROM
@@ -152,151 +168,202 @@ app.get("/get/statistik", async (req, res) => {
         ) AS subquery;
     `);
 
-    res.status(200).json({
-      jumlahAnggota: jumlahAnggota.jumlahAnggota,
-      jumlahSimpanan: jumlahSimpanan.jumlahSimpanan,
-      penarikanSimpanan: penarikanSimpanan.penarikanSimpanan,
-      jumlahSaldo: jumlahSaldo.jumlahSaldo,
-      pinjamBulan: pinjamBulan.pinjamBulan,
-      tagihanPerTahun: tagihanPerTahun.tagihanPerTahun,
-      sisaTagihanPerTahun: sisaTagihanPerTahun.sisaTagihanPerTahun,
-    });
-  } catch (error) {
-    console.error("Error fetching data: " + error.message);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
+      res.status(200).json({
+        jumlahAnggota: jumlahAnggota.jumlahAnggota,
+        jumlahSimpanan: jumlahSimpanan.jumlahSimpanan,
+        penarikanSimpanan: penarikanSimpanan.penarikanSimpanan,
+        jumlahSaldo: jumlahSaldo.jumlahSaldo,
+        pinjamBulan: pinjamBulan.pinjamBulan,
+        tagihanPerTahun: tagihanPerTahun.tagihanPerTahun,
+        sisaTagihanPerTahun: sisaTagihanPerTahun.sisaTagihanPerTahun,
+      });
+    } catch (error) {
+      console.error("Error fetching data: " + error.message);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
 
-// API ENDPOINT BERANDA <<< END
+  // API ENDPOINT BERANDA <<< END
 
-// START >>> API ENDPOINT ANGGOTA
+  // START >>> API ENDPOINT LOGIN
+  // app.post("/login", async (req, res) => {
+  //   const { username, password } = req.body;
+  //   const query = "SELECT * FROM tbl_user WHERE username = ?";
 
-app.get("/get/anggota", (req, res) => {
-  db.query(
-    "SELECT * FROM tbl_anggota ORDER BY kodeAnggota ASC",
-    (err, results) => {
+  //   db.query(query, [username], async (err, results) => {
+  //     if (err) {
+  //       console.error(err);
+  //       return res
+  //         .status(500)
+  //         .json({ success: false, message: "Internal Server Error" });
+  //     }
+
+  //     if (results.length > 0) {
+  //       const hashedPassword = results[0].password; // Assuming the hashed password is stored in the 'password' column
+
+  //       try {
+  //         const match = await bcrypt.compare(password, hashedPassword);
+  //         if (match) {
+  //           res.json({ success: true, message: "Login successful" });
+  //         } else {
+  //           res.json({ success: false, message: "Invalid username or password" });
+  //         }
+  //       } catch (error) {
+  //         console.error(error);
+  //         res
+  //           .status(500)
+  //           .json({ success: false, message: "Internal Server Error" });
+  //       }
+  //     } else {
+  //       res.json({ success: false, message: "Invalid username or password" });
+  //     }
+  //   });
+  // });
+
+  // API ENDPOINT LOGIN <<< END
+
+  // START >>> API ENDPOINT ANGGOTA
+
+  app.get("/get/anggota", (req, res) => {
+    db.query(
+      "SELECT * FROM tbl_anggota ORDER BY kodeAnggota ASC",
+      (err, results) => {
+        if (err) {
+          console.error("Error fetching data: " + err.sqlMessage);
+          res.status(500).json({ error: "Internal Server Error" });
+        } else {
+          res.status(200).json(results);
+        }
+      }
+    );
+  });
+
+  app.get("/get/anggota/:id", (req, res) => {
+    const id = req.params.id;
+
+    db.query(`SELECT * FROM tbl_anggota WHERE id = ?`, [id], (err, results) => {
       if (err) {
         console.error("Error fetching data: " + err.sqlMessage);
         res.status(500).json({ error: "Internal Server Error" });
       } else {
-        res.status(200).json(results);
+        res.status(200).json(results[0]);
       }
-    }
-  );
-});
-
-app.get("/get/anggota/:id", (req, res) => {
-  const id = req.params.id;
-
-  db.query("SELECT * FROM tbl_anggota WHERE id = ?", [id], (err, results) => {
-    if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results[0]);
-    }
+    });
   });
-});
 
-app.put("/put/anggota/:id", (req, res) => {
-  const id = req.params.id;
+  app.put("/put/anggota/:id", (req, res) => {
+    const id = req.params.id;
 
-  const { kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP } =
-    req.body;
+    const {
+      kodeAnggota,
+      nama,
+      jenKel,
+      tempatLahir,
+      tanggalLahir,
+      alamat,
+      noHP,
+    } = req.body;
 
-  const updateQuery = `UPDATE tbl_anggota
+    const updateQuery = `UPDATE tbl_anggota
     SET kodeAnggota = ?, nama = ?, jenKel = ?, tempatLahir = ?, tanggalLahir = ?, alamat = ?, noHP = ?
     WHERE id = ?`;
 
-  db.query(
-    updateQuery,
-    [kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP, id],
-    (err, result) => {
+    db.query(
+      updateQuery,
+      [kodeAnggota, nama, jenKel, tempatLahir, tanggalLahir, alamat, noHP, id],
+      (err, result) => {
+        if (err) {
+          console.error("Error updating record:", err);
+          res.status(500).json({ error: "Internal Server Error" });
+        } else {
+          console.log("Record updated:", result);
+          res.status(200).json({ message: "Record updated successfully" });
+        }
+      }
+    );
+  });
+
+  app.delete("/delete/anggota/:id", (req, res) => {
+    const id = req.params.id;
+
+    const deleteQuery = `DELETE FROM tbl_anggota WHERE id = ?`;
+
+    db.query(deleteQuery, [id], (err, result) => {
       if (err) {
-        console.error("Error updating record:", err);
+        console.error("Error deleting record:", err);
         res.status(500).json({ error: "Internal Server Error" });
       } else {
-        console.log("Record updated:", result);
-        res.status(200).json({ message: "Record updated successfully" });
+        console.log("Record deleted:", result);
+        res.status(200).json({ message: "Record deleted successfully" });
       }
-    }
-  );
-});
-
-app.delete("/delete/anggota/:id", (req, res) => {
-  const id = req.params.id;
-
-  const deleteQuery = `DELETE FROM tbl_anggota WHERE id = ?`;
-
-  db.query(deleteQuery, [id], (err, result) => {
-    if (err) {
-      console.error("Error deleting record:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      console.log("Record deleted:", result);
-      res.status(200).json({ message: "Record deleted successfully" });
-    }
+    });
   });
-});
 
-app.post("/post/anggota", async (req, res) => {
-  const {
-    kodeAnggota,
-    nama,
-    jenisAnggota,
-    jenKel,
-    tempatLahir,
-    tanggalLahir,
-    alamat,
-    noHP,
-  } = req.body;
+  app.post("/post/anggota", async (req, res) => {
+    const {
+      kodeAnggota,
+      nama,
+      jenisAnggota,
+      jenKel,
+      tempatLahir,
+      tanggalLahir,
+      alamat,
+      noHP,
+    } = req.body;
 
-  const today = new Date();
-  const date = today.getDate();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const year = today.getFullYear();
+    const today = new Date();
+    const date = today.getDate();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const year = today.getFullYear();
 
-  const currentDate = `${year}-${month}-${date}`;
+    const currentDate = `${year}-${month}-${date}`;
 
-  const insertQuery = `INSERT INTO tbl_anggota (kodeAnggota, nama, jenisAnggota, jenKel, tempatLahir, tanggalLahir, alamat, noHP, tanggalDaftar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const insertQuery = `INSERT INTO tbl_anggota (kodeAnggota, nama, jenisAnggota, jenKel, tempatLahir, tanggalLahir, alamat, noHP, tanggalDaftar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  const values = [
-    kodeAnggota,
-    nama,
-    jenisAnggota,
-    jenKel,
-    tempatLahir,
-    tanggalLahir,
-    alamat,
-    noHP,
-    currentDate,
-  ];
+    const values = [
+      kodeAnggota,
+      nama,
+      jenisAnggota,
+      jenKel,
+      tempatLahir,
+      tanggalLahir,
+      alamat,
+      noHP,
+      currentDate,
+    ];
 
-  db.query(insertQuery, values, (err, result) => {
-    if (err) {
-      console.error("Error inserting data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      console.log("Data inserted successfully", result);
-      res.status(200).json({ message: "Data inserted successfully" });
-    }
+    db.query(insertQuery, values, (err, result) => {
+      if (err) {
+        console.error("Error inserting data: " + err.sqlMessage);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        console.log("Data inserted successfully", result);
+        res.status(200).json({ message: "Data inserted successfully" });
+      }
+    });
   });
-});
 
-// API ENDPOINT ANGGOTA <<< END
+  // API ENDPOINT ANGGOTA <<< END
 
-// START >>> API ENDPOINT SIMPANAN
+  // START >>> API ENDPOINT SIMPANAN
 
-app.get("/get/simpan", (req, res) => {
-  const sqlQuery = `
+  app.get("/get/simpan", (req, res) => {
+    const sqlQuery = `
     SELECT
     tbl_anggota.kodeAnggota,
     tbl_anggota.nama,
     tbl_anggota.tanggalDaftar,
-    CASE
-      WHEN SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN -tbl_simpan.saldo ELSE tbl_simpan.saldo END) = 0 THEN 0
-      ELSE SUM(CASE WHEN tbl_simpan.jenisSimpan = 'Ambil Simpanan' THEN -tbl_simpan.saldo ELSE tbl_simpan.saldo END)
-    END AS totalSaldo
+    (
+      SUM(CASE WHEN jenisSimpan != 'Ambil Simpanan' THEN saldo ELSE 0 END) -
+      SUM(CASE WHEN jenisSimpan = 'Ambil Simpanan' THEN saldo ELSE 0 END)
+    ) AS totalSaldo,
+    (
+      SUM(CASE 
+        WHEN jenisSimpan NOT IN ('Simpanan Pokok', 'Simpanan Wajib', 'Ambil Simpanan') THEN saldo 
+        ELSE 0 
+      END) -
+      SUM(CASE WHEN jenisSimpan = 'Ambil Simpanan' THEN saldo ELSE 0 END)
+    ) AS bisaAmbil
     FROM tbl_anggota
     LEFT JOIN tbl_simpan ON tbl_anggota.kodeAnggota = tbl_simpan.kodeAnggota
     WHERE tbl_anggota.jenisAnggota != 'Non-Benefit'
@@ -304,120 +371,120 @@ app.get("/get/simpan", (req, res) => {
     ORDER BY kodeAnggota ASC
   `;
 
-  db.query(sqlQuery, (err, results) => {
-    if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
+    db.query(sqlQuery, (err, results) => {
+      if (err) {
+        console.error("Error fetching data: " + err.sqlMessage);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
   });
-});
 
-app.get("/get/simpan/:kodeAnggota", (req, res) => {
-  const kodeAnggota = req.params.kodeAnggota;
+  app.get("/get/simpan/:kodeAnggota", (req, res) => {
+    const kodeAnggota = req.params.kodeAnggota;
 
-  const selectQuery = `
+    const selectQuery = `
     SELECT id, tanggalSimpan, jenisSimpan, saldo
     FROM tbl_simpan
     WHERE kodeAnggota = ?
     ORDER BY tanggalSimpan DESC;
   `;
 
-  db.query(selectQuery, [kodeAnggota], (err, results) => {
-    if (err) {
-      console.error("Error fetching data:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
+    db.query(selectQuery, [kodeAnggota], (err, results) => {
+      if (err) {
+        console.error("Error fetching data:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
   });
-});
 
-app.post("/post/simpan", upload.single("uploadFile"), (req, res) => {
-  const { kodeAnggota, tanggalSimpan, jenisSimpan, saldo } = req.body;
-  let uploadFile = null;
+  app.post("/post/simpan", upload.single("uploadFile"), (req, res) => {
+    const { kodeAnggota, tanggalSimpan, jenisSimpan, saldo } = req.body;
+    let uploadFile = null;
 
-  if (req.file) {
-    uploadFile = req.file.filename;
-  }
+    if (req.file) {
+      uploadFile = req.file.filename;
+    }
 
-  const insertQuery = `
+    const insertQuery = `
     INSERT INTO tbl_simpan (kodeAnggota, tanggalSimpan, jenisSimpan, saldo, uploadFile)
     VALUES (?, ?, ?, ?, ?)
   `;
 
-  db.query(
-    insertQuery,
-    [kodeAnggota, tanggalSimpan, jenisSimpan, saldo, uploadFile],
-    (err, result) => {
-      if (err) {
-        console.error("Error inserting data:", err);
-        res.status(500).json({ error: "Internal Server Error" });
-      } else {
-        console.log("Record inserted:", result);
-        res.status(200).json({ message: "Record inserted successfully" });
+    db.query(
+      insertQuery,
+      [kodeAnggota, tanggalSimpan, jenisSimpan, saldo, uploadFile],
+      (err, result) => {
+        if (err) {
+          console.error("Error inserting data:", err);
+          res.status(500).json({ error: "Internal Server Error" });
+        } else {
+          console.log("Record inserted:", result);
+          res.status(200).json({ message: "Record inserted successfully" });
+        }
       }
-    }
-  );
-});
+    );
+  });
 
-app.delete("/delete/simpan/:kodeAnggota/:id", (req, res) => {
-  const kodeAnggota = req.params.kodeAnggota;
-  const id = req.params.id;
+  app.delete("/delete/simpan/:kodeAnggota/:id", (req, res) => {
+    const kodeAnggota = req.params.kodeAnggota;
+    const id = req.params.id;
 
-  const selectQuery = `
+    const selectQuery = `
     SELECT uploadFile
     FROM tbl_simpan
     WHERE kodeAnggota = ? AND id = ?
   `;
 
-  db.query(selectQuery, [kodeAnggota, id], (err, results) => {
-    if (err) {
-      console.error("Error fetching data:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      const uploadFile = results[0].uploadFile;
-      let fileDeleted = true;
+    db.query(selectQuery, [kodeAnggota, id], (err, results) => {
+      if (err) {
+        console.error("Error fetching data:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        const uploadFile = results[0].uploadFile;
+        let fileDeleted = true;
 
-      if (uploadFile) {
-        const filePath = path.join(__dirname, "uploads", "image", uploadFile);
-        fs.unlink(filePath, (unlinkErr) => {
-          if (unlinkErr) {
-            console.error("Error deleting file:", unlinkErr);
-            fileDeleted = false;
-          }
-        });
-      }
+        if (uploadFile) {
+          const filePath = path.join(__dirname, "uploads", "image", uploadFile);
+          fs.unlink(filePath, (unlinkErr) => {
+            if (unlinkErr) {
+              console.error("Error deleting file:", unlinkErr);
+              fileDeleted = false;
+            }
+          });
+        }
 
-      const deleteQuery = `
+        const deleteQuery = `
         DELETE FROM tbl_simpan
         WHERE kodeAnggota = ? AND id = ?
       `;
 
-      db.query(deleteQuery, [kodeAnggota, id], (deleteErr, result) => {
-        if (deleteErr) {
-          console.error("Error deleting data:", deleteErr);
-          res.status(500).json({ error: "Internal Server Error" });
-        } else {
-          if (fileDeleted) {
-            console.log("Record deleted along with file, if any:", result);
+        db.query(deleteQuery, [kodeAnggota, id], (deleteErr, result) => {
+          if (deleteErr) {
+            console.error("Error deleting data:", deleteErr);
+            res.status(500).json({ error: "Internal Server Error" });
           } else {
-            console.log("Record deleted but file deletion failed:", result);
+            if (fileDeleted) {
+              console.log("Record deleted along with file, if any:", result);
+            } else {
+              console.log("Record deleted but file deletion failed:", result);
+            }
+            res.status(200).json({ message: "Record deleted successfully" });
           }
-          res.status(200).json({ message: "Record deleted successfully" });
-        }
-      });
-    }
+        });
+      }
+    });
   });
-});
 
-// API ENDPOINT SIMPANAN <<< END
+  // API ENDPOINT SIMPANAN <<< END
 
-// START >>> API ENDPOINT PINJAMAN
+  // START >>> API ENDPOINT PINJAMAN
 
-app.get("/get/pinjam", (req, res) => {
-  const sqlQuery = `
+  app.get("/get/pinjam", (req, res) => {
+    const sqlQuery = `
     SELECT
       tbl_anggota.kodeAnggota,
       tbl_anggota.nama,
@@ -434,40 +501,40 @@ app.get("/get/pinjam", (req, res) => {
       tbl_anggota.kodeAnggota ASC
   `;
 
-  db.query(sqlQuery, (err, results) => {
-    if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
+    db.query(sqlQuery, (err, results) => {
+      if (err) {
+        console.error("Error fetching data: " + err.sqlMessage);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
   });
-});
 
-app.get("/get/pinjam/:kodeAnggota", (req, res) => {
-  const { kodeAnggota } = req.params;
+  app.get("/get/pinjam/:kodeAnggota", (req, res) => {
+    const { kodeAnggota } = req.params;
 
-  const selectQuery = `
+    const selectQuery = `
     SELECT *
     FROM tbl_pinjam
     WHERE kodeAnggota = ?
     ORDER BY createdAt DESC;
   `;
 
-  db.query(selectQuery, [kodeAnggota], (err, results) => {
-    if (err) {
-      console.error("Error fetching data:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
+    db.query(selectQuery, [kodeAnggota], (err, results) => {
+      if (err) {
+        console.error("Error fetching data:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
   });
-});
 
-app.get("/get/bayar/:kodeAnggota", (req, res) => {
-  const { kodeAnggota } = req.params;
+  app.get("/get/bayar/:kodeAnggota", (req, res) => {
+    const { kodeAnggota } = req.params;
 
-  const selectQuery = `
+    const selectQuery = `
     SELECT
       *
     FROM
@@ -480,330 +547,367 @@ app.get("/get/bayar/:kodeAnggota", (req, res) => {
       1
   `;
 
-  db.query(selectQuery, [kodeAnggota], (err, results) => {
-    if (err) {
-      console.error("Error fetching data:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
-  });
-});
-
-app.get("/get/angsuran/:idPinjam", (req, res) => {
-  const idPinjam = req.params.idPinjam;
-
-  const query = `SELECT id, idPinjam, uangAngsuran, jasaUang, totalBayar, tanggalBayar FROM tbl_angsuran WHERE idPinjam = ?`;
-
-  db.query(query, [idPinjam], (err, results) => {
-    if (err) {
-      console.error("Error fetching data:", err);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
-  });
-});
-
-app.post("/post/pinjam", async (req, res) => {
-  const {
-    kodeAnggota,
-    jenisTransaksi,
-    angsuran,
-    tanggalTransaksi,
-    angsuranPokok,
-    angsuranJasa,
-    angsuranPerBulan,
-  } = req.body;
-
-  const insertPinjamQuery = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, angsuran, tanggalTransaksi, angsuranPokok, angsuranJasa, angsuranPerBulan) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-
-  const pinjamValues = [
-    kodeAnggota,
-    jenisTransaksi,
-    angsuran,
-    tanggalTransaksi,
-    angsuranPokok,
-    angsuranJasa,
-    angsuranPerBulan,
-  ];
-
-  try {
-    // Insert data into tbl_pinjam
-    const pinjamInsertResult = await new Promise((resolve, reject) => {
-      db.query(insertPinjamQuery, pinjamValues, (err, result) => {
-        if (err) {
-          console.error(
-            "Error inserting data into tbl_pinjam: " + err.sqlMessage
-          );
-          reject(err);
-        } else {
-          console.log("Data inserted into tbl_pinjam successfully", result);
-          resolve(result.insertId); // Resolving with ID of the newly inserted data
-        }
-      });
+    db.query(selectQuery, [kodeAnggota], (err, results) => {
+      if (err) {
+        console.error("Error fetching data:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
     });
+  });
 
-    // Get bungaAngsuran from tbl_pengaturan
-    const bungaAngsuranQuery = `SELECT bungaAngsuran FROM tbl_pengaturan WHERE idPengaturan = 1`;
+  app.get("/get/angsuran/:idPinjam", (req, res) => {
+    const idPinjam = req.params.idPinjam;
 
-    const bungaAngsuranFromDB = await new Promise((resolve, reject) => {
-      db.query(bungaAngsuranQuery, (err, result) => {
-        if (err) {
-          console.error("Error retrieving bungaAngsuran: " + err.sqlMessage);
-          reject(err);
-        } else {
-          if (result.length > 0) {
-            resolve(parseFloat(result[0].bungaAngsuran));
+    const query = `SELECT id, idPinjam, uangAngsuran, jasaUang, totalBayar, tanggalBayar FROM tbl_angsuran WHERE idPinjam = ?`;
+
+    db.query(query, [idPinjam], (err, results) => {
+      if (err) {
+        console.error("Error fetching data:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
+  });
+
+  app.post("/post/pinjam", async (req, res) => {
+    const {
+      kodeAnggota,
+      jenisTransaksi,
+      angsuran,
+      tanggalTransaksi,
+      angsuranPokok,
+      angsuranJasa,
+      angsuranPerBulan,
+    } = req.body;
+
+    const insertPinjamQuery = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, angsuran, tanggalTransaksi, angsuranPokok, angsuranJasa, angsuranPerBulan) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+    const pinjamValues = [
+      kodeAnggota,
+      jenisTransaksi,
+      angsuran,
+      tanggalTransaksi,
+      angsuranPokok,
+      angsuranJasa,
+      angsuranPerBulan,
+    ];
+
+    try {
+      // Insert data into tbl_pinjam
+      const pinjamInsertResult = await new Promise((resolve, reject) => {
+        db.query(insertPinjamQuery, pinjamValues, (err, result) => {
+          if (err) {
+            console.error(
+              "Error inserting data into tbl_pinjam: " + err.sqlMessage
+            );
+            reject(err);
           } else {
-            reject(new Error("No data found for idPengaturan = 1"));
+            console.log("Data inserted into tbl_pinjam successfully", result);
+            resolve(result.insertId); // Resolving with ID of the newly inserted data
           }
-        }
+        });
       });
-    });
 
-    // Calculate values for tbl_angsuran
-    const uangAngsuran = angsuranPokok / angsuran;
-    const jasaUang = angsuranPokok * (parseInt(bungaAngsuranFromDB) / 100);
-    const totalBayar = uangAngsuran + jasaUang;
+      // Get bungaAngsuran from tbl_pengaturan
+      const bungaAngsuranQuery = `SELECT bungaAngsuran FROM tbl_pengaturan WHERE idPengaturan = 1`;
 
-    // Create an array to hold values for multiple rows insertion into tbl_angsuran
-    const angsuranValues = Array.from({ length: angsuran }, () => [
-      pinjamInsertResult, // Using the ID from tbl_pinjam insertion
-      uangAngsuran,
-      jasaUang,
-      totalBayar,
-    ]);
-
-    const insertAngsuranQuery = `INSERT INTO tbl_angsuran (idPinjam, uangAngsuran, jasaUang, totalBayar) VALUES ?`;
-
-    // Insert data into tbl_angsuran
-    await new Promise((resolve, reject) => {
-      db.query(insertAngsuranQuery, [angsuranValues], (err, result) => {
-        if (err) {
-          console.error(
-            "Error inserting data into tbl_angsuran: " + err.sqlMessage
-          );
-          reject(err);
-        } else {
-          console.log("Data inserted into tbl_angsuran successfully", result);
-          resolve();
-        }
+      const bungaAngsuranFromDB = await new Promise((resolve, reject) => {
+        db.query(bungaAngsuranQuery, (err, result) => {
+          if (err) {
+            console.error("Error retrieving bungaAngsuran: " + err.sqlMessage);
+            reject(err);
+          } else {
+            if (result.length > 0) {
+              resolve(parseFloat(result[0].bungaAngsuran));
+            } else {
+              reject(new Error("No data found for idPengaturan = 1"));
+            }
+          }
+        });
       });
-    });
 
-    res.status(200).json({ message: "Data inserted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
+      // Calculate values for tbl_angsuran
+      const uangAngsuran = angsuranPokok / angsuran;
+      const jasaUang = angsuranPokok * (parseInt(bungaAngsuranFromDB) / 100);
+      const totalBayar = uangAngsuran + jasaUang;
 
-app.delete("/delete/pinjam/:kodeAnggota/:id", (req, res) => {
-  const { id } = req.params;
+      // Create an array to hold values for multiple rows insertion into tbl_angsuran
+      const angsuranValues = Array.from({ length: angsuran }, () => [
+        pinjamInsertResult, // Using the ID from tbl_pinjam insertion
+        uangAngsuran,
+        jasaUang,
+        totalBayar,
+      ]);
 
-  // Query untuk menghapus data berdasarkan kodeAnggota dan id
-  const deleteQuery = "DELETE FROM tbl_pinjam WHERE id = ?";
+      const insertAngsuranQuery = `INSERT INTO tbl_angsuran (idPinjam, uangAngsuran, jasaUang, totalBayar) VALUES ?`;
 
-  // Menjalankan query dengan parameter yang diberikan
-  db.query(deleteQuery, [id], (err) => {
-    if (err) {
-      res.status(500).send("Gagal menghapus data");
-      throw err;
+      // Insert data into tbl_angsuran
+      await new Promise((resolve, reject) => {
+        db.query(insertAngsuranQuery, [angsuranValues], (err, result) => {
+          if (err) {
+            console.error(
+              "Error inserting data into tbl_angsuran: " + err.sqlMessage
+            );
+            reject(err);
+          } else {
+            console.log("Data inserted into tbl_angsuran successfully", result);
+            resolve();
+          }
+        });
+      });
+
+      res.status(200).json({ message: "Data inserted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Internal Server Error" });
     }
-    res.status(200).send("Data berhasil dihapus");
   });
-});
 
-app.put("/put/pinjam/:id", async (req, res) => {
-  const { id } = req.params;
+  app.delete("/delete/pinjam/:kodeAnggota/:id", (req, res) => {
+    const { id } = req.params;
 
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
+    // Query untuk menghapus data berdasarkan kodeAnggota dan id
+    const deleteQuery = "DELETE FROM tbl_pinjam WHERE id = ?";
 
-  const formattedDate = `${year}-${month}-${day}`;
+    // Menjalankan query dengan parameter yang diberikan
+    db.query(deleteQuery, [id], (err) => {
+      if (err) {
+        res.status(500).send("Gagal menghapus data");
+        throw err;
+      }
+      res.status(200).send("Data berhasil dihapus");
+    });
+  });
 
-  const updateQuery = `
+  app.put("/put/pinjam/:id", async (req, res) => {
+    const { id } = req.params;
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    const formattedDate = `${year}-${month}-${day}`;
+
+    const updateQuery = `
     UPDATE tbl_angsuran
     SET
       tanggalBayar = '${formattedDate}'
     WHERE id = ${id}
   `;
 
-  try {
-    await getQueryResult(updateQuery);
-    res.status(200).json({ message: "Data updated successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
+    try {
+      await getQueryResult(updateQuery);
+      res.status(200).json({ message: "Data updated successfully" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
 
-app.put("/put/angsuran/:idPinjam", async (req, res) => {
-  const { idPinjam } = req.params;
+  app.put("/put/angsuran/:idPinjam", async (req, res) => {
+    const { idPinjam } = req.params;
 
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
 
-  const formattedDate = `${year}-${month}-${day}`;
+    const formattedDate = `${year}-${month}-${day}`;
 
-  const updateQuery = `
+    const updateQuery = `
     UPDATE tbl_angsuran
     SET tanggalBayar = '${formattedDate}'
     WHERE idPinjam = ${idPinjam}
       AND (tanggalBayar IS NULL OR tanggalBayar = '')
   `;
 
-  try {
-    await getQueryResult(updateQuery);
-    res.status(200).json({ message: "Data updated successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-app.post("/post/angsuran", async (req, res) => {
-  const {
-    kodeAnggota,
-    jenisTransaksi,
-    angsuran,
-    tanggalTransaksi,
-    angsuranPokok,
-    angsuranJasa,
-    angsuranPerBulan,
-  } = req.body;
-
-  const insertPinjamQuery = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, angsuran, tanggalTransaksi, angsuranPokok, angsuranJasa, angsuranPerBulan) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-
-  const pinjamValues = [
-    kodeAnggota,
-    jenisTransaksi,
-    angsuran,
-    tanggalTransaksi,
-    angsuranPokok,
-    angsuranJasa,
-    angsuranPerBulan,
-  ];
-
-  try {
-    // Insert data into tbl_pinjam
-    const pinjamInsertResult = await new Promise((resolve, reject) => {
-      db.query(insertPinjamQuery, pinjamValues, (err, result) => {
-        if (err) {
-          console.error(
-            "Error inserting data into tbl_pinjam: " + err.sqlMessage
-          );
-          reject(err);
-        } else {
-          console.log("Data inserted into tbl_pinjam successfully", result);
-          resolve(result.insertId); // Resolving with ID of the newly inserted data
-        }
-      });
-    });
-
-    res.status(200).json({
-      message: "Data inserted into tbl_pinjam successfully",
-      insertId: pinjamInsertResult,
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-// API ENDPOINT PINJAMAN <<< END
-
-// START >>> API ENDPOINT TRANSAKSI
-
-app.get("/get/transaksi", (req, res) => {
-  sqlQuery = `SELECT * FROM tbl_transaksi ORDER BY tanggalTransaksi DESC`;
-
-  db.query(sqlQuery, (err, results) => {
-    if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
+    try {
+      await getQueryResult(updateQuery);
+      res.status(200).json({ message: "Data updated successfully" });
+    } catch (error) {
+      console.error(error);
       res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
     }
   });
-});
 
-app.post("/post/transaksi", async (req, res) => {
-  const { jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan } =
-    req.body;
+  app.post("/post/angsuran", async (req, res) => {
+    const {
+      kodeAnggota,
+      jenisTransaksi,
+      angsuran,
+      tanggalTransaksi,
+      angsuranPokok,
+      angsuranJasa,
+      angsuranPerBulan,
+    } = req.body;
 
-  // Query untuk menambahkan data ke tbl_transaksi
-  const insertQuery = `
+    const insertPinjamQuery = `INSERT INTO tbl_pinjam (kodeAnggota, jenisTransaksi, angsuran, tanggalTransaksi, angsuranPokok, angsuranJasa, angsuranPerBulan) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+    const pinjamValues = [
+      kodeAnggota,
+      jenisTransaksi,
+      angsuran,
+      tanggalTransaksi,
+      angsuranPokok,
+      angsuranJasa,
+      angsuranPerBulan,
+    ];
+
+    try {
+      // Insert data into tbl_pinjam
+      const pinjamInsertResult = await new Promise((resolve, reject) => {
+        db.query(insertPinjamQuery, pinjamValues, (err, result) => {
+          if (err) {
+            console.error(
+              "Error inserting data into tbl_pinjam: " + err.sqlMessage
+            );
+            reject(err);
+          } else {
+            console.log("Data inserted into tbl_pinjam successfully", result);
+            resolve(result.insertId); // Resolving with ID of the newly inserted data
+          }
+        });
+      });
+
+      res.status(200).json({
+        message: "Data inserted into tbl_pinjam successfully",
+        insertId: pinjamInsertResult,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+
+  // API ENDPOINT PINJAMAN <<< END
+
+  // START >>> API ENDPOINT TRANSAKSI KAS
+
+  app.get("/get/kas", async (req, res) => {
+    try {
+      const queryKas = await getQueryResult(`
+      SELECT
+        SUM(CASE WHEN jenisTransaksi != 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END) AS totalTransaksiMasuk,
+        SUM(CASE WHEN jenisTransaksi = 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END) AS totalTransaksiKeluar,
+        SUM(CASE WHEN jenisTransaksi != 'Transaksi Keluar' THEN nominalTransaksi 
+                WHEN jenisTransaksi = 'Transaksi Keluar' THEN -1 * nominalTransaksi 
+                ELSE 0 
+            END) AS saldoKas
+      FROM tbl_transaksi
+    `);
+
+      const querySimpanan = await getQueryResult(`
+      SELECT
+        totalSimpananPokok,
+        totalSimpananWajib,
+        (totalSimpananPokok + totalSimpananWajib) AS saldoSimpanan
+      FROM (
+        SELECT
+          SUM(CASE WHEN jenisSimpan = 'Simpanan Pokok' THEN saldo ELSE 0 END) AS totalSimpananPokok,
+          SUM(CASE WHEN jenisSimpan = 'Simpanan Wajib' THEN saldo ELSE 0 END) AS totalSimpananWajib
+        FROM tbl_simpan
+      ) AS subqueryAlias
+    `);
+
+      res.status(200).json({
+        transaksiKas: queryKas.saldoKas,
+        sPokokWajib: querySimpanan.saldoSimpanan,
+        saldoKas: queryKas.saldoKas + querySimpanan.saldoSimpanan,
+      });
+    } catch (error) {
+      console.error("Error fetching data: " + error.message);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+
+  app.get("/get/transaksi", (req, res) => {
+    sqlQuery = `SELECT * FROM tbl_transaksi ORDER BY tanggalTransaksi DESC`;
+
+    db.query(sqlQuery, (err, results) => {
+      if (err) {
+        console.error("Error fetching data: " + err.sqlMessage);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
+  });
+
+  app.post("/post/transaksi", async (req, res) => {
+    const { jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan } =
+      req.body;
+
+    // Query untuk menambahkan data ke tbl_transaksi
+    const insertQuery = `
     INSERT INTO tbl_transaksi (jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan)
     VALUES (?, ?, ?, ?)
   `;
 
-  const values = [
-    jenisTransaksi,
-    tanggalTransaksi,
-    nominalTransaksi,
-    keterangan,
-  ];
+    const values = [
+      jenisTransaksi,
+      tanggalTransaksi,
+      nominalTransaksi,
+      keterangan,
+    ];
 
-  try {
-    db.query(insertQuery, values, (err, result) => {
-      if (err) {
-        console.error(
-          "Error inserting data into tbl_transaksi: " + err.sqlMessage
-        );
-        res
-          .status(500)
-          .json({ error: "Error inserting data into tbl_transaksi" });
-      } else {
-        console.log("Data inserted into tbl_transaksi successfully", result);
-        res.status(200).json({ insertId: result.insertId });
+    try {
+      db.query(insertQuery, values, (err, result) => {
+        if (err) {
+          console.error(
+            "Error inserting data into tbl_transaksi: " + err.sqlMessage
+          );
+          res
+            .status(500)
+            .json({ error: "Error inserting data into tbl_transaksi" });
+        } else {
+          console.log("Data inserted into tbl_transaksi successfully", result);
+          res.status(200).json({ insertId: result.insertId });
+        }
+      });
+    } catch (error) {
+      console.error("Error occurred: ", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+
+  app.delete("/delete/transaksi/:id", async (req, res) => {
+    const transaksiId = req.params.id;
+
+    try {
+      // Pastikan bahwa transaksiId adalah angka
+      if (!/^\d+$/.test(transaksiId)) {
+        return res.status(400).json({ error: "Invalid parameter" });
       }
-    });
-  } catch (error) {
-    console.error("Error occurred: ", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
 
-app.delete("/delete/transaksi/:id", async (req, res) => {
-  const transaksiId = req.params.id;
+      // Periksa apakah data dengan ID yang diberikan ada di database
+      const checkQuery = `SELECT * FROM tbl_transaksi WHERE id = ${transaksiId}`;
+      const existingData = await getQueryResult(checkQuery);
 
-  try {
-    // Pastikan bahwa transaksiId adalah angka
-    if (!/^\d+$/.test(transaksiId)) {
-      return res.status(400).json({ error: "Invalid parameter" });
+      if (existingData.length === 0) {
+        return res.status(404).json({ error: "Data not found" });
+      }
+
+      // Jika data ada, lakukan penghapusan
+      const deleteQuery = `DELETE FROM tbl_transaksi WHERE id = ${transaksiId}`;
+      await getQueryResult(deleteQuery);
+
+      res.status(200).json({ message: "Data deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting data:", error);
+      res
+        .status(500)
+        .json({ error: "Error deleting data", message: error.message });
     }
+  });
 
-    // Periksa apakah data dengan ID yang diberikan ada di database
-    const checkQuery = `SELECT * FROM tbl_transaksi WHERE id = ${transaksiId}`;
-    const existingData = await getQueryResult(checkQuery);
+  app.put("/put/transaksi/:id", async (req, res) => {
+    const { id } = req.params;
+    const { jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan } =
+      req.body;
 
-    if (existingData.length === 0) {
-      return res.status(404).json({ error: "Data not found" });
-    }
-
-    // Jika data ada, lakukan penghapusan
-    const deleteQuery = `DELETE FROM tbl_transaksi WHERE id = ${transaksiId}`;
-    await getQueryResult(deleteQuery);
-
-    res.status(200).json({ message: "Data deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting data:", error);
-    res
-      .status(500)
-      .json({ error: "Error deleting data", message: error.message });
-  }
-});
-
-app.put("/put/transaksi/:id", async (req, res) => {
-  const { id } = req.params;
-  const { jenisTransaksi, tanggalTransaksi, nominalTransaksi, keterangan } =
-    req.body;
-
-  const updateQuery = `
+    const updateQuery = `
     UPDATE tbl_transaksi
     SET
       jenisTransaksi = '${jenisTransaksi}',
@@ -813,21 +917,21 @@ app.put("/put/transaksi/:id", async (req, res) => {
     WHERE id = ${id};
   `;
 
-  try {
-    await getQueryResult(updateQuery);
-    res.status(200).json({ message: "Data updated successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
+    try {
+      await getQueryResult(updateQuery);
+      res.status(200).json({ message: "Data updated successfully" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
 
-// API ENDPOINT TRANSAKSI <<< END
+  // API ENDPOINT TRANSAKSI KAS <<< END
 
-// START >>> API ENDPOINT LAPORAN
+  // START >>> API ENDPOINT LAPORAN
 
-app.get("/get/lapSimpan", (req, res) => {
-  const sqlQuery = `
+  app.get("/get/lapSimpan", (req, res) => {
+    const sqlQuery = `
     SELECT
       YEAR(tanggalSimpan) AS tahunSimpan
     FROM
@@ -838,20 +942,20 @@ app.get("/get/lapSimpan", (req, res) => {
       tahunSimpan DESC
   `;
 
-  db.query(sqlQuery, (err, results) => {
-    if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
+    db.query(sqlQuery, (err, results) => {
+      if (err) {
+        console.error("Error fetching data: " + err.sqlMessage);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
   });
-});
 
-app.get("/get/lapSimpan/:year", (req, res) => {
-  const year = parseInt(req.params.year);
+  app.get("/get/lapSimpan/:year", (req, res) => {
+    const year = parseInt(req.params.year);
 
-  const sqlQuery = `
+    const sqlQuery = `
     SELECT 
       a.kodeAnggota, 
       a.nama,
@@ -869,18 +973,18 @@ app.get("/get/lapSimpan/:year", (req, res) => {
     ORDER BY a.kodeAnggota
   `;
 
-  db.query(sqlQuery, [year], (err, results) => {
-    if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
+    db.query(sqlQuery, [year], (err, results) => {
+      if (err) {
+        console.error("Error fetching data: " + err.sqlMessage);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
   });
-});
 
-app.get("/get/lapAngsuran", (req, res) => {
-  const sqlQuery = `
+  app.get("/get/lapAngsuran", (req, res) => {
+    const sqlQuery = `
     SELECT 
       YEAR(tanggalTransaksi) AS tahunPinjam
     FROM tbl_pinjam
@@ -888,20 +992,20 @@ app.get("/get/lapAngsuran", (req, res) => {
     ORDER BY tahunPinjam DESC
   `;
 
-  db.query(sqlQuery, (err, results) => {
-    if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
+    db.query(sqlQuery, (err, results) => {
+      if (err) {
+        console.error("Error fetching data: " + err.sqlMessage);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
   });
-});
 
-app.get("/get/lapAngsuran/:year", (req, res) => {
-  const yearInt = parseInt(req.params.year);
+  app.get("/get/lapAngsuran/:year", (req, res) => {
+    const yearInt = parseInt(req.params.year);
 
-  const sqlQuery = `
+    const sqlQuery = `
     SELECT
       s.id,
       a.nama,
@@ -926,25 +1030,25 @@ app.get("/get/lapAngsuran/:year", (req, res) => {
     ORDER BY s.createdAt DESC
   `;
 
-  const startYear = yearInt - 1;
-  const endYear = yearInt;
+    const startYear = yearInt - 1;
+    const endYear = yearInt;
 
-  db.query(
-    sqlQuery,
-    [yearInt, yearInt, yearInt, yearInt, startYear, endYear],
-    (err, results) => {
-      if (err) {
-        console.error("Error fetching data: " + err.sqlMessage);
-        res.status(500).json({ error: "Internal Server Error" });
-      } else {
-        res.status(200).json(results);
+    db.query(
+      sqlQuery,
+      [yearInt, yearInt, yearInt, yearInt, startYear, endYear],
+      (err, results) => {
+        if (err) {
+          console.error("Error fetching data: " + err.sqlMessage);
+          res.status(500).json({ error: "Internal Server Error" });
+        } else {
+          res.status(200).json(results);
+        }
       }
-    }
-  );
-});
+    );
+  });
 
-app.get("/get/lapSHU", (req, res) => {
-  const sqlQuery = `
+  app.get("/get/lapSHU", (req, res) => {
+    const sqlQuery = `
     SELECT 
       YEAR(tanggalTransaksi) AS tahunPinjam
     FROM tbl_pinjam
@@ -952,21 +1056,21 @@ app.get("/get/lapSHU", (req, res) => {
     ORDER BY tahunPinjam DESC
   `;
 
-  db.query(sqlQuery, (err, results) => {
-    if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
+    db.query(sqlQuery, (err, results) => {
+      if (err) {
+        console.error("Error fetching data: " + err.sqlMessage);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
   });
-});
 
-app.get("/get/lapSHU/:year", async (req, res) => {
-  const year = req.params.year;
+  app.get("/get/lapSHU/:year", async (req, res) => {
+    const year = req.params.year;
 
-  try {
-    const totalBayarAngsuranPerTahun = await getQueryResult(`
+    try {
+      const totalBayarAngsuranPerTahun = await getQueryResult(`
       SELECT
         IFNULL(SUM(CASE WHEN (tanggalBayar IS NOT NULL AND tanggalBayar != '') THEN jasaUang ELSE 0 END), 0) AS totalBayarAngsuranPerTahun
       FROM
@@ -975,7 +1079,7 @@ app.get("/get/lapSHU/:year", async (req, res) => {
         YEAR(tanggalBayar) = ${year}
     `);
 
-    const totalPengeluaranKasPerTahun = await getQueryResult(`
+      const totalPengeluaranKasPerTahun = await getQueryResult(`
       SELECT
         IFNULL(SUM(CASE WHEN jenisTransaksi = 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END), 0) AS totalPengeluaranKasPerTahun
       FROM
@@ -984,7 +1088,7 @@ app.get("/get/lapSHU/:year", async (req, res) => {
         YEAR(tanggalTransaksi) = ${year}
     `);
 
-    const totalSimpananPerTahun = await getQueryResult(`
+      const totalSimpananPerTahun = await getQueryResult(`
       SELECT
         IFNULL(
           SUM(
@@ -1001,65 +1105,65 @@ app.get("/get/lapSHU/:year", async (req, res) => {
         YEAR(tanggalSimpan) = ${year}
     `);
 
-    res.status(200).json({
-      totalBayarAngsuranPerTahun:
-        totalBayarAngsuranPerTahun.totalBayarAngsuranPerTahun,
-      totalPengeluaranKasPerTahun:
-        totalPengeluaranKasPerTahun.totalPengeluaranKasPerTahun,
-      totalSimpananPerTahun: totalSimpananPerTahun.totalSimpananPerTahun,
-    });
-  } catch (error) {
-    console.error("Error fetching data: " + error.message);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-// API ENDPOINT LAPORAN <<< END
-
-// START >>> API ENDPOINT PENGATURAN
-
-app.get("/get/pengaturan", (req, res) => {
-  const id = 1;
-
-  const sqlQuery = `SELECT * FROM tbl_pengaturan WHERE idPengaturan = ?`;
-
-  db.query(sqlQuery, [id], (err, results) => {
-    if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
+      res.status(200).json({
+        totalBayarAngsuranPerTahun:
+          totalBayarAngsuranPerTahun.totalBayarAngsuranPerTahun,
+        totalPengeluaranKasPerTahun:
+          totalPengeluaranKasPerTahun.totalPengeluaranKasPerTahun,
+        totalSimpananPerTahun: totalSimpananPerTahun.totalSimpananPerTahun,
+      });
+    } catch (error) {
+      console.error("Error fetching data: " + error.message);
       res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
     }
   });
-});
 
-app.put("/put/pengaturan", (req, res) => {
-  const id = 1;
-  const { simpananPokok, simpananWajib, bungaAngsuran } = req.body;
+  // API ENDPOINT LAPORAN <<< END
 
-  const updateQuery = `
+  // START >>> API ENDPOINT PENGATURAN
+
+  app.get("/get/pengaturan", (req, res) => {
+    const id = 1;
+
+    const sqlQuery = `SELECT * FROM tbl_pengaturan WHERE idPengaturan = ?`;
+
+    db.query(sqlQuery, [id], (err, results) => {
+      if (err) {
+        console.error("Error fetching data: " + err.sqlMessage);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
+  });
+
+  app.put("/put/pengaturan", (req, res) => {
+    const id = 1;
+    const { simpananPokok, simpananWajib, bungaAngsuran } = req.body;
+
+    const updateQuery = `
     UPDATE tbl_pengaturan
     SET simpananPokok = ?, simpananWajib = ?, bungaAngsuran = ?
     WHERE idPengaturan = ?
   `;
 
-  db.query(
-    updateQuery,
-    [simpananPokok, simpananWajib, bungaAngsuran, id],
-    (err, result) => {
-      if (err) {
-        console.error("Error updating record:", err);
-        res.status(500).json({ error: "Internal Server Error" });
-      } else {
-        console.log("Record updated:", result);
-        res.status(200).json({ message: "Record updated successfully" });
+    db.query(
+      updateQuery,
+      [simpananPokok, simpananWajib, bungaAngsuran, id],
+      (err, result) => {
+        if (err) {
+          console.error("Error updating record:", err);
+          res.status(500).json({ error: "Internal Server Error" });
+        } else {
+          console.log("Record updated:", result);
+          res.status(200).json({ message: "Record updated successfully" });
+        }
       }
-    }
-  );
-});
+    );
+  });
 
-app.get("/get/keanggotaan", (req, res) => {
-  const sqlQuery = `
+  app.get("/get/keanggotaan", (req, res) => {
+    const sqlQuery = `
     SELECT
       *
     FROM
@@ -1068,80 +1172,83 @@ app.get("/get/keanggotaan", (req, res) => {
       namaKeanggotaan
     `;
 
-  db.query(sqlQuery, (err, results) => {
-    if (err) {
-      console.error("Error fetching data: " + err.sqlMessage);
-      res.status(500).json({ error: "Internal Server Error" });
-    } else {
-      res.status(200).json(results);
-    }
+    db.query(sqlQuery, (err, results) => {
+      if (err) {
+        console.error("Error fetching data: " + err.sqlMessage);
+        res.status(500).json({ error: "Internal Server Error" });
+      } else {
+        res.status(200).json(results);
+      }
+    });
   });
-});
 
-// API ENDPOINT PENGATURAN <<< END
+  // API ENDPOINT PENGATURAN <<< END
 
-// Fungsi untuk menghapus file dari direktori
-const deleteFile = (filePath) => {
-  fs.unlink(filePath, (err) => {
-    if (err) {
-      console.error("Error deleting file:", err);
-    } else {
-      console.log("File deleted successfully");
-    }
-  });
-};
+  // Fungsi untuk menghapus file dari direktori
+  const deleteFile = (filePath) => {
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error("Error deleting file:", err);
+      } else {
+        console.log("File deleted successfully");
+      }
+    });
+  };
 
-// Fungsi untuk mencari dan menghapus file serta mengupdate nilai uploadFile dalam database
-const processFiles = () => {
-  let affectedRows = 0; // Untuk melacak jumlah baris yang terpengaruh
+  // Fungsi untuk mencari dan menghapus file serta mengupdate nilai uploadFile dalam database
+  const processFiles = () => {
+    let affectedRows = 0; // Untuk melacak jumlah baris yang terpengaruh
 
-  // Logika untuk mendapatkan tahun saat ini
-  const currentYear = new Date().getFullYear();
-  const lastYear = currentYear - 1;
+    // Logika untuk mendapatkan tahun saat ini
+    const currentYear = new Date().getFullYear();
+    const lastYear = currentYear - 1;
 
-  // Query untuk mendapatkan data yang sesuai dengan kriteria
-  const selectQuery = `SELECT * FROM tbl_simpan WHERE YEAR(tanggalSimpan) = ? AND uploadFile IS NOT NULL`;
-  db.query(selectQuery, [lastYear], (error, results) => {
-    if (error) {
-      console.error("Error fetching data:", error);
-      return;
-    }
-
-    results.forEach((row) => {
-      const filePath = path.join("./uploads/image", row.uploadFile);
-      if (fs.existsSync(filePath)) {
-        deleteFile(filePath);
-        affectedRows++; // Menambah jumlah baris yang terpengaruh
+    // Query untuk mendapatkan data yang sesuai dengan kriteria
+    const selectQuery = `SELECT * FROM tbl_simpan WHERE YEAR(tanggalSimpan) = ? AND uploadFile IS NOT NULL`;
+    db.query(selectQuery, [lastYear], (error, results) => {
+      if (error) {
+        console.error("Error fetching data:", error);
+        return;
       }
 
-      // Update nilai uploadFile menjadi NULL atau kosong
-      const updateQuery = `UPDATE tbl_simpan SET uploadFile = NULL WHERE id = ?`;
-      db.query(updateQuery, [row.id], (err, result) => {
-        if (err) {
-          console.error("Error updating data:", err);
-        } else {
-          console.log("Data updated successfully");
+      results.forEach((row) => {
+        const filePath = path.join("./uploads/image", row.uploadFile);
+        if (fs.existsSync(filePath)) {
+          deleteFile(filePath);
+          affectedRows++; // Menambah jumlah baris yang terpengaruh
         }
+
+        // Update nilai uploadFile menjadi NULL atau kosong
+        const updateQuery = `UPDATE tbl_simpan SET uploadFile = NULL WHERE id = ?`;
+        db.query(updateQuery, [row.id], (err, result) => {
+          if (err) {
+            console.error("Error updating data:", err);
+          } else {
+            console.log("Data updated successfully");
+          }
+        });
       });
+
+      console.log(`Total ${affectedRows} files affected`);
     });
+  };
 
-    console.log(`Total ${affectedRows} files affected`);
+  processFiles();
+
+  // Start the server
+  app.listen(port, () => {
+    console.log(
+      `${chalk.bold("Local:")} \t\t\t http://localhost:${chalk.bold(port)}`
+    );
   });
-};
 
-processFiles();
+  // app.listen(port, ip_address, () => {
+  //   console.log(
+  //     `${chalk.bold("On Your Network:")} \t http://${ip_address}:${chalk.bold(
+  //       port
+  //     )}`
+  //   );
+  // });
+}
 
-// Start the server
-app.listen(port, () => {
-  console.log(
-    `${chalk.bold("Local:")} \t\t\t http://localhost:${chalk.bold(port)}`
-  );
-});
-
-app.listen(port, ip_address, () => {
-  console.log(
-    `${chalk.bold("On Your Network:")} \t http://${ip_address}:${chalk.bold(
-      port
-    )}`
-  );
-});
+connectToDatabase();

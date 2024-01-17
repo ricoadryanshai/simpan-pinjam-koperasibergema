@@ -1,21 +1,29 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import { Button, Form, Modal } from "react-bootstrap";
-import { tambahTransaksi } from "../utils/api";
-import { formatNumber } from "../utils/format";
+import { getKas, tambahTransaksi } from "../utils/api";
+import { formatNumber, formatRupiah } from "../utils/format";
 import { handleInputChange } from "../utils/handle";
+
+const today = new Date();
+const date = String(today.getDate()).padStart(2, "0");
+const month = String(today.getMonth() + 1).padStart(2, "0");
+const year = today.getFullYear();
 
 export const TransaksiTambahModal = (props) => {
   const { show, onHide } = props;
 
   const [input, setInput] = React.useState("");
+  const [saldoKas, setSaldoKas] = React.useState({});
 
   const handleSubmitClick = async () => {
     const newTransaki = {
       jenisTransaksi: document.getElementById("jenisTransaksi").value,
-      tanggalTransaksi: document.getElementById("tanggalTransaksi").value,
-      nominalTransaksi: input,
-      keterangan: document.getElementById("keterangan").value,
+      tanggalTransaksi:
+        document.getElementById("tanggalTransaksi").value ||
+        `${year}-${month}-${date}`,
+      nominalTransaksi: input || 0,
+      keterangan: document.getElementById("keterangan").value || "-",
     };
 
     try {
@@ -32,6 +40,32 @@ export const TransaksiTambahModal = (props) => {
     handleInputChange(event, setInput);
   };
 
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmitClick();
+    }
+  };
+
+  const yourFormRef = React.useRef(null);
+
+  React.useEffect(() => {
+    yourFormRef.current && yourFormRef.current.focus();
+  }, [show]);
+
+  React.useEffect(() => {
+    if (show) {
+      const fetchSaldoKas = async () => {
+        try {
+          const data = await getKas();
+          setSaldoKas(data);
+        } catch (error) {
+          console.log("Error fetching saldo kas: ", error);
+        }
+      };
+      fetchSaldoKas();
+    }
+  }, [show]);
   return (
     <Modal
       show={show}
@@ -39,13 +73,14 @@ export const TransaksiTambahModal = (props) => {
         onHide();
         setInput("");
       }}
+      backdrop="static"
     >
       <Modal.Header closeButton>
         <Modal.Title className="text-uppercase fw-bold">
           Transaksi Kas
         </Modal.Title>
       </Modal.Header>
-      <Form>
+      <Form ref={yourFormRef} onKeyDown={handleKeyPress}>
         <Modal.Body>
           <Form.Group className="mb-2">
             <Form.Label>Tanggal Transaksi</Form.Label>
@@ -64,6 +99,15 @@ export const TransaksiTambahModal = (props) => {
               <option>Transaksi Masuk</option>
               <option>Transaksi Keluar</option>
             </Form.Select>
+          </Form.Group>
+
+          <Form.Group className="mb-2">
+            <Form.Label>Saldo Kas</Form.Label>
+            <Form.Control
+              type="text"
+              disabled
+              defaultValue={formatRupiah(saldoKas.saldoKas)}
+            />
           </Form.Group>
 
           <Form.Group className="mb-2">

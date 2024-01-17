@@ -66,16 +66,29 @@ export default function AnggotaEditModal(props) {
       console.log("Error updating data anggota: ", error);
     }
   };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSave();
+    }
+  };
+
+  const yourFormRef = React.useRef(null);
+
+  React.useEffect(() => {
+    yourFormRef.current && yourFormRef.current.focus();
+  }, [show]);
   return (
     <>
-      <Modal show={show} onHide={onHide} backdrop="static" keyboard={false}>
+      <Modal show={show} onHide={onHide} backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title className="text-uppercase fw-bold">
             Edit Data {nama}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
+          <Form ref={yourFormRef} onKeyDown={handleKeyPress}>
             <Form.Group as={Row} className="mb-3">
               <Col sm={4}>
                 <Form.Label className="my-0">Kode Anggota</Form.Label>

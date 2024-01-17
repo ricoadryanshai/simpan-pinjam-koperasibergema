@@ -2,13 +2,17 @@
 import React from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { tambahSimpan } from "../utils/api";
-import { formatNumber } from "../utils/format";
+import { formatNumber, formatRupiah } from "../utils/format";
+
+const today = new Date();
+const date = String(today.getDate()).padStart(2, "0");
+const month = String(today.getMonth() + 1).padStart(2, "0");
+const year = today.getFullYear();
 
 export default function SimpanAmbilModal(props) {
   const { show, onClose, rowData, clearModalData, fetchData } = props;
 
   const [inputNominal, setInputNominal] = React.useState("");
-  const [selectedFile, setSelectedFile] = React.useState(null);
 
   const handleInputChange = (event) => {
     // Hapus karakter selain angka dan tanda minus (untuk nilai negatif)
@@ -18,16 +22,15 @@ export default function SimpanAmbilModal(props) {
     setInputNominal(formattedValue);
   };
 
-  const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
-  };
+  // const handleFileChange = (event) => {
+  //   setSelectedFile(event.target.files[0]);
+  // };
 
   const handleClose = () => {
     onClose();
     clearModalData();
     fetchData();
     setInputNominal("");
-    setSelectedFile(null);
   };
 
   const handleSubmit = async () => {
@@ -39,43 +42,51 @@ export default function SimpanAmbilModal(props) {
         return;
       }
 
-      // Validasi inputNominal tidak lebih besar dari totalSaldo
-      if (inputNominal > rowData.totalSaldo) {
+      // Validasi inputNominal tidak lebih besar dari bisaAmbil
+      if (inputNominal > rowData.bisaAmbil) {
         alert("Jumlah ambil anda melebihi saldo anda");
-        console.error("InputNominal is greater than totalSaldo");
+        console.error("InputNominal is greater than bisaAmbil");
         return;
       }
 
       await tambahSimpan(
         rowData.kodeAnggota,
-        document.getElementById("inputTanggalTransaksi").value,
-        document.getElementById("formPlaintextJenisSimpanan").value,
-        inputNominal,
-        selectedFile
+        document.getElementById("inputTanggalTransaksi").value ||
+          `${year}-${month}-${date}`,
+        document.getElementById("formPlaintextJenisSimpanan").value ||
+          "Ambil Simpanan",
+        inputNominal || 0
       );
 
       onClose();
       fetchData();
       setInputNominal("");
-      setSelectedFile(null);
       clearModalData();
     } catch (error) {
       console.error("Error posting data:", error);
     }
   };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const yourFormRef = React.useRef(null);
+
+  React.useEffect(() => {
+    yourFormRef.current && yourFormRef.current.focus();
+  }, [show]);
   return (
     <>
-      <Modal
-        show={show}
-        onHide={handleClose}
-        backdrop="static"
-        keyboard={false}
-      >
+      <Modal show={show} onHide={handleClose} backdrop="static">
         <Modal.Header>
           <Modal.Title>Ambil Simpanan</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
+          <Form ref={yourFormRef} onKeyDown={handleKeyPress}>
             <Form.Group
               as={Row}
               className="mb-2"
@@ -116,7 +127,7 @@ export default function SimpanAmbilModal(props) {
                 <Form.Control
                   plaintext
                   readOnly
-                  defaultValue={formatRupiah(rowData ? rowData.totalSaldo : "")}
+                  defaultValue={formatRupiah(rowData?.bisaAmbil || 0)}
                 />
               </Col>
             </Form.Group>
@@ -130,8 +141,8 @@ export default function SimpanAmbilModal(props) {
               </Form.Label>
               <Col>
                 <Form.Control
-                  type="text"
-                  disabled
+                  plaintext
+                  readOnly
                   defaultValue="Ambil Simpanan"
                 />
               </Col>
@@ -160,18 +171,6 @@ export default function SimpanAmbilModal(props) {
                 <Form.Control type="date" />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} controlId="formFile" className="mb-2">
-              <Form.Label column sm="4">
-                Bukti Transfer
-              </Form.Label>
-              <Col>
-                <Form.Control
-                  type="file"
-                  name="uploadFile"
-                  onChange={handleFileChange}
-                />
-              </Col>
-            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -185,18 +184,4 @@ export default function SimpanAmbilModal(props) {
       </Modal>
     </>
   );
-  function formatRupiah(angka) {
-    if (typeof angka !== "number") {
-      return "Rp 0,00";
-    }
-
-    // Format angka dengan koma sebagai pemisah ribuan dan dua digit desimal
-    const formattedAngka = angka.toLocaleString("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 2,
-    });
-
-    return formattedAngka;
-  }
 }

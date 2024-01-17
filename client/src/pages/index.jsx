@@ -5,3 +5,4 @@ export { default as Pinjaman } from "./Pinjaman";
 export { default as Transaksi } from "./Transaksi";
 export { default as Laporan } from "./Laporan";
 export { default as Pengaturan } from "./Pengaturan";
+export { default as Login } from "./Login";

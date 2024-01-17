@@ -72,32 +72,25 @@ export const PinjamProsesModal = (props) => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Row className="mb-3">
-            <Col>
-              <Row className="mb-1">
-                <Col>Kode Anggota</Col>
-                <Col>{kodeAnggota}</Col>
-              </Row>
-              <Row>
-                <Col>Nama</Col>
-                <Col>{nama}</Col>
-              </Row>
-            </Col>
-            <Col>
-              <Row className="mb-1">
-                <Col>Tanggal Pinjam</Col>
-                <Col>{formatDate(tanggalTransaksi)}</Col>
-              </Row>
-              <Row className="mb-1">
-                <Col>Jumlah Pinjam</Col>
-                <Col>{formatRupiah(nominalTransaksi)}</Col>
-              </Row>
-              <Row>
-                <Col>Lama Pinjam</Col>
-                <Col>{angsuran} Bulan</Col>
-              </Row>
-            </Col>
+          <Row>
+            <Col className="fw-bold">Kode Anggota</Col>
+            <Col>{kodeAnggota}</Col>
+            <Col className="fw-bold">Tanggal Pinjam</Col>
+            <Col>{formatDate(tanggalTransaksi)}</Col>
           </Row>
+          <Row>
+            <Col className="fw-bold">Nama</Col>
+            <Col>{nama}</Col>
+            <Col className="fw-bold">Jumlah Pinjam</Col>
+            <Col>{formatRupiah(nominalTransaksi)}</Col>
+          </Row>
+          <Row>
+            <Col></Col>
+            <Col></Col>
+            <Col className="fw-bold">Lama Pinjam</Col>
+            <Col>{angsuran} Bulan</Col>
+          </Row>
+          <hr className="my-2 border-2" />
           <Row>
             <Table hover responsive size="sm">
               <thead className="table-info">

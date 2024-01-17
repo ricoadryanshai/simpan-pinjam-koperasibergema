@@ -239,6 +239,16 @@ export const updateLunasAngsuran = async (idPinjam) => {
 
 // START >>> API ENDPOINT TRANSAKSI
 
+export const getKas = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/kas`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
 export const getTransaksi = async () => {
   try {
     const response = await axios.get(`${API_ENDPOINT}/get/transaksi`);

@@ -31,10 +31,10 @@ export default function AnggotaTambahModal(props) {
   const handleSubmit = async () => {
     const inputData = {
       kodeAnggota: document.getElementById("kodeAnggota")?.value || "",
-      nama: document.getElementById("nama")?.value || "",
-      jenisAnggota: dropdown || "",
-      jenKel: document.getElementById("jenKel")?.value || "",
-      tempatLahir: document.getElementById("tempatLahir")?.value || "-",
+      nama: document.getElementById("nama")?.value || "-",
+      jenisAnggota: dropdown || "Anggota",
+      jenKel: document.getElementById("jenKel")?.value || "Pria",
+      tempatLahir: document.getElementById("tempatLahir")?.value || `-`,
       tanggalLahir:
         document.getElementById("tanggalLahir")?.value ||
         `${year}-${month}-${date}`,
@@ -101,13 +101,24 @@ export default function AnggotaTambahModal(props) {
     fecthedData();
   }, [show]);
 
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const yourFormRef = React.useRef(null);
+
+  React.useEffect(() => {
+    yourFormRef.current && yourFormRef.current.focus();
+  }, [show]);
   return (
     <>
       <Modal
         show={show}
         onHide={() => handleCloseModal()}
         backdrop="static"
-        keyboard={false}
         scrollable
       >
         <Modal.Header closeButton>
@@ -116,7 +127,7 @@ export default function AnggotaTambahModal(props) {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
+          <Form ref={yourFormRef} onKeyDown={handleKeyPress}>
             <Form.Group as={Row} className="mb-3">
               <Col sm={4}>
                 <Form.Label>Kode Anggota</Form.Label>

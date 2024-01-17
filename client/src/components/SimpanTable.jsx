@@ -173,7 +173,7 @@ export default function SimpanTable() {
                   <div className="input-wrapper">
                     <FaSearch id="search-icon" />
                     <input
-                      placeholder="Ketika untuk mencari data..."
+                      placeholder="Ketik untuk mencari data..."
                       onChange={handleInputChange}
                     />
                   </div>
@@ -265,6 +265,7 @@ export default function SimpanTable() {
         modalData={modalData}
         updateModalData={setModalData}
         clearModalData={() => setModalData([])}
+        fetchData={() => fetchData()}
       />
 
       <SimpanTambahModal

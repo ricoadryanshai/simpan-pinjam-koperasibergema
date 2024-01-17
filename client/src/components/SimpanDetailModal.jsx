@@ -1,5 +1,5 @@
 import React from "react";
-import { Col, Container, Modal, Row, Table } from "react-bootstrap";
+import { Col, Modal, Row, Table } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
 import { FaSearch } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,7 +10,8 @@ import { SimpanPrintOut } from "./SimpanPrintOut";
 import SimpanExport from "./SimpanExport";
 
 export default function SimpanDetailModal(props) {
-  const { show, onClose, rowData, modalData, clearModalData } = props;
+  const { show, onClose, rowData, modalData, clearModalData, fetchData } =
+    props;
 
   const [, /* headerData */ setHeaderData] = React.useState({
     kodeAnggota: "",
@@ -23,6 +24,7 @@ export default function SimpanDetailModal(props) {
   const handleClose = () => {
     onClose();
     clearModalData();
+    fetchData();
   };
 
   const componentRef = React.useRef();
@@ -43,10 +45,11 @@ export default function SimpanDetailModal(props) {
     }
   }, [rowData]);
 
-  const kodeRowData = rowData ? rowData.kodeAnggota : "";
-  const namaRowData = rowData ? rowData.nama : "";
-  const tanggalRowData = rowData ? rowData.tanggalDaftar : "";
-  const saldoRowData = rowData ? rowData.totalSaldo : "";
+  const kodeRowData = rowData?.kodeAnggota || "-";
+  const namaRowData = rowData?.nama || "-";
+  const tanggalRowData = rowData?.tanggalDaftar || "-";
+  const saldoRowData = rowData?.totalSaldo || 0;
+  const saldoPenarikan = rowData?.bisaAmbil || 0;
 
   const tableRef = React.useRef(null);
 
@@ -71,35 +74,36 @@ export default function SimpanDetailModal(props) {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Container>
-            <Row>
-              <Col sm={3} className="fw-bold">
-                <Row>Kode Anggota</Row>
-                <Row>Nama Anggota</Row>
-                <Row>Tanggal Bergabung</Row>
-                <Row>Total Saldo</Row>
-              </Col>
-              <Col>
-                <Row>{kodeRowData}</Row>
-                <Row>{namaRowData}</Row>
-                <Row>{formatDate(tanggalRowData)}</Row>
-                <Row>{formatRupiah(saldoRowData)}</Row>
-              </Col>
-              <Col className="d-flex flex-row-reverse align-items-end flex-gap-1">
-                <FontAwesomeIcon
-                  icon={faFileExport}
-                  onClick={onDownload}
-                  className="custom-icon-pointer"
-                />
-                <FontAwesomeIcon
-                  icon={faPrint}
-                  onClick={handlePrint}
-                  className="custom-icon-pointer"
-                />
-              </Col>
-            </Row>
-          </Container>
-          <hr className="mt-2 mb-2" />
+          <Row>
+            <Col className="fw-bold">Kode Anggota</Col>
+            <Col>{kodeRowData}</Col>
+            <Col className="fw-bold">Total Simpanan</Col>
+            <Col>{formatRupiah(saldoRowData)}</Col>
+          </Row>
+          <Row>
+            <Col className="fw-bold">Nama Anggota</Col>
+            <Col>{namaRowData}</Col>
+            <Col className="fw-bold">Saldo Bisa di Ambil</Col>
+            <Col>{formatRupiah(saldoPenarikan)}</Col>
+          </Row>
+          <Row>
+            <Col className="fw-bold">Tanggal Bergabung</Col>
+            <Col>{formatDate(tanggalRowData)}</Col>
+            <Col />
+            <Col className="d-flex justify-content-end gap-3">
+              <FontAwesomeIcon
+                icon={faFileExport}
+                onClick={onDownload}
+                className="custom-icon-pointer"
+              />
+              <FontAwesomeIcon
+                icon={faPrint}
+                onClick={handlePrint}
+                className="custom-icon-pointer"
+              />
+            </Col>
+          </Row>
+          <hr className="my-2 border-2" />
           <Row className="mb-2">
             <Col />
             <Col>
