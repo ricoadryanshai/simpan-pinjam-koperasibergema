@@ -15,7 +15,7 @@ import {
 function App() {
   return (
     <>
-      <Router basename="/kpgansel">
+      <Router>
         <Header />
         <Routes>
           <Route path="/" element={<Beranda />} />
