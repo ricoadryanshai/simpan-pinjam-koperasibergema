@@ -7,8 +7,8 @@ import {
   Pagination,
   Row,
   Table,
+  Stack,
 } from "react-bootstrap";
-import { getSimpanAnggotaById } from "../utils/api";
 import SimpanDetailModal from "./SimpanDetailModal";
 import SimpanTambahModal from "./SimpanTambahModal";
 import SimpanAmbilModal from "./SimpanAmbilModal";
@@ -22,6 +22,7 @@ import {
   faMoneyBillTransfer,
   faPiggyBank,
 } from "@fortawesome/free-solid-svg-icons";
+import { getKas } from "../utils/api";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -38,9 +39,19 @@ export default function SimpanTable() {
     key: "nama",
     direction: "asc",
   });
+  const [saldoKas, setSaldoKas] = React.useState({});
 
   const fetchData = async () => {
     await fetchSimpanan(setSimpananData);
+  };
+
+  const fetchSaldoKas = async () => {
+    try {
+      const data = await getKas();
+      setSaldoKas(data);
+    } catch (error) {
+      console.log("Fetching Saldo Kas Error From Client-side:", error);
+    }
   };
 
   const handleModal = (rowData, setShowModal) => {
@@ -66,16 +77,8 @@ export default function SimpanTable() {
     setActivePage(1);
   };
 
-  const handleDetailClick = (rowData) => {
+  const handleDetailClick = async (rowData) => {
     handleModal(rowData, setShowDetailModal);
-
-    getSimpanAnggotaById(rowData.kodeAnggota)
-      .then((data) => {
-        setModalData(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching detailed data:", error);
-      });
   };
 
   const handleTambahClick = (rowData) => {
@@ -149,6 +152,7 @@ export default function SimpanTable() {
   const startIndex = (activePage - 1) * ITEMS_PER_PAGE + 1;
 
   React.useEffect(() => {
+    fetchSaldoKas();
     fetchData();
   }, []);
 
@@ -159,8 +163,8 @@ export default function SimpanTable() {
   }, [sortedData]);
   return (
     <>
-      <div className="d-flex justify-content-center">
-        <Card className="custom-border-box">
+      <Stack className="justify-content-center align-items-center" gap={3}>
+        <Card className="custom-width-card">
           <Container className="py-2">
             <Card.Title className="fw-bold text-uppercase mb-2">
               <span>Data Simpanan Anggota</span>
@@ -237,8 +241,7 @@ export default function SimpanTable() {
             </Table>
           </Container>
         </Card>
-      </div>
-      <div className="d-flex justify-content-center mt-2">
+
         <Pagination>
           <Pagination.First onClick={goToFirstPage} />
           <Pagination.Prev onClick={goToPrevPage} />
@@ -256,7 +259,7 @@ export default function SimpanTable() {
           <Pagination.Next onClick={goToNextPage} />
           <Pagination.Last onClick={goToLastPage} />
         </Pagination>
-      </div>
+      </Stack>
 
       <SimpanDetailModal
         show={showDetailModal}
@@ -282,6 +285,8 @@ export default function SimpanTable() {
         rowData={selectedRowData}
         clearModalData={() => setModalData([])}
         fetchData={fetchData}
+        saldoKas={saldoKas}
+        fetchSaldoKas={() => fetchSaldoKas()}
       />
     </>
   );

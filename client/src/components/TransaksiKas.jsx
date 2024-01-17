@@ -7,6 +7,7 @@ import {
   Pagination,
   Row,
   Col,
+  Stack,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -186,13 +187,12 @@ export default function TransaksiKas() {
   }, []);
   return (
     <>
-      <div className="d-flex justify-content-center">
-        <Card className="custom-border-box">
+      <Stack className="justify-content-center align-items-center">
+        <Card className="custom-width-card">
           <Container className="pt-2 pb-2">
-            <Card.Title className="text-uppercase fw-bold mb-2">
+            <Card.Title className="text-uppercase fw-bold pb-2 border-bottom">
               Penggunaan Uang Kas
             </Card.Title>
-            <hr className="mt-2 mb-2" />
             <Row className="mb-2">
               <Col>
                 <Button
@@ -269,7 +269,7 @@ export default function TransaksiKas() {
             </Table>
           </Container>
         </Card>
-      </div>
+      </Stack>
       <div className="d-flex justify-content-center mt-2">
         <Pagination>
           <Pagination.First onClick={goToFirstPage} />

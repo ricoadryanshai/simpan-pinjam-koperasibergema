@@ -1,6 +1,6 @@
 import React from "react";
 import Table from "react-bootstrap/Table";
-import { Button, Card, Container, Row, Col, Pagination } from "react-bootstrap";
+import { Button, Card, Stack, Row, Col, Pagination } from "react-bootstrap";
 import AnggotaEditModal from "./AnggotaEditModal";
 import { FaSearch } from "react-icons/fa";
 import "../styles/SearchBar.css";
@@ -182,104 +182,104 @@ export default function AnggotaTable() {
   }, [sortedData]);
   return (
     <>
-      <div className="d-flex justify-content-center">
-        <Card className="custom-border-box">
-          <Container fluid>
-            <Card.Title className="fw-bold text-uppercase my-2">
-              Data Nasabah
-            </Card.Title>
+      <Stack className="justify-content-center align-items-center" gap={3}>
+        <Card className="custom-width-card p-2">
+          <Card.Title className="fw-bold text-uppercase my-2">
+            Data Nasabah
+          </Card.Title>
 
-            <hr className="my-2" />
-            <Row className="mb-2">
-              <Col>
-                <Button
-                  className="no-print"
-                  onClick={() => handleModalShow("tambah")}
-                >
-                  Tambah Nasabah
-                  <FontAwesomeIcon icon={faSquarePlus} className="ms-1" />
-                </Button>
-              </Col>
-              <Col>
-                <div className="search-bar-container">
-                  <div className="input-wrapper">
-                    <FaSearch id="search-icon" />
-                    <input
-                      placeholder="Ketik untuk mencari data..."
-                      onChange={handleInputChange}
-                    />
-                  </div>
+          <hr className="my-2" />
+          <Row className="mb-2">
+            <Col>
+              <Button
+                className="no-print"
+                onClick={() => handleModalShow("tambah")}
+              >
+                Tambah Nasabah
+                <FontAwesomeIcon icon={faSquarePlus} className="ms-1" />
+              </Button>
+            </Col>
+            <Col>
+              <div className="search-bar-container">
+                <div className="input-wrapper">
+                  <FaSearch id="search-icon" />
+                  <input
+                    placeholder="Ketik untuk mencari data..."
+                    onChange={handleInputChange}
+                  />
                 </div>
-              </Col>
-            </Row>
-            <Table hover responsive size="sm">
-              <thead className="table-light">
-                <tr className="text-center align-middle table-info">
-                  <th>No.</th>
-                  <th>Kode Anggota</th>
-                  <th>Nama</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentEntries.map((anggota, index) => (
-                  <tr key={anggota.id} className="align-middle text-center">
-                    <td>{startIndex + index}</td>
-                    <td>{highlightSearchText(anggota.kodeAnggota)}</td>
-                    <td className="text-start">
-                      {highlightSearchText(anggota.nama)}
-                    </td>
+              </div>
+            </Col>
+          </Row>
+          <Table hover responsive size="sm">
+            <thead className="table-light">
+              <tr className="text-center align-middle table-info">
+                <th>No.</th>
+                <th>Kode Anggota</th>
+                <th>Nama</th>
+                <th colSpan={3}>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentEntries.map((anggota, index) => (
+                <tr key={anggota.id} className="align-middle text-center">
+                  <td>{startIndex + index}</td>
+                  <td>{highlightSearchText(anggota.kodeAnggota)}</td>
+                  <td className="text-start">
+                    {highlightSearchText(anggota.nama)}
+                  </td>
 
-                    <td className="d-flex justify-content-center flex-gap-1">
-                      <Button
-                        variant="secondary"
-                        onClick={() => handleModalShow("detail", anggota)}
-                      >
-                        <FontAwesomeIcon icon={faCircleInfo} className="me-1" />
-                        Detail
-                      </Button>
-                      <Button
-                        variant="warning"
-                        onClick={() => handleModalShow("edit", anggota)}
-                      >
-                        <FontAwesomeIcon
-                          icon={faPenToSquare}
-                          className="me-1"
-                        />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="danger"
-                        onClick={() => handleDeleteClick(anggota.id)}
-                      >
-                        <FontAwesomeIcon icon={faTrashCan} className="me-1" />
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </Container>
+                  <td>
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleModalShow("detail", anggota)}
+                    >
+                      <FontAwesomeIcon icon={faCircleInfo} className="me-1" />
+                      Detail
+                    </Button>
+                  </td>
+                  <td>
+                    <Button
+                      variant="warning"
+                      onClick={() => handleModalShow("edit", anggota)}
+                    >
+                      <FontAwesomeIcon icon={faPenToSquare} className="me-1" />
+                      Edit
+                    </Button>
+                  </td>
+                  <td>
+                    <Button
+                      variant="danger"
+                      onClick={() => handleDeleteClick(anggota.id)}
+                    >
+                      <FontAwesomeIcon icon={faTrashCan} className="me-1" />
+                      Delete
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
         </Card>
-      </div>
-      <Pagination className="mt-2 justify-content-center">
-        <Pagination.First onClick={goToFirstPage} />
-        <Pagination.Prev onClick={goToPrevPage} />
-        {[...Array(Math.ceil(anggotaData.length / ITEMS_PER_PAGE))].map(
-          (_, index) => (
-            <Pagination.Item
-              key={index + 1}
-              active={index + 1 === activePage}
-              onClick={() => handlePageChange(index + 1)}
-            >
-              {index + 1}
-            </Pagination.Item>
-          )
-        )}
-        <Pagination.Next onClick={goToNextPage} />
-        <Pagination.Last onClick={goToLastPage} />
-      </Pagination>
+
+        <Pagination>
+          <Pagination.First onClick={goToFirstPage} />
+          <Pagination.Prev onClick={goToPrevPage} />
+          {[...Array(Math.ceil(anggotaData.length / ITEMS_PER_PAGE))].map(
+            (_, index) => (
+              <Pagination.Item
+                key={index + 1}
+                active={index + 1 === activePage}
+                onClick={() => handlePageChange(index + 1)}
+              >
+                {index + 1}
+              </Pagination.Item>
+            )
+          )}
+          <Pagination.Next onClick={goToNextPage} />
+          <Pagination.Last onClick={goToLastPage} />
+        </Pagination>
+      </Stack>
 
       <AnggotaTambahModal
         show={showTambah}

@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const API_ENDPOINT = "http://localhost:3023";
+import { API_ENDPOINT } from "./server_port";
 
 // START >>> API ENDPOINT BERANDA
 
@@ -337,9 +336,9 @@ export const getLapAngsuranByYear = async (year) => {
   }
 };
 
-export const getLapSHU = async () => {
+export const getLapKas = async () => {
   try {
-    const response = await axios.get(`${API_ENDPOINT}/get/lapSHU`);
+    const response = await axios.get(`${API_ENDPOINT}/get/lapKas`);
     return response.data;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -347,9 +346,9 @@ export const getLapSHU = async () => {
   }
 };
 
-export const getLapSHUByYear = async (year) => {
+export const getLapKasByYear = async (year) => {
   try {
-    const response = await axios.get(`${API_ENDPOINT}/get/lapSHU/${year}`);
+    const response = await axios.get(`${API_ENDPOINT}/get/lapKas/${year}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -366,7 +365,7 @@ export const getPengaturan = async () => {
     const response = await axios.get(`${API_ENDPOINT}/get/pengaturan`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Fetching Error From Client-side:", error);
     throw error;
   }
 };

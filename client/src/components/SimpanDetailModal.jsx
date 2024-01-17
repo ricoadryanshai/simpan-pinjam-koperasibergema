@@ -8,10 +8,10 @@ import { useReactToPrint } from "react-to-print";
 import { useDownloadExcel } from "react-export-table-to-excel";
 import { SimpanPrintOut } from "./SimpanPrintOut";
 import SimpanExport from "./SimpanExport";
+import { getSimpanAnggotaById } from "../utils/api";
 
 export default function SimpanDetailModal(props) {
-  const { show, onClose, rowData, modalData, clearModalData, fetchData } =
-    props;
+  const { show, onClose, rowData, clearModalData, fetchData } = props;
 
   const [, /* headerData */ setHeaderData] = React.useState({
     kodeAnggota: "",
@@ -20,12 +20,30 @@ export default function SimpanDetailModal(props) {
     totalSaldo: "",
   });
   const [input, setInput] = React.useState("");
+  const [modalData, setModalData] = React.useState([]);
 
+  const fetchDetailData = async () => {
+    try {
+      const data = await getSimpanAnggotaById(rowData.kodeAnggota);
+      setModalData(data);
+    } catch (error) {
+      console.error("Error fetching detailed data:", error);
+    }
+  };
   const handleClose = () => {
     onClose();
     clearModalData();
     fetchData();
   };
+
+  // const handleDeleteClick = async (id) => {
+  //   try {
+  //     await deleteSimpan(rowData.kodeAnggota, id);
+  //     fetchDetailData();
+  //   } catch (error) {
+  //     console.log("Deleting Error From Client-side:", error);
+  //   }
+  // };
 
   const componentRef = React.useRef();
 
@@ -44,6 +62,13 @@ export default function SimpanDetailModal(props) {
       });
     }
   }, [rowData]);
+
+  React.useEffect(() => {
+    if (show) {
+      fetchDetailData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show]);
 
   const kodeRowData = rowData?.kodeAnggota || "-";
   const namaRowData = rowData?.nama || "-";
@@ -64,7 +89,6 @@ export default function SimpanDetailModal(props) {
         show={show}
         onHide={handleClose}
         backdrop="static"
-        keyboard={false}
         size="lg"
         scrollable={true}
       >
@@ -89,19 +113,25 @@ export default function SimpanDetailModal(props) {
           <Row>
             <Col className="fw-bold">Tanggal Bergabung</Col>
             <Col>{formatDate(tanggalRowData)}</Col>
-            <Col />
-            <Col className="d-flex justify-content-end gap-3">
-              <FontAwesomeIcon
-                icon={faFileExport}
-                onClick={onDownload}
-                className="custom-icon-pointer"
-              />
-              <FontAwesomeIcon
-                icon={faPrint}
-                onClick={handlePrint}
-                className="custom-icon-pointer"
-              />
-            </Col>
+            <Col className="fw-bold">Bisa di Ambil Ketika Keluar</Col>
+            <Col>{formatRupiah(saldoRowData - saldoPenarikan)}</Col>
+            <Row>
+              <Col />
+              <Col />
+              <Col />
+              <Col className="d-flex justify-content-end gap-3">
+                <FontAwesomeIcon
+                  icon={faFileExport}
+                  onClick={onDownload}
+                  className="custom-icon-pointer"
+                />
+                <FontAwesomeIcon
+                  icon={faPrint}
+                  onClick={handlePrint}
+                  className="custom-icon-pointer"
+                />
+              </Col>
+            </Row>
           </Row>
           <hr className="my-2 border-2" />
           <Row className="mb-2">
@@ -125,7 +155,7 @@ export default function SimpanDetailModal(props) {
                 <th>Tanggal Transaksi</th>
                 <th>Jenis Transaksi</th>
                 <th className="text-start">Nominal</th>
-                {/* <th>Bukti Transfer</th> */}
+                {/* <th>Aksi</th> */}
               </tr>
             </thead>
             <tbody>
@@ -160,15 +190,11 @@ export default function SimpanDetailModal(props) {
                       {formatRupiah(transaction.saldo)}
                     </td>
                     {/* <td>
-                      {transaction.uploadFile ? (
-                        <img
-                          src={`${IMG_SERVER_PORT}/${transaction.uploadFile}`}
-                          alt="Bukti Transfer"
-                          style={{ maxWidth: "50px", cursor: "pointer" }}
-                        />
-                      ) : (
-                        <span>Tidak ada bukti transfer</span>
-                      )}
+                      <FontAwesomeIcon
+                        icon={faTrashCan}
+                        className="mx-1 custom-icon-pointer custom-color"
+                        onClick={() => handleDeleteClick(transaction.id)}
+                      />
                     </td> */}
                   </tr>
                 ))}

@@ -39,6 +39,9 @@ body {
 .custom-navbar-color {
   background-color: #a11010;
 }
+.custom-color {
+  color: red;
+}
 .custom-icon-pointer {
   cursor: pointer;
 }

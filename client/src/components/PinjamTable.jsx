@@ -7,6 +7,7 @@ import {
   Pagination,
   Row,
   Table,
+  Stack,
 } from "react-bootstrap";
 import { PinjamDetailModal } from "./PinjamDetailModal";
 import { FaSearch } from "react-icons/fa";
@@ -197,8 +198,8 @@ export default function PinjamTable() {
   }, []);
   return (
     <>
-      <div className="d-flex justify-content-center">
-        <Card className="custom-border-box">
+      <Stack className="justify-content-center align-items-center" gap={3}>
+        <Card className="custom-width-card">
           <Container className="py-2">
             <Card.Title className="fw-bold text-uppercase mb-2">
               Data Pinjaman Anggota
@@ -274,8 +275,7 @@ export default function PinjamTable() {
             </Table>
           </Container>
         </Card>
-      </div>
-      <div className="d-flex justify-content-center mt-2">
+
         <Pagination>
           <Pagination.First onClick={goToFirstPage} />
           <Pagination.Prev onClick={goToPrevPage} />
@@ -293,7 +293,7 @@ export default function PinjamTable() {
           <Pagination.Next onClick={goToNextPage} />
           <Pagination.Last onClick={goToLastPage} />
         </Pagination>
-      </div>
+      </Stack>
 
       <PinjamDetailModal
         show={showDetail}

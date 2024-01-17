@@ -10,7 +10,15 @@ const month = String(today.getMonth() + 1).padStart(2, "0");
 const year = today.getFullYear();
 
 export default function SimpanAmbilModal(props) {
-  const { show, onClose, rowData, clearModalData, fetchData } = props;
+  const {
+    show,
+    onClose,
+    rowData,
+    clearModalData,
+    fetchData,
+    saldoKas,
+    fetchSaldoKas,
+  } = props;
 
   const [inputNominal, setInputNominal] = React.useState("");
 
@@ -22,10 +30,6 @@ export default function SimpanAmbilModal(props) {
     setInputNominal(formattedValue);
   };
 
-  // const handleFileChange = (event) => {
-  //   setSelectedFile(event.target.files[0]);
-  // };
-
   const handleClose = () => {
     onClose();
     clearModalData();
@@ -34,21 +38,23 @@ export default function SimpanAmbilModal(props) {
   };
 
   const handleSubmit = async () => {
+    if (!inputNominal || isNaN(inputNominal) || inputNominal < 0) {
+      alert("Invalid inputNominal");
+      document.getElementById("inputNominal").focus();
+      return;
+    }
+    if (inputNominal > saldoKas.saldoKas) {
+      alert("Jumlah ambil melebihi saldo koperasi saat ini.");
+      document.getElementById("inputNominal").focus();
+      return;
+    }
+    if (inputNominal > rowData.bisaAmbil) {
+      alert("Jumlah ambil melebihi nominal yang bisa di ambil.");
+      document.getElementById("inputNominal").focus();
+      return;
+    }
+
     try {
-      // Validasi inputNominal
-      if (inputNominal === "" || isNaN(inputNominal) || inputNominal < 0) {
-        alert("Invalid inputNominal");
-        console.error("Invalid inputNominal");
-        return;
-      }
-
-      // Validasi inputNominal tidak lebih besar dari bisaAmbil
-      if (inputNominal > rowData.bisaAmbil) {
-        alert("Jumlah ambil anda melebihi saldo anda");
-        console.error("InputNominal is greater than bisaAmbil");
-        return;
-      }
-
       await tambahSimpan(
         rowData.kodeAnggota,
         document.getElementById("inputTanggalTransaksi").value ||
@@ -60,10 +66,12 @@ export default function SimpanAmbilModal(props) {
 
       onClose();
       fetchData();
+      fetchSaldoKas();
       setInputNominal("");
       clearModalData();
+      // console.log(saldoKas.saldoKas);
     } catch (error) {
-      console.error("Error posting data:", error);
+      console.error("Ambil Simpanan Error From Client-side:", error);
     }
   };
 
@@ -118,22 +126,6 @@ export default function SimpanAmbilModal(props) {
             <Form.Group
               as={Row}
               className="mb-2"
-              controlId="formPlaintextTotalSaldo"
-            >
-              <Form.Label column sm="4">
-                Total Saldo
-              </Form.Label>
-              <Col>
-                <Form.Control
-                  plaintext
-                  readOnly
-                  defaultValue={formatRupiah(rowData?.bisaAmbil || 0)}
-                />
-              </Col>
-            </Form.Group>
-            <Form.Group
-              as={Row}
-              className="mb-2"
               controlId="formPlaintextJenisSimpanan"
             >
               <Form.Label column sm="4">
@@ -144,6 +136,30 @@ export default function SimpanAmbilModal(props) {
                   plaintext
                   readOnly
                   defaultValue="Ambil Simpanan"
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-2" controlId="saldoKas">
+              <Form.Label column sm="4">
+                Saldo Kas
+              </Form.Label>
+              <Col>
+                <Form.Control
+                  plaintext
+                  readOnly
+                  defaultValue={formatRupiah(saldoKas.saldoKas)}
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-2" controlId="bisaAmbil">
+              <Form.Label column sm="4">
+                Bisa Diambil
+              </Form.Label>
+              <Col>
+                <Form.Control
+                  plaintext
+                  readOnly
+                  defaultValue={formatRupiah(rowData?.bisaAmbil || 0)}
                 />
               </Col>
             </Form.Group>
