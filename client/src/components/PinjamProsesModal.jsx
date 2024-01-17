@@ -16,8 +16,7 @@ export const PinjamProsesModal = (props) => {
   const nominalTransaksi = parseFloat(savedData?.nominalTransaksi || 0);
   const angsuran = parseFloat(savedData?.angsuran || 1);
 
-  const bungaAngsuran =
-    fetchPengaturan.length > 0 ? fetchPengaturan[0]?.bungaAngsuran || 0 : 0;
+  const bungaAngsuran = fetchPengaturan.bungaAngsuran || 0;
   const angsuranPokok = nominalTransaksi / angsuran;
   const angsuranJasa = nominalTransaksi * (bungaAngsuran / 100);
   const angsuranPerBulan = angsuranPokok + angsuranJasa;

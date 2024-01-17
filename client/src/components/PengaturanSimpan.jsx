@@ -1,21 +1,10 @@
 import React from "react";
-import { Card, Form, Button, Row, Col } from "react-bootstrap";
+import { Card, Form, Button, Row, Col, Stack } from "react-bootstrap";
 import { editPengaturan, getPengaturan } from "../utils/api";
 import { formatNumber } from "../utils/format";
-import { useNavigate } from "react-router-dom";
 
-export const PengaturanSimpan = () => {
+const PengaturanSimpan = () => {
   const [fetchData, setFetchData] = React.useState([]);
-
-  const simpananPokok =
-    fetchData.length > 0 ? fetchData[0]?.simpananPokok || 0 : 0;
-  const simpananWajib =
-    fetchData.length > 0 ? fetchData[0]?.simpananWajib || 0 : 0;
-
-  const bungaAngsuran =
-    fetchData.length > 0 ? fetchData[0]?.bungaAngsuran || 0 : 0;
-
-  const navigate = useNavigate();
 
   const fetchingData = async () => {
     try {
@@ -29,111 +18,95 @@ export const PengaturanSimpan = () => {
     fetchingData();
   }, []);
 
-  const handleResetClick = async () => {};
+  const handleResetClick = async () => {
+    fetchingData();
+  };
 
   const handleSubmitClick = async () => {
+    const simpananPokok = document.getElementById("simpananPokok").value;
+    const simpananWajib = document.getElementById("simpananWajib").value;
+    const bungaAngsuran = document.getElementById("bungaAngsuran").value;
+
     try {
       const cleanValue = (value) => {
         return value.replace(/\D/g, "");
       };
 
       const updatedPengaturan = {
-        simpananPokok: cleanValue(
-          document.getElementById("simpananPokok")?.value || ""
-        ),
-        simpananWajib: cleanValue(
-          document.getElementById("simpananWajib")?.value || ""
-        ),
-        bungaAngsuran: cleanValue(
-          document.getElementById("bungaAngsuran")?.value || ""
-        ),
+        simpananPokok: cleanValue(simpananPokok),
+        simpananWajib: cleanValue(simpananWajib),
+        bungaAngsuran: bungaAngsuran,
       };
 
       await editPengaturan(updatedPengaturan);
-      navigate("/");
+      alert("Pengaturan berhasil di update.");
+      fetchingData();
     } catch (error) {
-      console.log("Error editing data pengaturan: ", error);
+      console.log("Update Error From Client-side Handle: ", error);
     }
   };
   return (
     <>
-      <div className="d-flex justify-content-center">
-        <Card className="custom-width">
-          <Card.Header>
-            <Card.Title>Pengaturan Simpanan</Card.Title>
-          </Card.Header>
+      <Stack className="justify-content-center align-items-center">
+        <Card className="custom-width-card p-2">
+          <Card.Title className="border-bottom pb-2 border-2 text-uppercase fw-bold">
+            Pengaturan Simpanan
+          </Card.Title>
           <Card.Body>
-            <Form>
-              <Row className="mb-3">
-                <Col>
-                  <Form.Label>Simpanan Pokok</Form.Label>
-                </Col>
-                <Col>
-                  <Form.Control
-                    type="text"
-                    name="simpananPokok"
-                    id="simpananPokok"
-                    value={formatNumber(simpananPokok)}
-                    onChange={(e) => {
-                      let value = e.target.value.replace(/[^0-9-]/g, "");
-                      setFetchData([{ ...fetchData[0], simpananPokok: value }]);
-                    }}
-                    required
-                  />
-                </Col>
-              </Row>
-              <Row className="mb-3">
-                <Col>
-                  <Form.Label>Simpanan Wajib</Form.Label>
-                </Col>
-                <Col>
-                  <Form.Control
-                    type="text"
-                    name="simpananWajib"
-                    id="simpananWajib"
-                    value={formatNumber(simpananWajib)}
-                    onChange={(e) => {
-                      let value = e.target.value.replace(/[^0-9-]/g, "");
-                      setFetchData([{ ...fetchData[0], simpananWajib: value }]);
-                    }}
-                    required
-                  />
-                </Col>
-              </Row>
-            </Form>
-          </Card.Body>
-          <Card.Header>
-            <Card.Title>Pengaturan Bunga</Card.Title>
-          </Card.Header>
-          <Card.Body>
-            <Row className="mb-3">
-              <Col>
-                <Form.Label>Bunga Angsuran</Form.Label>
-              </Col>
+            <Form.Group as={Row} controlId="simpananPokok" className="mb-3">
+              <Form.Label as={Col}>Simpanan Pokok</Form.Label>
               <Col>
                 <Form.Control
-                  type="number"
-                  name="bungaAngsuran"
-                  id="bungaAngsuran"
-                  value={formatNumber(bungaAngsuran)}
+                  type="text"
+                  value={formatNumber(fetchData.simpananPokok)}
                   onChange={(e) => {
                     let value = e.target.value.replace(/[^0-9-]/g, "");
-                    value = value % 12 === 0 ? "12" : (value % 12).toString();
-                    setFetchData([{ ...fetchData[0], bungaAngsuran: value }]);
+                    setFetchData([{ ...fetchData[0], simpananPokok: value }]);
                   }}
                   required
                 />
               </Col>
-            </Row>
+            </Form.Group>
+            <Form.Group as={Row} controlId="simpananWajib">
+              <Form.Label as={Col}>Simpanan Wajib</Form.Label>
+              <Col>
+                <Form.Control
+                  type="text"
+                  value={formatNumber(fetchData.simpananWajib)}
+                  onChange={(e) => {
+                    let value = e.target.value.replace(/[^0-9-]/g, "");
+                    setFetchData([{ ...fetchData[0], simpananWajib: value }]);
+                  }}
+                  required
+                />
+              </Col>
+            </Form.Group>
+          </Card.Body>
+          <Card.Title className="border-bottom border-top py-2 border-2 text-uppercase fw-bold">
+            Pengaturan Angsuran
+          </Card.Title>
+          <Card.Body>
+            <Form.Group as={Row} controlId="bungaAngsuran">
+              <Form.Label as={Col}>Bunga Angsuran Jasa</Form.Label>
+              <Col>
+                <Form.Control
+                  type="number"
+                  defaultValue={fetchData.bungaAngsuran}
+                  required
+                />
+              </Col>
+            </Form.Group>
           </Card.Body>
           <Card.Footer className="d-flex flex-gap-1 justify-content-end">
-            <Button variant={"secondary"} onClick={() => handleResetClick()}>
+            <Button variant="secondary" onClick={() => handleResetClick()}>
               Reset
             </Button>
             <Button onClick={() => handleSubmitClick()}>Submit</Button>
           </Card.Footer>
         </Card>
-      </div>
+      </Stack>
     </>
   );
 };
+
+export default PengaturanSimpan;

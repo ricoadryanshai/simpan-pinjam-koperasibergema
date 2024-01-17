@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, Table, Stack, Form } from "react-bootstrap";
-import { getLapSimpanan, getLapSimpananByYear } from "../utils/api";
+import { getLapSimpanan, getLapSimpananByYear, getSHU } from "../utils/api";
 import { formatRupiah } from "../utils/format";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileExport, faPrint } from "@fortawesome/free-solid-svg-icons";
@@ -9,17 +9,21 @@ import { useDownloadExcel } from "react-export-table-to-excel";
 import { LaporanSimpananPrintOut } from "./LaporanSimpananPrintOut";
 import LaporanSimpananExport from "./LaporanSimpananExport";
 
-export const LaporanSimpanan = ({ objectSHU, fetchLapSHU }) => {
+const LaporanSimpanan = () => {
+  const [keanggotaan, setKeanggotaan] = React.useState([]);
   const [lapSimpanan, setLapSimpanan] = React.useState([]);
   const [lapByYear, setLapByYear] = React.useState([]);
   const [selectedYear, setSelectedYear] = React.useState("");
   const [uniqueYears, setUniqueYears] = React.useState([]);
 
-  const componentRef = React.useRef();
-
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-  });
+  const fetchPengaturanPersen = async () => {
+    try {
+      const data = await getSHU();
+      setKeanggotaan(data);
+    } catch (error) {
+      console.error("Fetching Keanggotaan Error From Client-side:", error);
+    }
+  };
 
   const fetchedData = async () => {
     try {
@@ -40,14 +44,18 @@ export const LaporanSimpanan = ({ objectSHU, fetchLapSHU }) => {
   };
 
   React.useEffect(() => {
-    if (selectedYear !== "") {
-      fetchedDataByYear(selectedYear);
-    }
-  }, [selectedYear]);
+    fetchPengaturanPersen();
+  }, []);
 
   React.useEffect(() => {
     fetchedData();
   }, []);
+
+  React.useEffect(() => {
+    if (selectedYear !== "") {
+      fetchedDataByYear(selectedYear);
+    }
+  }, [selectedYear]);
 
   React.useEffect(() => {
     if (lapSimpanan.length > 0) {
@@ -60,12 +68,6 @@ export const LaporanSimpanan = ({ objectSHU, fetchLapSHU }) => {
     }
   }, [lapSimpanan]);
 
-  React.useEffect(() => {
-    if (selectedYear !== "") {
-      fetchLapSHU(selectedYear);
-    }
-  }, [fetchLapSHU, selectedYear]);
-
   const handleYearChange = (e) => {
     setSelectedYear(e.target.value);
   };
@@ -76,11 +78,11 @@ export const LaporanSimpanan = ({ objectSHU, fetchLapSHU }) => {
     return total + simpanan;
   }, 0);
 
-  const totalSHU =
-    objectSHU?.bagianInvestor ||
-    null + objectSHU?.bagianAdministrasi ||
-    null + objectSHU?.bagianPengurus ||
-    null;
+  /* const totalSHU =
+        objectSHU?.bagianInvestor ||
+        null + objectSHU?.bagianAdministrasi ||
+        null + objectSHU?.bagianPengurus ||
+        null; */
 
   const jumlahPenarikan = lapByYear.reduce((total, laporan) => {
     const penarikan = laporan.penarikan;
@@ -88,12 +90,16 @@ export const LaporanSimpanan = ({ objectSHU, fetchLapSHU }) => {
   }, 0);
 
   const totalSaldoAllRows = lapByYear.reduce(() => {
-    const saldo = jumlahSimpananAllRows + totalSHU - jumlahPenarikan;
+    const saldo = jumlahSimpananAllRows /* + totalSHU */ - jumlahPenarikan;
     return saldo;
   }, 0);
 
-  const tableRef = React.useRef(null);
+  const componentRef = React.useRef();
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
 
+  const tableRef = React.useRef(null);
   const { onDownload } = useDownloadExcel({
     currentTableRef: tableRef.current,
     filename: `Laporan_Simpanan_Tahun_${selectedYear ? selectedYear : "YYYY"}`,
@@ -145,7 +151,8 @@ export const LaporanSimpanan = ({ objectSHU, fetchLapSHU }) => {
               <tr>
                 <th className="text-center">No.</th>
                 <th className="text-center">Kode Anggota</th>
-                <th className="text-center">Nama</th>
+                <th>Nama</th>
+                <th className="text-center">Jenis Anggota</th>
                 <th>Simpanan Pokok</th>
                 <th>Simpanan Wajib</th>
                 <th>Simpanan Sukarela</th>
@@ -162,28 +169,7 @@ export const LaporanSimpanan = ({ objectSHU, fetchLapSHU }) => {
                   laporan.simpananWajib +
                   laporan.simpananSukarela;
 
-                let sisaHasilUsaha = null;
-
-                switch (laporan.jenisAnggota) {
-                  case "Investor":
-                    sisaHasilUsaha =
-                      (jumlahSimpanan / jumlahSimpananAllRows) *
-                      objectSHU.bagianInvestor;
-                    break;
-                  case "Administrasi":
-                    sisaHasilUsaha =
-                      (jumlahSimpanan / jumlahSimpananAllRows) *
-                      objectSHU.bagianAdministrasi;
-                    break;
-                  case "Pengurus":
-                    sisaHasilUsaha =
-                      (jumlahSimpanan / jumlahSimpananAllRows) *
-                      objectSHU.bagianPengurus;
-                    break;
-                  default:
-                    sisaHasilUsaha = null;
-                    break;
-                }
+                let sisaHasilUsaha = laporan.jenisAnggota;
 
                 const totalSaldo =
                   jumlahSimpanan + sisaHasilUsaha - laporan.penarikan;
@@ -192,6 +178,7 @@ export const LaporanSimpanan = ({ objectSHU, fetchLapSHU }) => {
                     <td className="text-center">{index + 1}</td>
                     <td className="text-center">{laporan.kodeAnggota}</td>
                     <td>{laporan.nama}</td>
+                    <td className="text-center">{laporan.jenisAnggota}</td>
                     <td>{formatRupiah(laporan.simpananPokok)}</td>
                     <td>{formatRupiah(laporan.simpananWajib)}</td>
                     <td>{formatRupiah(laporan.simpananSukarela)}</td>
@@ -211,7 +198,7 @@ export const LaporanSimpanan = ({ objectSHU, fetchLapSHU }) => {
                 <td className="fw-bold">
                   {formatRupiah(jumlahSimpananAllRows)}
                 </td>
-                <td className="fw-bold">{formatRupiah(totalSHU)}</td>
+                <td className="fw-bold">{formatRupiah(/* totalSHU */)}</td>
                 <td className="fw-bold">{formatRupiah(jumlahPenarikan)}</td>
                 <td className="fw-bold">{formatRupiah(totalSaldoAllRows)}</td>
               </tr>
@@ -220,7 +207,7 @@ export const LaporanSimpanan = ({ objectSHU, fetchLapSHU }) => {
         </Stack>
       </Stack>
 
-      <LaporanSimpananPrintOut
+      {/* <LaporanSimpananPrintOut
         componentReference={componentRef}
         lapByYear={lapByYear}
         jumlahSimpananAllRows={jumlahSimpananAllRows}
@@ -234,7 +221,9 @@ export const LaporanSimpanan = ({ objectSHU, fetchLapSHU }) => {
         jumlahSimpananAllRows={jumlahSimpananAllRows}
         selectedYear={selectedYear}
         totalSaldoAllRows={totalSaldoAllRows}
-      />
+      /> */}
     </>
   );
 };
+
+export default LaporanSimpanan;

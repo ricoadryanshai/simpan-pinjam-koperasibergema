@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import { Button, Form, Modal } from "react-bootstrap";
-import { getKas, tambahTransaksi } from "../utils/api";
+import { tambahTransaksi } from "../utils/api";
 import { formatNumber, formatRupiah } from "../utils/format";
 import { handleInputChange } from "../utils/handle";
 
@@ -11,10 +11,9 @@ const month = String(today.getMonth() + 1).padStart(2, "0");
 const year = today.getFullYear();
 
 export const TransaksiTambahModal = (props) => {
-  const { show, onHide } = props;
+  const { show, onHide, saldoKas } = props;
 
   const [input, setInput] = React.useState("");
-  const [saldoKas, setSaldoKas] = React.useState({});
 
   const handleSubmitClick = async () => {
     const newTransaki = {
@@ -27,10 +26,30 @@ export const TransaksiTambahModal = (props) => {
     };
 
     try {
-      await tambahTransaksi(newTransaki);
-      console.log("Successfully submiting data.");
-      onHide();
-      setInput("");
+      if (newTransaki) {
+        if (
+          document.getElementById("jenisTransaksi").value === "Transaksi Keluar"
+        ) {
+          if (input > saldoKas.saldoKas) {
+            alert(
+              `Nominal pengeluaran melebihi saldo koperasi saat ini: ${formatRupiah(
+                saldoKas.saldoKas
+              )}`
+            );
+            document.getElementById("nominalTransaksi").focus();
+          } else {
+            await tambahTransaksi(newTransaki);
+            console.log("Successfully submiting data.");
+            onHide();
+            setInput("");
+          }
+        } else {
+          await tambahTransaksi(newTransaki);
+          console.log("Successfully submiting data.");
+          onHide();
+          setInput("");
+        }
+      }
     } catch (error) {
       console.log("Error submiting data transaksi: ", error);
     }
@@ -51,20 +70,6 @@ export const TransaksiTambahModal = (props) => {
 
   React.useEffect(() => {
     yourFormRef.current && yourFormRef.current.focus();
-  }, [show]);
-
-  React.useEffect(() => {
-    if (show) {
-      const fetchSaldoKas = async () => {
-        try {
-          const data = await getKas();
-          setSaldoKas(data);
-        } catch (error) {
-          console.log("Error fetching saldo kas: ", error);
-        }
-      };
-      fetchSaldoKas();
-    }
   }, [show]);
   return (
     <Modal
@@ -101,7 +106,7 @@ export const TransaksiTambahModal = (props) => {
             </Form.Select>
           </Form.Group>
 
-          <Form.Group className="mb-2">
+          <Form.Group className="mb-2" controlId="saldoKas">
             <Form.Label>Saldo Kas</Form.Label>
             <Form.Control
               type="text"

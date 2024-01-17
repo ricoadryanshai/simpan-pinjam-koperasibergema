@@ -7,6 +7,7 @@ import {
   Pagination,
   Row,
   Col,
+  Stack,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -18,7 +19,7 @@ import { FaSearch } from "react-icons/fa";
 import { TransaksiTambahModal } from "./TransaksiTambahModal";
 import { TransaksiEditModal } from "./TransaksiEditModal";
 import { formatDate, formatRupiah } from "../utils/format";
-import { deleteTransaksi, getTransaksi } from "../utils/api";
+import { deleteTransaksi, getKas, getTransaksi } from "../utils/api";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -33,6 +34,7 @@ export default function TransaksiKas() {
     key: "nama",
     direction: "asc",
   });
+  const [saldoKas, setSaldoKas] = React.useState({});
 
   const fetchedData = async () => {
     try {
@@ -40,6 +42,15 @@ export default function TransaksiKas() {
       setTransaksi(data);
     } catch (error) {
       console.log("Error fetching data transaksi: ", error);
+    }
+  };
+
+  const fetchSaldoKas = async () => {
+    try {
+      const data = await getKas();
+      setSaldoKas(data);
+    } catch (error) {
+      console.log("Error fetching saldo kas: ", error);
     }
   };
 
@@ -62,10 +73,12 @@ export default function TransaksiKas() {
       case "tambah":
         setShowTambah(false);
         fetchedData();
+        fetchSaldoKas();
         break;
       case "edit":
         setShowEdit(false);
         fetchedData();
+        fetchSaldoKas();
         break;
       default:
         break;
@@ -76,6 +89,7 @@ export default function TransaksiKas() {
     try {
       await deleteTransaksi(id);
       fetchedData();
+      fetchSaldoKas();
     } catch (error) {
       console.log("Error deleting data transaksi: ", error);
     }
@@ -167,15 +181,18 @@ export default function TransaksiKas() {
       setFilteredData(sortedData);
     }
   }, [sortedData]);
+
+  React.useEffect(() => {
+    fetchSaldoKas();
+  }, []);
   return (
     <>
-      <div className="d-flex justify-content-center">
-        <Card className="custom-border-box">
+      <Stack className="justify-content-center align-items-center">
+        <Card className="custom-width-card">
           <Container className="pt-2 pb-2">
-            <Card.Title className="text-uppercase fw-bold mb-2">
+            <Card.Title className="text-uppercase fw-bold pb-2 border-bottom">
               Penggunaan Uang Kas
             </Card.Title>
-            <hr className="mt-2 mb-2" />
             <Row className="mb-2">
               <Col>
                 <Button
@@ -252,7 +269,7 @@ export default function TransaksiKas() {
             </Table>
           </Container>
         </Card>
-      </div>
+      </Stack>
       <div className="d-flex justify-content-center mt-2">
         <Pagination>
           <Pagination.First onClick={goToFirstPage} />
@@ -276,12 +293,14 @@ export default function TransaksiKas() {
       <TransaksiTambahModal
         show={showTambah}
         onHide={() => handleModalClose("tambah")}
+        saldoKas={saldoKas}
       />
 
       <TransaksiEditModal
         show={showEdit}
         onHide={() => handleModalClose("edit")}
         selectedRow={selectedRow}
+        saldoKas={saldoKas}
       />
     </>
   );

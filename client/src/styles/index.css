@@ -21,7 +21,7 @@ body {
   height: 200px;
 }
 .custom-width-card {
-  min-width: 1200px;
+  max-width: 1200px;
 }
 .custom-border-box {
   min-width: 800px;
@@ -38,6 +38,9 @@ body {
 }
 .custom-navbar-color {
   background-color: #a11010;
+}
+.custom-color {
+  color: red;
 }
 .custom-icon-pointer {
   cursor: pointer;

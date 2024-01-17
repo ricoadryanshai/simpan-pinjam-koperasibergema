@@ -51,7 +51,6 @@ export const PinjamDetailModal = (props) => {
         onHide={onHide}
         size="xl"
         backdrop="static"
-        keyboard={false}
         scrollable={true}
       >
         <Modal.Header closeButton className="text-uppercase fw-bold">

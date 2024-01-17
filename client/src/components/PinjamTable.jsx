@@ -7,6 +7,7 @@ import {
   Pagination,
   Row,
   Table,
+  Stack,
 } from "react-bootstrap";
 import { PinjamDetailModal } from "./PinjamDetailModal";
 import { FaSearch } from "react-icons/fa";
@@ -14,7 +15,7 @@ import "../styles/SearchBar.css";
 import { formatRupiah } from "../utils/format";
 import { PinjamTambahModal } from "./PinjamTambahModal";
 import { PinjamBayarModal } from "./PinjamBayarModal";
-import { getPinjamAnggota } from "../utils/api";
+import { getKas, getPinjamAnggota } from "../utils/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleInfo,
@@ -36,6 +37,24 @@ export default function PinjamTable() {
     key: "nama",
     direction: "asc",
   });
+  const [saldoKas, setSaldoKas] = React.useState({});
+
+  const fetchedData = async () => {
+    try {
+      setPinjamData(await getPinjamAnggota());
+    } catch (error) {
+      console.log("Error fetching data pinjam :", error);
+    }
+  };
+
+  const fetchSaldoKas = async () => {
+    try {
+      const data = await getKas();
+      setSaldoKas(data);
+    } catch (error) {
+      console.log("Error fetching saldo kas: ", error);
+    }
+  };
 
   const handleModalShow = async (modalType, pinjam) => {
     switch (modalType) {
@@ -61,25 +80,20 @@ export default function PinjamTable() {
       case "detail":
         setShowDetail(false);
         fetchedData();
+        fetchSaldoKas();
         break;
       case "pinjam":
         setShowPinjam(false);
         fetchedData();
+        fetchSaldoKas();
         break;
       case "bayar":
         setShowBayar(false);
         fetchedData();
+        fetchSaldoKas();
         break;
       default:
         break;
-    }
-  };
-
-  const fetchedData = async () => {
-    try {
-      setPinjamData(await getPinjamAnggota());
-    } catch (error) {
-      console.log("Error fetching data pinjam :", error);
     }
   };
 
@@ -178,10 +192,14 @@ export default function PinjamTable() {
       setFilteredData(sortedData);
     }
   }, [sortedData]);
+
+  React.useEffect(() => {
+    fetchSaldoKas();
+  }, []);
   return (
     <>
-      <div className="d-flex justify-content-center">
-        <Card className="custom-border-box">
+      <Stack className="justify-content-center align-items-center" gap={3}>
+        <Card className="custom-width-card">
           <Container className="py-2">
             <Card.Title className="fw-bold text-uppercase mb-2">
               Data Pinjaman Anggota
@@ -257,8 +275,7 @@ export default function PinjamTable() {
             </Table>
           </Container>
         </Card>
-      </div>
-      <div className="d-flex justify-content-center mt-2">
+
         <Pagination>
           <Pagination.First onClick={goToFirstPage} />
           <Pagination.Prev onClick={goToPrevPage} />
@@ -276,7 +293,7 @@ export default function PinjamTable() {
           <Pagination.Next onClick={goToNextPage} />
           <Pagination.Last onClick={goToLastPage} />
         </Pagination>
-      </div>
+      </Stack>
 
       <PinjamDetailModal
         show={showDetail}
@@ -288,6 +305,7 @@ export default function PinjamTable() {
         onHide={() => handleModalClose("pinjam")}
         selectedRow={selectedRow}
         setShowPinjam={setShowPinjam}
+        saldoKas={saldoKas}
       />
       <PinjamBayarModal
         show={showBayar}
