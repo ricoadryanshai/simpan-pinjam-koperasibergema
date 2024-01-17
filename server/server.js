@@ -69,11 +69,10 @@ function connectToDatabase() {
     if (err) {
       console.error("Database connection failed: " + err);
 
-      // Retry the connection after a delay (e.g., 3 seconds)
       setTimeout(() => {
         console.log("Retrying database connection...");
         connectToDatabase();
-      }, 3000); // Adjust the delay as needed
+      }, 3000);
       return;
     }
 
@@ -93,6 +92,32 @@ function setupApiEndpoints(db) {
           reject(err);
         } else {
           resolve(results[0]);
+        }
+      });
+    });
+  }
+
+  function getArrayResult(query, values) {
+    return new Promise((resolve, reject) => {
+      db.query(query, (err, results) => {
+        db.query(query, values, (err, results) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(results);
+          }
+        });
+      });
+    });
+  }
+
+  function executeQueryResult(query, values) {
+    return new Promise((resolve, reject) => {
+      db.query(query, values, (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
         }
       });
     });

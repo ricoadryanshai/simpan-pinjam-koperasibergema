@@ -132,8 +132,8 @@ export default function AnggotaEditModal(props) {
                     Pilih Keanggotaan
                   </option>
                   {keanggotaan.map((anggota) => (
-                    <option key={anggota.id} value={anggota.namaKeanggotaan}>
-                      {anggota.namaKeanggotaan}
+                    <option key={anggota.id} value={anggota.jenisSHU}>
+                      {anggota.jenisSHU}
                     </option>
                   ))}
                 </Form.Select>

@@ -83,9 +83,7 @@ export default function AnggotaTambahModal({ show, onHide, anggotaData }) {
           kodeAnggota,
           `${year}-${month}-${date}`,
           "Simpanan Pokok",
-          fetchPengaturan.length > 0
-            ? fetchPengaturan[0]?.simpananPokok || 0
-            : 0
+          fetchPengaturan.simpananPokok || 0
         );
 
         setInputNoHp("");

@@ -63,18 +63,10 @@ export default function SimpanTambahModal(props) {
 
     switch (selectedOption) {
       case "Simpanan Pokok":
-        setInputNominal(
-          fetchPengaturan.length > 0
-            ? fetchPengaturan[0]?.simpananPokok || 0
-            : 0
-        );
+        setInputNominal(fetchPengaturan.simpananPokok || 0);
         break;
       case "Simpanan Wajib":
-        setInputNominal(
-          fetchPengaturan.length > 0
-            ? fetchPengaturan[0]?.simpananWajib || 0
-            : 0
-        );
+        setInputNominal(fetchPengaturan.simpananWajib || 0);
         break;
       default:
         setInputNominal("");

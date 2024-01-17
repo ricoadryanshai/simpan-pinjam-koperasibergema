@@ -35,22 +35,21 @@ export const PinjamTambahModal = (props) => {
   };
 
   const handleModalShow = (modalType) => {
-    let isFormInvalid = false;
-
-    if (!selectedDate) {
-      isFormInvalid = true;
+    if (!inputNominalPinjam && !inputNominalAngsuran) {
+      alert("Nominal pinjam dan Angsuran tidak boleh kosong.");
+      document.getElementById("formNominalTransaksi").focus();
+      return;
     }
 
     if (!inputNominalPinjam) {
-      isFormInvalid = true;
+      alert("Nominal pinjam tidak boleh kosong.");
+      document.getElementById("formNominalTransaksi").focus();
+      return;
     }
 
     if (!inputNominalAngsuran) {
-      isFormInvalid = true;
-    }
-
-    if (isFormInvalid) {
-      alert("Mohon lengkapi form yang masih kosong");
+      alert("Angsuran tidak boleh kosong.");
+      document.getElementById("formAngsuran").focus();
       return;
     }
 
@@ -72,8 +71,8 @@ export const PinjamTambahModal = (props) => {
       kodeAnggota: kodeAnggota,
       jenisTransaksi: "Pinjam",
       nama: nama,
-      nominalTransaksi: inputNominalPinjam || 10000,
-      angsuran: inputNominalAngsuran < 1 ? 1 : inputNominalAngsuran,
+      nominalTransaksi: inputNominalPinjam,
+      angsuran: inputNominalAngsuran,
       tanggalTransaksi: selectedDate || `${year}-${month}-${date}`,
     };
 
