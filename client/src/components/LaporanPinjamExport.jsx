@@ -20,12 +20,6 @@ const LaporanPinjamExport = ({
           </th>
         </tr>
         <tr>
-          <th colSpan={13}>Kelurahan Gandaria Selatan</th>
-        </tr>
-        <tr>
-          <td colSpan={13} />
-        </tr>
-        <tr>
           <th>No.</th>
           <th>Nama</th>
           <th>Tanggal Pinjam</th>
@@ -56,13 +50,13 @@ const LaporanPinjamExport = ({
             <th>{formatNumber(laporan.bayarAngsuranPokok)}</th>
             <th>{formatNumber(laporan.bayarAngsuranJasa)}</th>
             <th>{formatNumber(laporan.bayarTagihan)}</th>
-            <td
+            <th
               style={{
                 color: laporan.statusPinjaman === "Lunas" ? "green" : "red",
               }}
             >
               {laporan.statusPinjaman}
-            </td>
+            </th>
           </tr>
         ))}
       </tbody>

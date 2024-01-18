@@ -113,8 +113,8 @@ export default function SimpanDetailModal(props) {
           <Row>
             <Col className="fw-bold">Tanggal Bergabung</Col>
             <Col>{formatDate(tanggalRowData)}</Col>
-            <Col className="fw-bold">Bisa di Ambil Ketika Keluar</Col>
-            <Col>{formatRupiah(saldoRowData - saldoPenarikan)}</Col>
+            <Col />
+            <Col />
             <Row>
               <Col />
               <Col />

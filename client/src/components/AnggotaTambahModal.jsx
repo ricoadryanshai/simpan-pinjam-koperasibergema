@@ -29,7 +29,7 @@ export default function AnggotaTambahModal({ show, onHide, anggotaData }) {
   const handleSubmit = async () => {
     const kodeAnggota = document.getElementById("kodeAnggota").value;
     const nama = document.getElementById("nama").value;
-    const jenisAnggota = dropdown || "Anggota";
+    const jenisAnggota = dropdown;
     const jenKel = document.getElementById("jenKel").value || "Pria";
     const tempatLahir = document.getElementById("tempatLahir").value || `-`;
     const tanggalLahir =
@@ -40,8 +40,8 @@ export default function AnggotaTambahModal({ show, onHide, anggotaData }) {
 
     const kodeAnggotaArray = anggotaData.map((item) => item.kodeAnggota);
 
-    if (!kodeAnggota && !nama) {
-      alert("Kode Anggota dan Nama wajib di isi.");
+    if (!kodeAnggota && !nama && !jenisAnggota) {
+      alert("Kode Anggota, Nama, dan Jenis Anggota wajib di isi.");
       document.getElementById("kodeAnggota").focus();
       return;
     }
@@ -55,6 +55,12 @@ export default function AnggotaTambahModal({ show, onHide, anggotaData }) {
     if (!nama) {
       alert("Nama tidak boleh kosong.");
       document.getElementById("nama").focus();
+      return;
+    }
+
+    if (!jenisAnggota) {
+      alert("Jenis anggota wajib di pilih.");
+      document.getElementById("dropdownKeanggotaan").focus();
       return;
     }
 
@@ -79,12 +85,14 @@ export default function AnggotaTambahModal({ show, onHide, anggotaData }) {
       await tambahAnggota(inputData);
 
       try {
-        await tambahSimpan(
-          kodeAnggota,
-          `${year}-${month}-${date}`,
-          "Simpanan Pokok",
-          fetchPengaturan.simpananPokok || 0
-        );
+        const objectSimpan = {
+          kodeAnggota: kodeAnggota,
+          tanggalSimpan: `${year}-${month}-${date}`,
+          jenisSimpan: "Simpanan Pokok",
+          saldo: fetchPengaturan.simpananPokok || 0,
+        };
+
+        await tambahSimpan(objectSimpan);
 
         setInputNoHp("");
         setDropdown("");
@@ -169,7 +177,11 @@ export default function AnggotaTambahModal({ show, onHide, anggotaData }) {
                 <Form.Control type="text" name="nama" required />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="mb-3">
+            <Form.Group
+              as={Row}
+              className="mb-3"
+              controlId="dropdownKeanggotaan"
+            >
               <Col sm={4}>
                 <Form.Label>Keanggotaan</Form.Label>
               </Col>

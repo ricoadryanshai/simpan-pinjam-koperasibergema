@@ -14,6 +14,7 @@ export default function AnggotaEditModal(props) {
     tanggalLahir,
     alamat,
     noHP,
+    status,
   } = selectedRow;
 
   const [noHpData, setNoHp] = React.useState("");
@@ -39,7 +40,7 @@ export default function AnggotaEditModal(props) {
     };
     keanggotaan();
     setDropdown(jenisAnggota);
-  }, [show, jenisAnggota]);
+  }, [show, jenisAnggota, status]);
 
   const handleInputChange = (e) => {
     const formattedValue = e.target.value.replace(/[^0-9]/g, "");
@@ -47,17 +48,40 @@ export default function AnggotaEditModal(props) {
   };
 
   const handleSave = async (id) => {
+    const name = document.getElementById("nama").value;
+    const jenisAnggota = document.getElementById("dropdownAnggota").value;
+    const statusAnggota = document.getElementById("statusAnggota").value;
+
+    if (!name) {
+      alert("Nama tidak boleh kosong.");
+      document.getElementById("nama").focus();
+      return;
+    }
+
+    if (!dropdown) {
+      alert("Jenis keanggotaan wajib di pilih.");
+      document.getElementById("dropdownAnggota").focus();
+      return;
+    }
+
+    if (!statusAnggota) {
+      alert("Status wajib di pilih.");
+      document.getElementById("statusAnggota").focus();
+      return;
+    }
+
     try {
       const updatedData = {
         kodeAnggota: document.getElementById("kodeAnggota")?.value || "",
-        nama: document.getElementById("nama")?.value || "",
-        jenisAnggota: dropdown || "",
+        nama: name,
+        jenisAnggota: jenisAnggota,
         jenKel:
           document.querySelector('input[name="jenKel"]:checked')?.value || "",
         tempatLahir: document.getElementById("tempatLahir")?.value || "",
         tanggalLahir: document.getElementById("tanggalLahir")?.value || "",
         alamat: document.getElementById("alamat")?.value || "",
         noHP: document.getElementById("noHP")?.value || "",
+        status: statusAnggota,
       };
 
       await editAnggota(id, updatedData);
@@ -119,7 +143,7 @@ export default function AnggotaEditModal(props) {
                 />
               </Col>
             </Form.Group>
-            <Form.Group as={Row} className="mb-3">
+            <Form.Group as={Row} className="mb-3" controlId="dropdownAnggota">
               <Col sm={4}>
                 <Form.Label>Keanggotaan</Form.Label>
               </Col>
@@ -219,6 +243,20 @@ export default function AnggotaEditModal(props) {
                   onChange={(e) => handleInputChange(e)}
                   required
                 />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3" controlId="statusAnggota">
+              <Col sm={4}>
+                <Form.Label>Status</Form.Label>
+              </Col>
+              <Col>
+                <Form.Select defaultValue={status}>
+                  <option value={""} disabled>
+                    Pilih Status
+                  </option>
+                  <option value="Aktif">Aktif</option>
+                  <option value="Tidak Aktif">Tidak Aktif</option>
+                </Form.Select>
               </Col>
             </Form.Group>
           </Form>

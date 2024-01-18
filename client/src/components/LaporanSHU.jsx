@@ -3,15 +3,17 @@ import React from "react";
 import { Card, Stack, Form, Row, Col } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileExport, faPrint } from "@fortawesome/free-solid-svg-icons";
-import { getLapSHU } from "../utils/api";
+import { getLapAngsuran, getLapPendapatanByYear, getSHU } from "../utils/api";
 import { formatRupiah } from "../utils/format";
 import { LaporanSHUPrintOut } from "./LaporanSHUPrintOut";
 import { useReactToPrint } from "react-to-print";
 import { useDownloadExcel } from "react-export-table-to-excel";
 import LaporanSHUExport from "./LaporanSHUExport";
 
-export const LaporanSHU = ({ keanggotaan, lapSHUByYear, fetchLapSHU }) => {
-  const [lapSHUBy, setlapSHUBy] = React.useState([]);
+export const LaporanSHU = () => {
+  const [lapSHU, setlapSHU] = React.useState([]);
+  const [lapSHUByYear, setlapSHUByYear] = React.useState([]);
+  const [keanggotaan, setKeanggotaan] = React.useState([]);
   const [selectedYear, setSelectedYear] = React.useState("");
   const [uniqueYears, setUniqueYears] = React.useState([]);
 
@@ -23,10 +25,31 @@ export const LaporanSHU = ({ keanggotaan, lapSHUByYear, fetchLapSHU }) => {
 
   const fetchedData = async () => {
     try {
-      const data = await getLapSHU();
-      setlapSHUBy(data);
+      const data = await getLapAngsuran();
+      setlapSHU(data);
     } catch (error) {
-      console.log("Error fetching laporan simpanan: ", error);
+      console.error("Error fetching laporan simpanan: ", error);
+    }
+  };
+
+  const fetchPembagianSHUByYear = async (year) => {
+    try {
+      const data = await getLapPendapatanByYear(year);
+      setlapSHUByYear(data);
+    } catch (error) {
+      console.error(
+        "Fetching Data Pembagian SHU By Year Error From Client-side:",
+        error
+      );
+    }
+  };
+
+  const fetchKeanggotaan = async () => {
+    try {
+      const data = await getSHU();
+      setKeanggotaan(data);
+    } catch (error) {
+      console.error("Fetching Data Keanggotaan Error From Client-side:", error);
     }
   };
 
@@ -35,15 +58,22 @@ export const LaporanSHU = ({ keanggotaan, lapSHUByYear, fetchLapSHU }) => {
   }, []);
 
   React.useEffect(() => {
-    if (lapSHUBy.length > 0) {
+    if (selectedYear) {
+      fetchPembagianSHUByYear(selectedYear);
+      fetchKeanggotaan();
+    }
+  }, [selectedYear]);
+
+  React.useEffect(() => {
+    if (lapSHU.length > 0) {
       // Mendapatkan nilai unik dari properti tahunSimpan
       const uniqueYears = Array.from(
-        new Set(lapSHUBy.map((item) => item.tahunPinjam))
+        new Set(lapSHU.map((item) => item.tahunPinjam))
       );
       // Mengatur nilai-nilai unik tersebut sebagai pilihan dropdown
       setUniqueYears(uniqueYears);
     }
-  }, [lapSHUBy]);
+  }, [lapSHU]);
 
   const handleYearChange = (e) => {
     setSelectedYear(e.target.value);
@@ -86,12 +116,26 @@ export const LaporanSHU = ({ keanggotaan, lapSHUByYear, fetchLapSHU }) => {
           <Stack direction="horizontal" className="justify-content-end gap-3">
             <FontAwesomeIcon
               icon={faPrint}
-              onClick={handlePrint}
+              onClick={() => {
+                if (selectedYear) {
+                  handlePrint();
+                } else {
+                  alert("Silahkan pilih tahun terlebih dahulu");
+                  return;
+                }
+              }}
               style={{ cursor: "pointer" }}
             />
             <FontAwesomeIcon
               icon={faFileExport}
-              onClick={onDownload}
+              onClick={() => {
+                if (selectedYear) {
+                  onDownload();
+                } else {
+                  alert("Silahkan pilih tahun terlebih dahulu");
+                  return;
+                }
+              }}
               className="custom-icon-pointer"
             />
           </Stack>
@@ -119,35 +163,41 @@ export const LaporanSHU = ({ keanggotaan, lapSHUByYear, fetchLapSHU }) => {
               <Col>Pendapatan Angsuran Jasa Tahun Ini</Col>
               <Col />
               <Col className="fw-bold">
-                {formatRupiah(lapSHUByYear.totalBayarAngsuranPerTahun)}
+                {formatRupiah(lapSHUByYear.pendapatanAngsuran)}
+              </Col>
+            </Row>
+            <Row className="mb-3">
+              <Col>Pengeluaran Kas Tahun Ini</Col>
+              <Col />
+              <Col className="fw-bold">
+                {formatRupiah(lapSHUByYear.pengeluaranKas)}
               </Col>
             </Row>
             <Row>
-              <Col>Pengeluaran Kebutuhan Kas Tahun Ini</Col>
+              <Col>Profit Tahun Ini</Col>
               <Col />
               <Col className="fw-bold">
-                {formatRupiah(lapSHUByYear.totalPengeluaranKasPerTahun)}
+                {formatRupiah(lapSHUByYear.pendapatanJasa)}
               </Col>
             </Row>
           </Stack>
           <Stack>
-            {keanggotaan
-              .filter((anggota) => anggota.id !== 6)
-              .map((anggota, index) => (
-                <Row className="mb-3" key={index}>
-                  <Col>{anggota.jenisAnggota}</Col>
-                  <Col>{anggota.persentaseSHU}%</Col>
-                  <Col className="fw-bold">
-                    {selectedYear
-                      ? formatRupiah(
-                          (anggota.persentaseSHU / 100) *
-                            (lapSHUByYear.totalBayarAngsuranPerTahun -
-                              lapSHUByYear.totalPengeluaranKasPerTahun)
-                        )
-                      : formatRupiah(0)}
-                  </Col>
-                </Row>
-              ))}
+            {selectedYear
+              ? keanggotaan.map((anggota, index) => (
+                  <Row className="mb-3" key={index}>
+                    <Col>{anggota.jenisSHU}</Col>
+                    <Col>{anggota.persentaseSHU}%</Col>
+                    <Col className="fw-bold">
+                      {selectedYear
+                        ? formatRupiah(
+                            (anggota.persentaseSHU / 100) *
+                              lapSHUByYear.pendapatanJasa
+                          )
+                        : formatRupiah(0)}
+                    </Col>
+                  </Row>
+                ))
+              : null}
           </Stack>
         </Stack>
       </Stack>
@@ -161,8 +211,8 @@ export const LaporanSHU = ({ keanggotaan, lapSHUByYear, fetchLapSHU }) => {
 
       <LaporanSHUExport
         tableReference={tableRef}
-        lapSHUByYear={lapSHUByYear}
         selectedYear={selectedYear}
+        lapSHUByYear={lapSHUByYear}
         keanggotaan={keanggotaan}
       />
     </>

@@ -39,13 +39,11 @@ export const TransaksiTambahModal = (props) => {
             document.getElementById("nominalTransaksi").focus();
           } else {
             await tambahTransaksi(newTransaki);
-            console.log("Successfully submiting data.");
             onHide();
             setInput("");
           }
         } else {
           await tambahTransaksi(newTransaki);
-          console.log("Successfully submiting data.");
           onHide();
           setInput("");
         }

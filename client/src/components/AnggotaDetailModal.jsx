@@ -15,6 +15,7 @@ export default function AnggotaDetailModal(props) {
   const tanggalLahir = selectedRow?.tanggalLahir || "";
   const alamat = selectedRow?.alamat || "";
   const noHP = selectedRow?.noHP || "";
+  const status = selectedRow?.status || "";
   const tanggalDaftar = selectedRow?.tanggalDaftar || "";
   return (
     <Modal
@@ -77,6 +78,12 @@ export default function AnggotaDetailModal(props) {
             No. HP
           </Col>
           <Col>{noHP}</Col>
+        </Row>
+        <Row className="mb-2 align-items-center">
+          <Col sm={4} className="fw-bold">
+            Status
+          </Col>
+          <Col>{status}</Col>
         </Row>
         <Row className="mb-2 align-items-center">
           <Col sm={4} className="fw-bold">

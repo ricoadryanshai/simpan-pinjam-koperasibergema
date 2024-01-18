@@ -195,48 +195,70 @@ export default function SimpanTable() {
                 </tr>
               </thead>
               <tbody>
-                {currentEntries.map((simpan, index) => (
-                  <tr className="text-center align-middle" key={index}>
-                    <td>{index + startIndex}</td>
-                    <td>{simpan.kodeAnggota}</td>
-                    <td className="text-start">{simpan.nama}</td>
-                    <td className="text-start">
-                      {formatRupiah(simpan.totalSaldo)}
-                    </td>
-                    <td>
-                      <Button
-                        variant="secondary"
-                        onClick={() => handleDetailClick(simpan)}
-                      >
-                        <FontAwesomeIcon icon={faCircleInfo} className="me-1" />
-                        Detail
-                      </Button>
-                    </td>
-                    <td>
-                      <Button
-                        variant="success"
-                        onClick={() => handleTambahClick(simpan)}
-                      >
-                        <FontAwesomeIcon icon={faPiggyBank} className="me-1" />
-                        Simpan
-                      </Button>
-                    </td>
-                    <td>
-                      {simpan.totalSaldo > 0 ? (
+                {currentEntries.map((simpan, index) => {
+                  let bg = "";
+
+                  if (simpan.status === "Tidak Aktif") {
+                    bg = "table-warning";
+                  }
+                  return (
+                    <tr
+                      className={`text-center align-middle ${bg}`}
+                      key={index}
+                    >
+                      <td>{index + startIndex}</td>
+                      <td>{simpan.kodeAnggota}</td>
+                      <td className="text-start">{simpan.nama}</td>
+                      <td className="text-start">
+                        {formatRupiah(simpan.totalSaldo)}
+                      </td>
+                      <td>
                         <Button
-                          variant="primary"
-                          onClick={() => handleAmbilClick(simpan)}
+                          variant="secondary"
+                          onClick={() => handleDetailClick(simpan)}
                         >
                           <FontAwesomeIcon
-                            icon={faMoneyBillTransfer}
+                            icon={faCircleInfo}
                             className="me-1"
                           />
-                          Ambil
+                          Detail
                         </Button>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td>
+                        <Button
+                          variant="success"
+                          onClick={() =>
+                            simpan.status === "Tidak Aktif"
+                              ? alert(
+                                  "Nasabah sudah tidak aktif, maka tidak bisa melakukan penyimpanan."
+                                )
+                              : handleTambahClick(simpan)
+                          }
+                        >
+                          <FontAwesomeIcon
+                            icon={faPiggyBank}
+                            className="me-1"
+                          />
+                          Simpan
+                        </Button>
+                      </td>
+                      <td>
+                        {simpan.totalSaldo > 0 ? (
+                          <Button
+                            variant="primary"
+                            onClick={() => handleAmbilClick(simpan)}
+                          >
+                            <FontAwesomeIcon
+                              icon={faMoneyBillTransfer}
+                              className="me-1"
+                            />
+                            Ambil
+                          </Button>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </Table>
           </Container>

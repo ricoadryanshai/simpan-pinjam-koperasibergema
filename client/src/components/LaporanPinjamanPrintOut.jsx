@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React from "react";
-import { formatRupiah } from "../utils/format";
+import { formatDate, formatRupiah } from "../utils/format";
 import { Stack, Card, Table } from "react-bootstrap";
 
 export const LaporanPinjamanPrintOut = ({
@@ -39,7 +39,7 @@ export const LaporanPinjamanPrintOut = ({
             <th className="text-center">Nama</th>
             <th className="text-center">Tanggal Pinjam</th>
             <th>Nominal Pinjaman</th>
-            <th>Angsuran</th>
+            <th className="text-center">Angsuran</th>
             <th>Jasa Didapat</th>
             <th>Sudah Dibayar</th>
             <th className="text-center">Status</th>
@@ -50,9 +50,11 @@ export const LaporanPinjamanPrintOut = ({
             <tr key={index}>
               <td className="text-center">{index + 1}</td>
               <td>{laporan.nama}</td>
-              <td className="text-center">{laporan.tanggalTransaksi}</td>
+              <td className="text-center">
+                {formatDate(laporan.tanggalTransaksi)}
+              </td>
               <td>{formatRupiah(laporan.nominalPinjam)}</td>
-              <td>{laporan.angsuran}</td>
+              <td className="text-center">{laporan.angsuran}</td>
               <td>{formatRupiah(laporan.nominalJasa)}</td>
               <td className="fw-bold">{formatRupiah(laporan.bayarTagihan)}</td>
               <td

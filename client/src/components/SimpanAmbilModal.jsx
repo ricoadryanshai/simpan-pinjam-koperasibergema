@@ -48,21 +48,33 @@ export default function SimpanAmbilModal(props) {
       document.getElementById("inputNominal").focus();
       return;
     }
-    if (inputNominal > rowData.bisaAmbil) {
-      alert("Jumlah ambil melebihi nominal yang bisa di ambil.");
-      document.getElementById("inputNominal").focus();
-      return;
+    if (rowData.status === "Tidak Aktif") {
+      if (inputNominal > rowData.totalSaldo) {
+        alert("Jumlah ambil melebihi nominal yang bisa di ambil.");
+        document.getElementById("inputNominal").focus();
+        return;
+      }
+    } else {
+      if (inputNominal > rowData.bisaAmbil) {
+        alert("Jumlah ambil melebihi nominal yang bisa di ambil.");
+        document.getElementById("inputNominal").focus();
+        return;
+      }
     }
 
     try {
-      await tambahSimpan(
-        rowData.kodeAnggota,
-        document.getElementById("inputTanggalTransaksi").value ||
+      const objectSimpan = {
+        kodeAnggota: rowData.kodeAnggota,
+        tanggalSimpan:
+          document.getElementById("inputTanggalTransaksi").value ||
           `${year}-${month}-${date}`,
-        document.getElementById("formPlaintextJenisSimpanan").value ||
+        jenisSimpan:
+          document.getElementById("formPlaintextJenisSimpanan").value ||
           "Ambil Simpanan",
-        inputNominal || 0
-      );
+        saldo: inputNominal || 0,
+      };
+
+      await tambahSimpan(objectSimpan);
 
       onClose();
       fetchData();
@@ -159,7 +171,11 @@ export default function SimpanAmbilModal(props) {
                 <Form.Control
                   plaintext
                   readOnly
-                  defaultValue={formatRupiah(rowData?.bisaAmbil || 0)}
+                  defaultValue={formatRupiah(
+                    rowData?.status === "Tidak Aktif"
+                      ? rowData?.totalSaldo
+                      : rowData?.bisaAmbil
+                  )}
                 />
               </Col>
             </Form.Group>

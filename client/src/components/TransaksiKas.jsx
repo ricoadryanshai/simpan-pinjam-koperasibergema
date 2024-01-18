@@ -147,10 +147,15 @@ export default function TransaksiKas() {
       const dateA = new Date(a.tanggalTransaksi);
       const dateB = new Date(b.tanggalTransaksi);
 
+      const createdAtA = new Date(a.createdAt);
+      const createdAtB = new Date(b.createdAt);
+
       if (dateA.getTime() !== dateB.getTime()) {
-        return sortConfig.direction === "asc" ? dateA - dateB : dateB - dateA;
+        return sortConfig.direction === "asc" ? dateB - dateA : dateA - dateB;
       } else {
-        return sortConfig.direction === "asc" ? a.id - b.id : b.id - a.id;
+        return sortConfig.direction === "asc"
+          ? createdAtB - createdAtA
+          : createdAtA - createdAtB;
       }
     });
     return sortedData;
@@ -160,7 +165,7 @@ export default function TransaksiKas() {
     if (sortConfig !== null) {
       return customSort(transaksi, sortConfig);
     }
-    return [...transaksi]; // Jika tidak ada konfigurasi pengurutan, kembalikan data asli
+    return [...transaksi];
   }, [transaksi, sortConfig]);
 
   const indexOfLastEntry = activePage * ITEMS_PER_PAGE;
@@ -187,7 +192,7 @@ export default function TransaksiKas() {
   }, []);
   return (
     <>
-      <Stack className="justify-content-center align-items-center">
+      <Stack className="justify-content-center align-items-center" gap={3}>
         <Card className="custom-width-card">
           <Container className="pt-2 pb-2">
             <Card.Title className="text-uppercase fw-bold pb-2 border-bottom">
@@ -269,8 +274,7 @@ export default function TransaksiKas() {
             </Table>
           </Container>
         </Card>
-      </Stack>
-      <div className="d-flex justify-content-center mt-2">
+
         <Pagination>
           <Pagination.First onClick={goToFirstPage} />
           <Pagination.Prev onClick={goToPrevPage} />
@@ -288,7 +292,7 @@ export default function TransaksiKas() {
           <Pagination.Next onClick={goToNextPage} />
           <Pagination.Last onClick={goToLastPage} />
         </Pagination>
-      </div>
+      </Stack>
 
       <TransaksiTambahModal
         show={showTambah}

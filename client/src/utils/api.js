@@ -99,26 +99,12 @@ export const getSimpanAnggotaById = async (kodeAnggota) => {
   }
 };
 
-export const tambahSimpan = async (
-  kodeAnggota,
-  tanggalSimpan,
-  jenisSimpan,
-  saldo,
-  uploadFile
-) => {
-  const formData = new FormData();
-  formData.append("kodeAnggota", kodeAnggota);
-  formData.append("tanggalSimpan", tanggalSimpan);
-  formData.append("jenisSimpan", jenisSimpan);
-  formData.append("saldo", saldo);
-  formData.append("uploadFile", uploadFile);
-
+export const tambahSimpan = async (objectData) => {
   try {
-    const response = await axios.post(`${API_ENDPOINT}/post/simpan`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await axios.post(
+      `${API_ENDPOINT}/post/simpan`,
+      objectData
+    );
     return response.data;
   } catch (error) {
     console.error("Error inputing data:", error);
@@ -184,10 +170,22 @@ export const deletePinjamByKodeAnggota = async (kodeAnggota, id) => {
   }
 };
 
-export const getBayarAngsuran = async (idPinjam) => {
+export const getBayarAngsuran = async () => {
   try {
-    const res = await axios.get(`${API_ENDPOINT}/get/angsuran/${idPinjam}`);
-    return res.data;
+    const response = await axios.get(`${API_ENDPOINT}/get/angsuran`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getBayarAngsuranById = async (idPinjam) => {
+  try {
+    const response = await axios.get(
+      `${API_ENDPOINT}/get/angsuran/${idPinjam}`
+    );
+    return response.data;
   } catch (error) {
     console.error("Error fetching data:", error);
     throw error;
@@ -241,6 +239,16 @@ export const updateLunasAngsuran = async (idPinjam) => {
 export const getKas = async () => {
   try {
     const response = await axios.get(`${API_ENDPOINT}/get/kas`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
+export const getKasByYear = async (year) => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/kas/${year}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -356,6 +364,28 @@ export const getLapKasByYear = async (year) => {
   }
 };
 
+export const getLapPendapatan = async () => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/lapPembagianSHU`);
+    return response.data;
+  } catch (error) {
+    console.error("Fetching Laporan Pembagian Error From Client-side:", error);
+    throw error;
+  }
+};
+
+export const getLapPendapatanByYear = async (year) => {
+  try {
+    const response = await axios.get(
+      `${API_ENDPOINT}/get/lapPembagianSHU/${year}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Fetching Laporan Pembagian Error From Client-side:", error);
+    throw error;
+  }
+};
+
 // API ENDPOINT LAPORAN <<< END
 
 // START >>> API ENDPOINT PENGATURAN
@@ -460,6 +490,23 @@ export const deleteSHU = async (id) => {
     return response.data;
   } catch (error) {
     console.log("Error deleting data: ", error);
+    throw error;
+  }
+};
+
+// API ENDPOINT PENGATURAN <<< END
+
+// START >>> API ENDPOINT PENGATURAN
+
+export const getMiscPinjam = async (year) => {
+  try {
+    const response = await axios.get(`${API_ENDPOINT}/get/miscPinjam/${year}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Fetch Kode Anggota From Table Pinjam Error From Client-side:",
+      error
+    );
     throw error;
   }
 };

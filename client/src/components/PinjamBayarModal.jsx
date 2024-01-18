@@ -3,7 +3,7 @@ import React from "react";
 import { Button, Col, Modal, Row, Table } from "react-bootstrap";
 import { formatDate, formatRupiah } from "../utils/format";
 import {
-  getBayarAngsuran,
+  getBayarAngsuranById,
   getBayarByKodeAnggota,
   getPengaturan,
   postAngsuran,
@@ -50,7 +50,7 @@ export const PinjamBayarModal = (props) => {
 
   const fetchedTagihan = async (idPinjam) => {
     try {
-      const data = await getBayarAngsuran(idPinjam);
+      const data = await getBayarAngsuranById(idPinjam);
       setFetchTagihan(data);
     } catch (error) {
       console.log("Error fetching data tagihan: ", error);
@@ -59,9 +59,7 @@ export const PinjamBayarModal = (props) => {
 
   React.useEffect(() => {
     if (show) {
-      if (idPinjam !== "" || idPinjam !== null) {
-        fetchedTagihan(idPinjam);
-      }
+      fetchedTagihan(idPinjam);
     }
   }, [show, idPinjam]);
 
@@ -82,7 +80,7 @@ export const PinjamBayarModal = (props) => {
     }
   }, [show]);
 
-  const persenAngsuran = pengaturan[0]?.bungaAngsuran || "";
+  const persenAngsuran = pengaturan.bungaAngsuran || 0;
   const angsuranPokok = nominalTransaksi / angsuran;
   const angsuranJasa = nominalTransaksi * (persenAngsuran / 100);
   const angsuranPerBulan = angsuranPokok + angsuranJasa;

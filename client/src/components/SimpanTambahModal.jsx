@@ -28,13 +28,15 @@ export default function SimpanTambahModal(props) {
 
   const handleSubmit = async () => {
     try {
-      await tambahSimpan(
-        rowData.kodeAnggota,
-        document.getElementById("inputTanggalTransaksi").value ||
+      const objectSimpan = {
+        kodeAnggota: rowData.kodeAnggota,
+        tanggalSimpan:
+          document.getElementById("inputTanggalTransaksi").value ||
           `${year}-${month}-${date}`,
-        Dropdown,
-        inputNominal || 0
-      );
+        jenisSimpan: Dropdown,
+        saldo: inputNominal || 0,
+      };
+      await tambahSimpan(objectSimpan);
 
       onClose();
       fetchData();

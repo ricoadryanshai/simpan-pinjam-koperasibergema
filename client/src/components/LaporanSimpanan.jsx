@@ -1,6 +1,14 @@
 import React from "react";
 import { Card, Table, Stack, Form, Button } from "react-bootstrap";
-import { getLapSimpanan, getLapSimpananByYear, getSHU } from "../utils/api";
+import {
+  getLapAngsuranByYear,
+  getLapPendapatanByYear,
+  getLapSimpanan,
+  getLapSimpananByYear,
+  getSHU,
+  tambahSimpan,
+  tambahTransaksi,
+} from "../utils/api";
 import { formatRupiah } from "../utils/format";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileExport, faPrint } from "@fortawesome/free-solid-svg-icons";
@@ -9,12 +17,19 @@ import { useDownloadExcel } from "react-export-table-to-excel";
 import { LaporanSimpananPrintOut } from "./LaporanSimpananPrintOut";
 import LaporanSimpananExport from "./LaporanSimpananExport";
 
+const today = new Date();
+const date = String(today.getDate()).padStart(2, "0");
+const month = String(today.getMonth() + 1).padStart(2, "0");
+const year = today.getFullYear();
+
 const LaporanSimpanan = () => {
   const [keanggotaan, setKeanggotaan] = React.useState([]);
   const [lapSimpanan, setLapSimpanan] = React.useState([]);
   const [lapByYear, setLapByYear] = React.useState([]);
   const [selectedYear, setSelectedYear] = React.useState("");
   const [uniqueYears, setUniqueYears] = React.useState([]);
+  const [pendapatan, setPendapatan] = React.useState({});
+  const [kodePinjam, setKodePinjam] = React.useState([]);
 
   const fetchPengaturanPersen = async () => {
     try {
@@ -43,6 +58,27 @@ const LaporanSimpanan = () => {
     }
   };
 
+  const fetchPendapatanByYear = async (year) => {
+    try {
+      const data = await getLapPendapatanByYear(year);
+      setPendapatan(data);
+    } catch (error) {
+      console.error("Fetching Error Pendapatan From useEffect:", error);
+    }
+  };
+
+  const fetchKodeAnggotaPinjam = async (year) => {
+    try {
+      const data = await getLapAngsuranByYear(year);
+      setKodePinjam(data);
+    } catch (error) {
+      console.error(
+        "Fetching Kode Anggota Table Pinjam Error From Handle-side:",
+        error
+      );
+    }
+  };
+
   React.useEffect(() => {
     fetchPengaturanPersen();
   }, []);
@@ -54,6 +90,18 @@ const LaporanSimpanan = () => {
   React.useEffect(() => {
     if (selectedYear !== "") {
       fetchedDataByYear(selectedYear);
+    }
+  }, [selectedYear]);
+
+  React.useEffect(() => {
+    if (selectedYear !== "") {
+      fetchPendapatanByYear(selectedYear);
+    }
+  }, [selectedYear]);
+
+  React.useEffect(() => {
+    if (selectedYear !== "") {
+      fetchKodeAnggotaPinjam(selectedYear);
     }
   }, [selectedYear]);
 
@@ -70,25 +118,22 @@ const LaporanSimpanan = () => {
 
   const jumlahSimpananAllRows = lapByYear.reduce((total, laporan) => {
     const simpanan =
-      laporan.simpananPokok + laporan.simpananWajib + laporan.simpananSukarela;
+      laporan.saldoSimpanSebelumnya +
+      laporan.simpananPokok +
+      laporan.simpananWajib +
+      laporan.simpananSukarela;
     return total + simpanan;
   }, 0);
 
-  /* const totalSHU =
-  objectSHU?.bagianInvestor ||
-  null + objectSHU?.bagianAdministrasi ||
-  null + objectSHU?.bagianPengurus ||
-  null; */
+  let totalSHUSimpanan = 0;
+  let totalSHUPinjaman = 0;
 
   const jumlahPenarikan = lapByYear.reduce((total, laporan) => {
     const penarikan = laporan.penarikan;
     return total + penarikan;
   }, 0);
 
-  const totalSaldoAllRows = lapByYear.reduce(() => {
-    const saldo = jumlahSimpananAllRows /* + totalSHU */ - jumlahPenarikan;
-    return saldo;
-  }, 0);
+  let totalSaldoAllRows = 0;
 
   const handleYearChange = (e) => {
     setSelectedYear(e.target.value);
@@ -107,8 +152,111 @@ const LaporanSimpanan = () => {
   });
 
   const handleImportButton = async () => {
+    const objectData = lapByYear.map((laporan) => {
+      const jumlahSimpanan =
+        laporan.saldoSimpanSebelumnya +
+        laporan.simpananPokok +
+        laporan.simpananWajib +
+        laporan.simpananSukarela;
+
+      let pendapatanJenisKeanggotaan = null;
+
+      const jenisSHU = keanggotaan.find(
+        (anggota) => anggota.jenisSHU === laporan.jenisAnggota
+      );
+
+      if (jenisSHU) {
+        const pembagianSHU =
+          pendapatan.pendapatanJasa * (jenisSHU.persentaseSHU / 100);
+        pendapatanJenisKeanggotaan = pembagianSHU;
+      }
+
+      let statusPinjam = "";
+      let hasLunasPinjaman = false;
+
+      const matchKodePinjam = kodePinjam.find((pinjam) => {
+        if (
+          pinjam.kodeAnggota === laporan.kodeAnggota &&
+          pinjam.statusPinjaman === "Lunas"
+        ) {
+          hasLunasPinjaman = true; // Set the flag if a match is found
+          return true; // Stop the iteration
+        }
+        return false; // Continue the iteration
+      });
+
+      if (hasLunasPinjaman) {
+        statusPinjam = "SHU Pinjam";
+      }
+
+      let dapatSHUPinjam = 0; // Initialize with 0
+
+      if (matchKodePinjam && matchKodePinjam.statusPinjaman === "Lunas") {
+        const jenisSHUPinjam = keanggotaan.find(
+          (anggota) => anggota.jenisSHU === statusPinjam
+        );
+
+        if (jenisSHUPinjam) {
+          const pembagianSHU =
+            pendapatan.pendapatanJasa * (jenisSHUPinjam.persentaseSHU / 100);
+          dapatSHUPinjam = pembagianSHU;
+        }
+      }
+
+      const persentTiapNasabah = jumlahSimpanan / jumlahSimpananAllRows;
+
+      const pendapatanSHUSimpanan =
+        pendapatanJenisKeanggotaan * persentTiapNasabah;
+
+      const pendapatanSHUPinjaman = dapatSHUPinjam * persentTiapNasabah;
+      return {
+        kodeAnggota: laporan.kodeAnggota,
+        tanggalSimpan: `${year}-${month}-${date}`,
+        jenisSimpan: `SHU ${selectedYear}`,
+        saldo: pendapatanSHUSimpanan + pendapatanSHUPinjaman,
+      };
+    });
+
+    const transformedData = {
+      kodeAnggota: objectData.map((data) => data.kodeAnggota),
+      tanggalSimpan: objectData.map((data) => data.tanggalSimpan),
+      jenisSimpan: objectData.map((data) => data.jenisSimpan),
+      saldo: objectData.map((data) => data.saldo),
+    };
+
     try {
-      console.log(lapByYear);
+      // Input Administrasi
+      await tambahTransaksi({
+        jenisTransaksi: `Transaksi Masuk`,
+        tanggalTransaksi: `${year}-${month}-${date}`,
+        nominalTransaksi: pendapatan.pendapatanAdministrasi,
+        keterangan: `SHU Administrasi ${selectedYear}`,
+      });
+
+      // // Input Modal
+      await tambahTransaksi({
+        jenisTransaksi: `Transaksi Masuk`,
+        tanggalTransaksi: `${year}-${month}-${date}`,
+        nominalTransaksi: pendapatan.pendapatanModal,
+        keterangan: `SHU Penyerahan Modal ${selectedYear}`,
+      });
+
+      transformedData.kodeAnggota.map(async (kodeAnggota, index) => {
+        await tambahSimpan({
+          kodeAnggota,
+          tanggalSimpan: transformedData.tanggalSimpan[index],
+          jenisSimpan: transformedData.jenisSimpan[index],
+          saldo: transformedData.saldo[index],
+        });
+      });
+
+      alert(`
+        Berhasil import SHU:\n
+        SHU Simpanan: ${totalSHUSimpanan}\n
+        SHU Pinjaman: ${totalSHUPinjaman}\n
+        SHU Administrasi: ${pendapatan.pendapatanAdministrasi}\n
+        SHU Modal: ${pendapatan.pendapatanModal}\n
+      `);
     } catch (error) {
       console.error("Import SHU Error From Client-side:", error);
     }
@@ -126,12 +274,26 @@ const LaporanSimpanan = () => {
           <Stack direction="horizontal" className="justify-content-end gap-3">
             <FontAwesomeIcon
               icon={faPrint}
-              onClick={handlePrint}
+              onClick={() => {
+                if (selectedYear) {
+                  handlePrint();
+                } else {
+                  alert("Silahkan pilih tahun terlebih dahulu");
+                  return;
+                }
+              }}
               className="custom-icon-pointer"
             />
             <FontAwesomeIcon
               icon={faFileExport}
-              onClick={onDownload}
+              onClick={() => {
+                if (selectedYear) {
+                  onDownload();
+                } else {
+                  alert("Silahkan pilih tahun terlebih dahulu");
+                  return;
+                }
+              }}
               className="custom-icon-pointer"
             />
           </Stack>
@@ -141,9 +303,21 @@ const LaporanSimpanan = () => {
           gap={3}
           className="justify-content-between"
         >
-          <Button variant="warning" onClick={() => handleImportButton()}>
-            Import SHU Ke Saldo Anggota
+          <Button
+            variant="warning"
+            onClick={() => {
+              if (selectedYear) {
+                handleImportButton();
+              } else {
+                alert("Silahkan pilih tahun terlebih dahulu.");
+                return;
+              }
+            }}
+            className="fw-bold text-uppercase"
+          >
+            Import SHU
           </Button>
+
           <Form className="d-flex justify-content-end">
             <Form.Select
               size="sm"
@@ -168,7 +342,7 @@ const LaporanSimpanan = () => {
               <th className="text-center">No.</th>
               <th className="text-center">Kode Anggota</th>
               <th>Nama</th>
-              <th className="text-center">Jenis Anggota</th>
+              <th>Simpanan {selectedYear ? selectedYear - 1 : "..."}</th>
               <th>Simpanan Pokok</th>
               <th>Simpanan Wajib</th>
               <th>Simpanan Sukarela</th>
@@ -182,53 +356,127 @@ const LaporanSimpanan = () => {
           <tbody className="align-middle">
             {lapByYear.map((laporan, index) => {
               const jumlahSimpanan =
+                laporan.saldoSimpanSebelumnya +
                 laporan.simpananPokok +
                 laporan.simpananWajib +
                 laporan.simpananSukarela;
 
-              let sisaHasilUsaha = laporan.jenisAnggota;
+              let pendapatanJenisKeanggotaan = null;
+
+              const jenisSHU = keanggotaan.find(
+                (anggota) => anggota.jenisSHU === laporan.jenisAnggota
+              );
+
+              if (jenisSHU) {
+                const pembagianSHU =
+                  pendapatan.pendapatanJasa * (jenisSHU.persentaseSHU / 100);
+                pendapatanJenisKeanggotaan = pembagianSHU;
+              }
+
+              let statusPinjam = "";
+              let hasLunasPinjaman = false;
+
+              const matchKodePinjam = kodePinjam.find((pinjam) => {
+                if (
+                  pinjam.kodeAnggota === laporan.kodeAnggota &&
+                  pinjam.statusPinjaman === "Lunas"
+                ) {
+                  hasLunasPinjaman = true; // Set the flag if a match is found
+                  return true; // Stop the iteration
+                }
+                return false; // Continue the iteration
+              });
+
+              if (hasLunasPinjaman) {
+                statusPinjam = "SHU Pinjam";
+              }
+
+              let dapatSHUPinjam = 0; // Initialize with 0
+
+              if (
+                matchKodePinjam &&
+                matchKodePinjam.statusPinjaman === "Lunas"
+              ) {
+                const jenisSHUPinjam = keanggotaan.find(
+                  (anggota) => anggota.jenisSHU === statusPinjam
+                );
+
+                if (jenisSHUPinjam) {
+                  const pembagianSHU =
+                    pendapatan.pendapatanJasa *
+                    (jenisSHUPinjam.persentaseSHU / 100);
+                  dapatSHUPinjam = pembagianSHU;
+                }
+              }
+
+              const persentTiapNasabah = jumlahSimpanan / jumlahSimpananAllRows;
+
+              const pendapatanSHUSimpanan =
+                pendapatanJenisKeanggotaan * persentTiapNasabah;
+
+              const pendapatanSHUPinjaman = dapatSHUPinjam * persentTiapNasabah;
+
+              totalSHUSimpanan += pendapatanSHUSimpanan;
+              totalSHUPinjaman += pendapatanSHUPinjaman;
 
               const totalSaldo =
-                jumlahSimpanan + sisaHasilUsaha - laporan.penarikan;
+                jumlahSimpanan +
+                pendapatanSHUSimpanan +
+                pendapatanSHUPinjaman -
+                laporan.penarikan;
+
+              totalSaldoAllRows += totalSaldo;
+
+              let bg = "";
+
+              if (laporan.status === "Tidak Aktif") {
+                bg = "table-warning";
+              }
               return (
-                <tr key={index}>
+                <tr key={index} className={`${bg}`}>
                   <td className="text-center">{index + 1}</td>
                   <td className="text-center">{laporan.kodeAnggota}</td>
                   <td>{laporan.nama}</td>
-                  <td className="text-center">{laporan.jenisAnggota}</td>
+                  <td>{formatRupiah(laporan.saldoSimpanSebelumnya)}</td>
                   <td>{formatRupiah(laporan.simpananPokok)}</td>
                   <td>{formatRupiah(laporan.simpananWajib)}</td>
                   <td>{formatRupiah(laporan.simpananSukarela)}</td>
                   <td>{formatRupiah(jumlahSimpanan)}</td>
-                  <td>{formatRupiah(sisaHasilUsaha)}</td>
-                  <td>{formatRupiah(sisaHasilUsaha)}</td>
+                  <td>{formatRupiah(pendapatanSHUSimpanan)}</td>
+                  <td>{formatRupiah(pendapatanSHUPinjaman)}</td>
                   <td>{formatRupiah(laporan.penarikan)}</td>
                   <td className="fw-bold">{formatRupiah(totalSaldo)}</td>
                 </tr>
               );
             })}
           </tbody>
-          <tfoot className="table-light">
+          <tfoot className="table-light fw-bold">
             <tr>
-              <td colSpan={7} className="text-center fw-bold">
+              <td colSpan={7} className="text-center">
                 Jumlah Simpanan Tahun {selectedYear ? selectedYear : "..."}
               </td>
-              <td className="fw-bold">{formatRupiah(jumlahSimpananAllRows)}</td>
-              <td className="fw-bold">{formatRupiah(/* totalSHU */)}</td>
-              <td className="fw-bold">{formatRupiah(/* totalSHU */)}</td>
-              <td className="fw-bold">{formatRupiah(jumlahPenarikan)}</td>
-              <td className="fw-bold">{formatRupiah(totalSaldoAllRows)}</td>
+              <td>{formatRupiah(jumlahSimpananAllRows)}</td>
+              <td>{formatRupiah(totalSHUSimpanan)}</td>
+              <td>{formatRupiah(totalSHUPinjaman)}</td>
+              <td>{formatRupiah(jumlahPenarikan)}</td>
+              <td>{formatRupiah(totalSaldoAllRows)}</td>
             </tr>
           </tfoot>
         </Table>
       </Stack>
 
-      {/* <LaporanSimpananPrintOut
+      <LaporanSimpananPrintOut
         componentReference={componentRef}
         lapByYear={lapByYear}
         jumlahSimpananAllRows={jumlahSimpananAllRows}
         selectedYear={selectedYear}
         totalSaldoAllRows={totalSaldoAllRows}
+        keanggotaan={keanggotaan}
+        pendapatan={pendapatan}
+        kodePinjam={kodePinjam}
+        totalSHUSimpanan={totalSHUSimpanan}
+        totalSHUPinjaman={totalSHUPinjaman}
+        jumlahPenarikan={jumlahPenarikan}
       />
 
       <LaporanSimpananExport
@@ -237,7 +485,13 @@ const LaporanSimpanan = () => {
         jumlahSimpananAllRows={jumlahSimpananAllRows}
         selectedYear={selectedYear}
         totalSaldoAllRows={totalSaldoAllRows}
-      /> */}
+        keanggotaan={keanggotaan}
+        pendapatan={pendapatan}
+        kodePinjam={kodePinjam}
+        totalSHUSimpanan={totalSHUSimpanan}
+        totalSHUPinjaman={totalSHUPinjaman}
+        jumlahPenarikan={jumlahPenarikan}
+      />
     </>
   );
 };

@@ -1,7 +1,6 @@
 import React from "react";
 import {
   deleteKeanggotaan,
-  deleteSHU,
   getKeanggotaan,
   getSHU,
   postKeanggotaan,
@@ -13,7 +12,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEye,
   faPenToSquare,
-  faSquarePlus,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -79,7 +77,7 @@ const PengaturanSHU = () => {
     }
   };
 
-  const handleDeleteClick = async (id) => {
+  /* const handleDeleteClick = async (id) => {
     try {
       await deleteSHU(id);
       await fetchSHU();
@@ -87,7 +85,7 @@ const PengaturanSHU = () => {
     } catch (error) {
       console.log("Error deleting data:", error);
     }
-  };
+  }; */
 
   const handleTampilClick = async (recordData) => {
     const objectData = {
@@ -128,10 +126,10 @@ const PengaturanSHU = () => {
             Pengaturan SHU Keanggotaan
           </Card.Title>
           <Stack direction="horizontal" className="justify-content-start pb-2">
-            <Button variant="primary" onClick={() => handleModalShow("tambah")}>
+            {/* <Button variant="primary" onClick={() => handleModalShow("tambah")}>
               Tambah Jenis SHU
               <FontAwesomeIcon icon={faSquarePlus} className="ms-1" />
-            </Button>
+            </Button> */}
           </Stack>
           <Table hover>
             <thead className="table-info">
@@ -162,7 +160,7 @@ const PengaturanSHU = () => {
                       </Button>
                     }
                   </td>
-                  <td>
+                  {/* <td>
                     {
                       <Button
                         variant="danger"
@@ -172,7 +170,7 @@ const PengaturanSHU = () => {
                         Delete
                       </Button>
                     }
-                  </td>
+                  </td> */}
                   <td>
                     {
                       <Button

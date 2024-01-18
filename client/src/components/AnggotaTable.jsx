@@ -221,43 +221,56 @@ export default function AnggotaTable() {
               </tr>
             </thead>
             <tbody>
-              {currentEntries.map((anggota, index) => (
-                <tr key={anggota.id} className="align-middle text-center">
-                  <td>{startIndex + index}</td>
-                  <td>{highlightSearchText(anggota.kodeAnggota)}</td>
-                  <td className="text-start">
-                    {highlightSearchText(anggota.nama)}
-                  </td>
+              {currentEntries.map((anggota, index) => {
+                let bg = "";
 
-                  <td>
-                    <Button
-                      variant="secondary"
-                      onClick={() => handleModalShow("detail", anggota)}
-                    >
-                      <FontAwesomeIcon icon={faCircleInfo} className="me-1" />
-                      Detail
-                    </Button>
-                  </td>
-                  <td>
-                    <Button
-                      variant="warning"
-                      onClick={() => handleModalShow("edit", anggota)}
-                    >
-                      <FontAwesomeIcon icon={faPenToSquare} className="me-1" />
-                      Edit
-                    </Button>
-                  </td>
-                  <td>
-                    <Button
-                      variant="danger"
-                      onClick={() => handleDeleteClick(anggota.id)}
-                    >
-                      <FontAwesomeIcon icon={faTrashCan} className="me-1" />
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+                if (anggota.status === "Tidak Aktif") {
+                  bg = "table-warning";
+                }
+                return (
+                  <tr
+                    key={anggota.id}
+                    className={`align-middle text-center ${bg}`}
+                  >
+                    <td>{startIndex + index}</td>
+                    <td>{highlightSearchText(anggota.kodeAnggota)}</td>
+                    <td className="text-start">
+                      {highlightSearchText(anggota.nama)}
+                    </td>
+
+                    <td>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleModalShow("detail", anggota)}
+                      >
+                        <FontAwesomeIcon icon={faCircleInfo} className="me-1" />
+                        Detail
+                      </Button>
+                    </td>
+                    <td>
+                      <Button
+                        variant="warning"
+                        onClick={() => handleModalShow("edit", anggota)}
+                      >
+                        <FontAwesomeIcon
+                          icon={faPenToSquare}
+                          className="me-1"
+                        />
+                        Edit
+                      </Button>
+                    </td>
+                    <td>
+                      <Button
+                        variant="danger"
+                        onClick={() => handleDeleteClick(anggota.id)}
+                      >
+                        <FontAwesomeIcon icon={faTrashCan} className="me-1" />
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </Table>
         </Card>

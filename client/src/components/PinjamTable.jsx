@@ -230,47 +230,69 @@ export default function PinjamTable() {
                 </tr>
               </thead>
               <tbody>
-                {currentEntries.map((pinjam, index) => (
-                  <tr key={index} className="text-center align-middle">
-                    <td>{index + startIndex}</td>
-                    <td>{pinjam.kodeAnggota}</td>
-                    <td className="text-start">{pinjam.nama}</td>
-                    <td className="text-start">
-                      {formatRupiah(pinjam.jumlahHutang - pinjam.jumlahBayar)}
-                    </td>
-                    <td className="text-center">
-                      <Button
-                        variant="secondary"
-                        onClick={() => handleModalShow("detail", pinjam)}
-                      >
-                        <FontAwesomeIcon icon={faCircleInfo} className="me-1" />
-                        Detail
-                      </Button>
-                    </td>
-                    <td className="text-center">
-                      {pinjam.jumlahHutang - pinjam.jumlahBayar <= 0 ? (
+                {currentEntries.map((pinjam, index) => {
+                  let bg = "";
+
+                  if (pinjam.status === "Tidak Aktif") {
+                    bg = "table-warning";
+                  }
+                  return (
+                    <tr
+                      key={index}
+                      className={`text-center align-middle ${bg}`}
+                    >
+                      <td>{index + startIndex}</td>
+                      <td>{pinjam.kodeAnggota}</td>
+                      <td className="text-start">{pinjam.nama}</td>
+                      <td className="text-start">
+                        {formatRupiah(pinjam.jumlahHutang - pinjam.jumlahBayar)}
+                      </td>
+                      <td className="text-center">
                         <Button
-                          variant="warning"
-                          onClick={() => handleModalShow("pinjam", pinjam)}
-                        >
-                          <FontAwesomeIcon icon={faLandmark} className="me-1" />
-                          Pinjam
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="success"
-                          onClick={() => handleModalShow("bayar", pinjam)}
+                          variant="secondary"
+                          onClick={() => handleModalShow("detail", pinjam)}
                         >
                           <FontAwesomeIcon
-                            icon={faMoneyBill}
+                            icon={faCircleInfo}
                             className="me-1"
                           />
-                          Bayar
+                          Detail
                         </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="text-center">
+                        {pinjam.jumlahHutang - pinjam.jumlahBayar <= 0 ? (
+                          <Button
+                            variant="warning"
+                            onClick={() =>
+                              pinjam.status === "Tidak Aktif"
+                                ? alert(
+                                    "Nasabah sudah tidak aktif, maka tidak bisa melakukan pinjaman."
+                                  )
+                                : handleModalShow("pinjam", pinjam)
+                            }
+                          >
+                            <FontAwesomeIcon
+                              icon={faLandmark}
+                              className="me-1"
+                            />
+                            Pinjam
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="success"
+                            onClick={() => handleModalShow("bayar", pinjam)}
+                          >
+                            <FontAwesomeIcon
+                              icon={faMoneyBill}
+                              className="me-1"
+                            />
+                            Bayar
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </Table>
           </Container>
