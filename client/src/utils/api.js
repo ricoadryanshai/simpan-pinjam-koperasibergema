@@ -496,7 +496,21 @@ export const deleteSHU = async (id) => {
 
 // API ENDPOINT PENGATURAN <<< END
 
-// START >>> API ENDPOINT PENGATURAN
+// API ENDPOINT LOGIN <<< START
+
+export const postLogin = async (objectLogin) => {
+  try {
+    const response = await axios.post(`${API_ENDPOINT}/login`, objectLogin);
+    return response.data;
+  } catch (error) {
+    console.error("Login Error:", error);
+    throw error;
+  }
+};
+
+// API ENDPOINT LOGIN <<< END
+
+// START >>> API ENDPOINT MISC
 
 export const getMiscPinjam = async (year) => {
   try {
@@ -511,4 +525,4 @@ export const getMiscPinjam = async (year) => {
   }
 };
 
-// API ENDPOINT PENGATURAN <<< END
+// API ENDPOINT MISC <<< END
