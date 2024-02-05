@@ -4,11 +4,12 @@ import { editPengaturan, getPengaturan } from "../utils/api";
 import { formatNumber } from "../utils/format";
 
 const PengaturanSimpan = () => {
-  const [fetchData, setFetchData] = React.useState([]);
+  const [fetchData, setFetchData] = React.useState({ bungaAngsuran: "" });
 
   const fetchingData = async () => {
     try {
-      setFetchData(await getPengaturan());
+      const data = await getPengaturan();
+      setFetchData(data);
     } catch (error) {
       console.log("Error fetching data pengaturan: ", error);
     }
@@ -18,7 +19,7 @@ const PengaturanSimpan = () => {
     fetchingData();
   }, []);
 
-  const handleResetClick = async () => {
+  const handleResetClick = () => {
     fetchingData();
   };
 
@@ -61,7 +62,10 @@ const PengaturanSimpan = () => {
                   value={formatNumber(fetchData.simpananPokok)}
                   onChange={(e) => {
                     let value = e.target.value.replace(/[^0-9-]/g, "");
-                    setFetchData([{ ...fetchData[0], simpananPokok: value }]);
+                    setFetchData((prevData) => ({
+                      ...prevData,
+                      simpananPokok: parseInt(value) || 0,
+                    }));
                   }}
                   required
                 />
@@ -75,7 +79,10 @@ const PengaturanSimpan = () => {
                   value={formatNumber(fetchData.simpananWajib)}
                   onChange={(e) => {
                     let value = e.target.value.replace(/[^0-9-]/g, "");
-                    setFetchData([{ ...fetchData[0], simpananWajib: value }]);
+                    setFetchData((prevData) => ({
+                      ...prevData,
+                      simpananWajib: parseInt(value) || 0,
+                    }));
                   }}
                   required
                 />
@@ -91,7 +98,13 @@ const PengaturanSimpan = () => {
               <Col>
                 <Form.Control
                   type="number"
-                  defaultValue={fetchData.bungaAngsuran}
+                  value={fetchData.bungaAngsuran}
+                  onChange={(e) =>
+                    setFetchData({
+                      ...fetchData,
+                      bungaAngsuran: e.target.value,
+                    })
+                  }
                   required
                 />
               </Col>
