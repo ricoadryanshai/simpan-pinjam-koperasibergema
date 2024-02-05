@@ -20,6 +20,7 @@ import { TransaksiTambahModal } from "./TransaksiTambahModal";
 import { TransaksiEditModal } from "./TransaksiEditModal";
 import { formatDate, formatRupiah } from "../utils/format";
 import { deleteTransaksi, getKas, getTransaksi } from "../utils/api";
+import TransaksiDeleteModal from "./TransaksiDeleteModal";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -27,6 +28,7 @@ export default function TransaksiKas() {
   const [transaksi, setTransaksi] = React.useState([]);
   const [showTambah, setShowTambah] = React.useState(false);
   const [showEdit, setShowEdit] = React.useState(false);
+  const [showDelete, setShowDelete] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState({});
   const [activePage, setActivePage] = React.useState(1);
   const [filteredData, setFilteredData] = React.useState([]);
@@ -63,6 +65,10 @@ export default function TransaksiKas() {
         setShowEdit(true);
         setSelectedRow(transaksi);
         break;
+      case "delete":
+        setShowDelete(true);
+        setSelectedRow(transaksi);
+        break;
       default:
         break;
     }
@@ -77,6 +83,11 @@ export default function TransaksiKas() {
         break;
       case "edit":
         setShowEdit(false);
+        fetchedData();
+        fetchSaldoKas();
+        break;
+      case "delete":
+        setShowDelete(false);
         fetchedData();
         fetchSaldoKas();
         break;
@@ -262,7 +273,7 @@ export default function TransaksiKas() {
                     <td className="no-print">
                       <Button
                         variant="danger"
-                        onClick={() => handleDeleteClick(transaksi.id)}
+                        onClick={() => handleModalShow("delete", transaksi)}
                       >
                         <FontAwesomeIcon icon={faTrashCan} className="mx-1" />
                         Delete
@@ -305,6 +316,13 @@ export default function TransaksiKas() {
         onHide={() => handleModalClose("edit")}
         selectedRow={selectedRow}
         saldoKas={saldoKas}
+      />
+
+      <TransaksiDeleteModal
+        show={showDelete}
+        onHide={() => handleModalClose("delete")}
+        selectedRow={selectedRow}
+        onDelete={handleDeleteClick}
       />
     </>
   );

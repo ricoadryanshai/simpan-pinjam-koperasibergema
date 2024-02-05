@@ -14,6 +14,7 @@ import {
 import { deleteAnggota, getAnggota } from "../utils/api";
 import AnggotaTambahModal from "./AnggotaTambahModal";
 import AnggotaDetailModal from "./AnggotaDetailModal";
+import AnggotaDeleteModal from "./AnggotaDeleteModal";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -24,6 +25,7 @@ export default function AnggotaTable() {
   const [showTambah, setShowTambah] = React.useState(false);
   const [showDetail, setShowDetail] = React.useState(false);
   const [showEdit, setShowEdit] = React.useState(false);
+  const [showDelete, setShowDelete] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState([]);
   const [sortConfig /* setSortConfig */] = React.useState({
     key: "nama",
@@ -58,6 +60,10 @@ export default function AnggotaTable() {
         setShowDetail(true);
         setSelectedRow(map);
         break;
+      case "delete":
+        setShowDelete(true);
+        setSelectedRow(map);
+        break;
       default:
         break;
     }
@@ -77,6 +83,10 @@ export default function AnggotaTable() {
         setShowEdit(false);
         fetchData();
         break;
+      case "delete":
+        setShowDelete(false);
+        fetchData();
+        break;
       default:
         break;
     }
@@ -85,7 +95,7 @@ export default function AnggotaTable() {
   const handleDeleteClick = async (id) => {
     try {
       await deleteAnggota(id);
-      await fetchData();
+      fetchData();
     } catch (error) {
       console.error("Error deleting data:", error);
     }
@@ -262,7 +272,7 @@ export default function AnggotaTable() {
                     <td>
                       <Button
                         variant="danger"
-                        onClick={() => handleDeleteClick(anggota.id)}
+                        onClick={() => handleModalShow("delete", anggota)}
                       >
                         <FontAwesomeIcon icon={faTrashCan} className="me-1" />
                         Delete
@@ -311,6 +321,13 @@ export default function AnggotaTable() {
         show={showEdit}
         onHide={() => handleModalClose("edit")}
         selectedRow={selectedRow}
+      />
+
+      <AnggotaDeleteModal
+        show={showDelete}
+        onHide={() => handleModalClose("delete")}
+        selectedRow={selectedRow}
+        onDelete={handleDeleteClick}
       />
     </>
   );
