@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "npm-run-all -p dev:*",
     "build": "npm-run-all --parallel client:build server:build",
-    "dev:client": "cd client && vite --base /kpgansel/",
+    "dev:client": "cd client && npm start",
     "client:build": "cd client && npm run build-all",
     "dev:server": "cd server && nodemon server.js",
     "server:build": "cd server && npm run build-all"
