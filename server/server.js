@@ -838,7 +838,7 @@ function setupApiEndpoints(db) {
       ) AS subqueryAlias
     `);
 
-      const queryPinjaman = await getQueryResult(`
+      /* const queryPinjaman = await getQueryResult(`
         SELECT
           jumlahPinjaman,
           jumlahBayaran,
@@ -849,16 +849,12 @@ function setupApiEndpoints(db) {
             SUM(CASE WHEN jenisTransaksi = 'Bayar' THEN angsuranPerBulan ELSE 0 END) AS jumlahBayaran
           FROM tbl_pinjam
         ) AS subqueryAlias
-    `);
+    `); */
 
       res.status(200).json({
         transaksiKas: queryKas.saldoTransaksiKas,
         sPokokWajib: querySimpanan.saldoSimpanan,
-        pinjaman: queryPinjaman.saldoPinjaman,
-        saldoKas:
-          queryKas.saldoTransaksiKas +
-          querySimpanan.saldoSimpanan +
-          queryPinjaman.saldoPinjaman,
+        saldoKas: queryKas.saldoTransaksiKas + querySimpanan.saldoSimpanan,
       });
     } catch (error) {
       console.error("Error fetching data: " + error.message);
@@ -900,7 +896,7 @@ function setupApiEndpoints(db) {
     `
       );
 
-      const queryPinjaman = await getQueryResult(
+      /* const queryPinjaman = await getQueryResult(
         `
         SELECT
           jumlahPinjaman,
@@ -915,16 +911,12 @@ function setupApiEndpoints(db) {
             YEAR(tanggalTransaksi) = ${year}
         ) AS subqueryAlias
     `
-      );
+      ); */
 
       res.status(200).json({
         transaksiKas: queryKas.saldoTransaksiKas,
         sPokokWajib: querySimpanan.saldoSimpanan,
-        pinjaman: queryPinjaman.saldoPinjaman,
-        saldoKas:
-          queryKas.saldoTransaksiKas +
-          querySimpanan.saldoSimpanan +
-          queryPinjaman.saldoPinjaman,
+        saldoKas: queryKas.saldoTransaksiKas + querySimpanan.saldoSimpanan,
       });
     } catch (error) {
       console.error("Error fetching data: " + error.message);
