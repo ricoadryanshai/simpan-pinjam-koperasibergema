@@ -1625,9 +1625,9 @@ function setupApiEndpoints(db) {
     try {
       const results = await executeQueryResult(sqlQuery, values);
       if (results.length > 0) {
-        res.status(200).json({ message: "Login berhasil" });
+        res.status(200).json({ message: "Login Berhasil" });
       } else {
-        res.status(401).json({ message: "Login gagal" });
+        res.status(401).json({ message: "Login Gagal" });
       }
     } catch (error) {
       console.error("Error validating user login credentials: ", error);
