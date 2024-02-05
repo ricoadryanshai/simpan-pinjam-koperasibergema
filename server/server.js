@@ -1606,6 +1606,37 @@ function setupApiEndpoints(db) {
 
   // API ENDPOINT PENGATURAN <<< END
 
+  // API ENDPOINT AKUN LOGIN >>> START
+
+  app.post("/login", async (req, res) => {
+    const { username, password } = req.body;
+
+    const sqlQuery = `
+      SELECT
+        *
+      FROM
+        tbl_user
+      WHERE
+        username = ? AND password = ?
+    `;
+
+    const values = [username, password];
+
+    try {
+      const results = await executeQueryResult(sqlQuery, values);
+      if (results.length > 0) {
+        res.status(200).json({ message: "Login berhasil" });
+      } else {
+        res.status(401).json({ message: "Login gagal" });
+      }
+    } catch (error) {
+      console.error("Error validating user login credentials: ", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  });
+
+  // API ENDPOINT AKUN LOGIN <<< END
+
   // Fungsi untuk menghapus file dari direktori
   // const deleteFile = (filePath) => {
   //   fs.unlink(filePath, (err) => {
