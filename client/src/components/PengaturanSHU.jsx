@@ -14,12 +14,14 @@ import {
   faPenToSquare,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
+import PengaturanSHUModalDelete from "./PengaturanSHUModalDelete";
 
 const PengaturanSHU = () => {
   const [shuAnggota, setSHUAnggota] = React.useState([]);
   const [keanggotaan, setKeanggotaan] = React.useState([]);
   const [showTambah, setShowTambah] = React.useState(false);
   const [showEdit, setShowEdit] = React.useState(false);
+  const [showDelete, setShowDelete] = React.useState(false);
   const [record, setRecord] = React.useState([]);
 
   const fetchSHU = async () => {
@@ -54,7 +56,10 @@ const PengaturanSHU = () => {
         setShowEdit(true);
         setRecord(data);
         break;
-
+      case "delete":
+        setShowDelete(true);
+        setRecord(data);
+        break;
       default:
         break;
     }
@@ -71,7 +76,11 @@ const PengaturanSHU = () => {
         fetchSHU();
         fetchKeanggotaan();
         break;
-
+      case "delete":
+        setShowDelete(false);
+        fetchSHU();
+        fetchKeanggotaan();
+        break;
       default:
         break;
     }
@@ -208,7 +217,7 @@ const PengaturanSHU = () => {
                     {
                       <Button
                         variant="danger"
-                        onClick={() => handleSembunyiClick(shu.id)}
+                        onClick={() => handleModalShow("delete", shu)}
                       >
                         <FontAwesomeIcon icon={faTrashCan} className="me-1" />
                         Delete
@@ -227,10 +236,18 @@ const PengaturanSHU = () => {
         onHide={() => handleModalClose("tambah")}
         shuAnggota={shuAnggota}
       />
+
       <PengaturanSHUModalEdit
         show={showEdit}
         onHide={() => handleModalClose("edit")}
         record={record}
+      />
+
+      <PengaturanSHUModalDelete
+        show={showDelete}
+        onHide={() => handleModalClose("delete")}
+        record={record}
+        onDelete={handleSembunyiClick}
       />
     </>
   );
