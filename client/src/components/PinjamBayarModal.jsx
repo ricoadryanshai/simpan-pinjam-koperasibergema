@@ -99,7 +99,7 @@ export const PinjamBayarModal = (props) => {
 
       await updateBayarAngsuran(tagihan.id);
       await postAngsuran(inputTagihan);
-      await fetchedTagihan(idPinjam);
+      fetchedTagihan(idPinjam);
     } catch (error) {
       console.log("Error handle pembayaran angsuran: ", error);
     }
@@ -107,28 +107,40 @@ export const PinjamBayarModal = (props) => {
 
   const handleLunasClick = async (tagihan, index) => {
     try {
-      const filteredBayarPinjam = fetchTagihan.filter(
-        (bayar) => bayar.tanggalBayar === null || bayar.tanggalBayar === ""
-      );
+      const lunasIndex = index; // Index pembayaran yang akan dilunasi
 
+      // Filter hanya pembayaran yang belum dibayar sebelumnya
+      const filteredBayarPinjam = fetchTagihan
+        .filter(
+          (bayar, i) =>
+            i <= lunasIndex &&
+            (bayar.tanggalBayar === null || bayar.tanggalBayar === "")
+        )
+        .map((bayar) => ({
+          // Map untuk mengambil uangAngsuran, jasaUang, dan totalBayar
+          uangAngsuran: parseFloat(bayar.uangAngsuran || 0),
+          jasaUang: parseFloat(bayar.jasaUang || 0),
+          totalBayar: parseFloat(bayar.totalBayar || 0),
+        }));
+
+      // Menghitung total angsuran pokok, jasa uang, dan total per bulan
       const totalUangAngsuran = filteredBayarPinjam.reduce(
-        (total, bayar) => total + parseFloat(bayar.uangAngsuran || 0), // Jumlahkan nilai 'uangAngsuran'
-        0 // Nilai awal untuk penghitungan
+        (total, bayar) => total + bayar.uangAngsuran,
+        0
       );
-
       const totalJasaUang = filteredBayarPinjam.reduce(
-        (total, bayar) => total + parseFloat(bayar.jasaUang || 0), // Jumlahkan nilai 'jasaUang'
-        0 // Nilai awal untuk penghitungan
+        (total, bayar) => total + bayar.jasaUang,
+        0
       );
       const totalBayarFiltered = filteredBayarPinjam.reduce(
-        (total, bayar) => total + parseFloat(bayar.totalBayar || 0), // Jumlahkan nilai 'totalBayar', pastikan diubah menjadi tipe angka jika tidak berupa angka
-        0 // Nilai awal untuk penghitungan
+        (total, bayar) => total + bayar.totalBayar,
+        0
       );
 
       const inputTagihan = {
         kodeAnggota: kodeAnggota,
         jenisTransaksi: "Bayar",
-        angsuran: index,
+        angsuran: index + 1,
         tanggalTransaksi: formattedDate,
         angsuranPokok: totalUangAngsuran.toFixed(2),
         angsuranJasa: totalJasaUang.toFixed(2),
@@ -138,6 +150,7 @@ export const PinjamBayarModal = (props) => {
       await updateLunasAngsuran(tagihan.idPinjam);
       await postAngsuran(inputTagihan);
       await fetchedTagihan(idPinjam);
+      console.log(inputTagihan);
     } catch (error) {
       console.log("Error handle pelunasan: ", error);
     }
@@ -214,7 +227,7 @@ export const PinjamBayarModal = (props) => {
                           </Button>
                           <Button
                             variant="success"
-                            onClick={() => handleLunasClick(tagihan, index + 1)}
+                            onClick={() => handleLunasClick(tagihan, index)}
                           >
                             Lunas
                           </Button>
