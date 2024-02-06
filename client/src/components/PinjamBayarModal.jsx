@@ -123,8 +123,18 @@ export const PinjamBayarModal = (props) => {
           totalBayar: parseFloat(bayar.totalBayar || 0),
         }));
 
+      const newFilteredBayarPinjam = fetchTagihan
+        .filter(
+          (bayar) => bayar.tanggalBayar === null || bayar.tanggalBayar === ""
+        )
+        .map((bayar) => ({
+          uangAngsuran: parseFloat(bayar.uangAngsuran || 0),
+          jasaUang: parseFloat(bayar.jasaUang || 0),
+          totalBayar: parseFloat(bayar.totalBayar || 0),
+        }));
+
       // Menghitung total angsuran pokok, jasa uang, dan total per bulan
-      const totalUangAngsuran = filteredBayarPinjam.reduce(
+      const totalUangAngsuran = newFilteredBayarPinjam.reduce(
         (total, bayar) => total + bayar.uangAngsuran,
         0
       );
@@ -144,12 +154,15 @@ export const PinjamBayarModal = (props) => {
         tanggalTransaksi: formattedDate,
         angsuranPokok: totalUangAngsuran.toFixed(2),
         angsuranJasa: totalJasaUang.toFixed(2),
-        angsuranPerBulan: totalBayarFiltered.toFixed(2),
+        angsuranPerBulan: parseFloat(totalUangAngsuran + totalJasaUang).toFixed(
+          2
+        ),
       };
 
       await updateLunasAngsuran(tagihan.idPinjam);
       await postAngsuran(inputTagihan);
       await fetchedTagihan(idPinjam);
+      // console.log(inputTagihan);
     } catch (error) {
       console.log("Error handle pelunasan: ", error);
     }
@@ -201,7 +214,7 @@ export const PinjamBayarModal = (props) => {
                 <th className="text-center">No.</th>
                 <th>Angsuran Pokok</th>
                 <th>Angsuran Jasa</th>
-                <th>Angsuran/Bulan</th>
+                <th>Angsuran Total</th>
                 <th className="text-center">Tanggal Bayar</th>
               </tr>
             </thead>

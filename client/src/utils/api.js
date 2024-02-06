@@ -498,13 +498,16 @@ export const deleteSHU = async (id) => {
 
 // API ENDPOINT LOGIN <<< START
 
-export const postLogin = async (objectLogin) => {
+export const postLogin = async ({ username, password }, onLogin) => {
   try {
-    const response = await axios.post(`${API_ENDPOINT}/login`, objectLogin);
-    return response.data;
+    const response = await axios.post(`${API_ENDPOINT}/post/login`, {
+      username,
+      password,
+    });
+
+    console.log(response);
   } catch (error) {
-    console.error("Login Error:", error);
-    throw error;
+    console.error("Error:", error);
   }
 };
 

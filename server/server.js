@@ -211,43 +211,6 @@ function setupApiEndpoints(db) {
 
   // API ENDPOINT BERANDA <<< END
 
-  // START >>> API ENDPOINT LOGIN
-  // app.post("/login", async (req, res) => {
-  //   const { username, password } = req.body;
-  //   const query = "SELECT * FROM tbl_user WHERE username = ?";
-
-  //   db.query(query, [username], async (err, results) => {
-  //     if (err) {
-  //       console.error(err);
-  //       return res
-  //         .status(500)
-  //         .json({ success: false, message: "Internal Server Error" });
-  //     }
-
-  //     if (results.length > 0) {
-  //       const hashedPassword = results[0].password; // Assuming the hashed password is stored in the 'password' column
-
-  //       try {
-  //         const match = await bcrypt.compare(password, hashedPassword);
-  //         if (match) {
-  //           res.json({ success: true, message: "Login successful" });
-  //         } else {
-  //           res.json({ success: false, message: "Invalid username or password" });
-  //         }
-  //       } catch (error) {
-  //         console.error(error);
-  //         res
-  //           .status(500)
-  //           .json({ success: false, message: "Internal Server Error" });
-  //       }
-  //     } else {
-  //       res.json({ success: false, message: "Invalid username or password" });
-  //     }
-  //   });
-  // });
-
-  // API ENDPOINT LOGIN <<< END
-
   // START >>> API ENDPOINT ANGGOTA
 
   app.get("/get/anggota", (req, res) => {
@@ -838,23 +801,28 @@ function setupApiEndpoints(db) {
       ) AS subqueryAlias
     `);
 
-      /* const queryPinjaman = await getQueryResult(`
+      const queryPinjaman = await getQueryResult(`
         SELECT
           jumlahPinjaman,
-          jumlahBayaran,
-          (jumlahBayaran - jumlahPinjaman) AS saldoPinjaman
+          jumlahBayaran
         FROM (
           SELECT
             SUM(CASE WHEN jenisTransaksi = 'Pinjam' THEN angsuranPokok ELSE 0 END) AS jumlahPinjaman,
-            SUM(CASE WHEN jenisTransaksi = 'Bayar' THEN angsuranPerBulan ELSE 0 END) AS jumlahBayaran
+            SUM(CASE WHEN jenisTransaksi = 'Bayar' THEN angsuranPokok ELSE 0 END) AS jumlahBayaran
           FROM tbl_pinjam
         ) AS subqueryAlias
-    `); */
+    `);
 
       res.status(200).json({
         transaksiKas: queryKas.saldoTransaksiKas,
         sPokokWajib: querySimpanan.saldoSimpanan,
-        saldoKas: queryKas.saldoTransaksiKas + querySimpanan.saldoSimpanan,
+        pPinjam: queryPinjaman.jumlahPinjaman,
+        pBayar: queryPinjaman.jumlahBayaran,
+        saldoKas:
+          queryKas.saldoTransaksiKas +
+          querySimpanan.saldoSimpanan -
+          queryPinjaman.jumlahPinjaman +
+          queryPinjaman.jumlahBayaran,
       });
     } catch (error) {
       console.error("Error fetching data: " + error.message);
@@ -896,7 +864,7 @@ function setupApiEndpoints(db) {
     `
       );
 
-      /* const queryPinjaman = await getQueryResult(
+      const queryPinjaman = await getQueryResult(
         `
         SELECT
           jumlahPinjaman,
@@ -911,12 +879,16 @@ function setupApiEndpoints(db) {
             YEAR(tanggalTransaksi) = ${year}
         ) AS subqueryAlias
     `
-      ); */
+      );
 
       res.status(200).json({
         transaksiKas: queryKas.saldoTransaksiKas,
         sPokokWajib: querySimpanan.saldoSimpanan,
-        saldoKas: queryKas.saldoTransaksiKas + querySimpanan.saldoSimpanan,
+        sPinjaman: queryPinjaman.jumlahPinjaman,
+        saldoKas:
+          queryKas.saldoTransaksiKas +
+          querySimpanan.saldoSimpanan -
+          queryPinjaman.jumlahPinjaman,
       });
     } catch (error) {
       console.error("Error fetching data: " + error.message);
@@ -1608,7 +1580,7 @@ function setupApiEndpoints(db) {
 
   // API ENDPOINT AKUN LOGIN >>> START
 
-  app.post("/login", async (req, res) => {
+  app.post("/post/login", async (req, res) => {
     const { username, password } = req.body;
 
     const sqlQuery = `
@@ -1627,7 +1599,7 @@ function setupApiEndpoints(db) {
       if (results.length > 0) {
         res.status(200).json({ message: "Login Berhasil" });
       } else {
-        res.status(401).json({ message: "Login Gagal" });
+        res.status(404).json({ message: "User Not Found" });
       }
     } catch (error) {
       console.error("Error validating user login credentials: ", error);

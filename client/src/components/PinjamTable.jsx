@@ -15,7 +15,12 @@ import "../styles/SearchBar.css";
 import { formatRupiah } from "../utils/format";
 import { PinjamTambahModal } from "./PinjamTambahModal";
 import { PinjamBayarModal } from "./PinjamBayarModal";
-import { getKas, getPinjamAnggota } from "../utils/api";
+import {
+  getBayarAngsuranById,
+  getBayarByKodeAnggota,
+  getKas,
+  getPinjamAnggota,
+} from "../utils/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleInfo,
@@ -38,10 +43,23 @@ export default function PinjamTable() {
     direction: "asc",
   });
   const [saldoKas, setSaldoKas] = React.useState({});
+  const [lunas, setLunas] = React.useState([]);
 
   const fetchedData = async () => {
     try {
-      setPinjamData(await getPinjamAnggota());
+      const dataPinjam = await getPinjamAnggota();
+      setPinjamData(dataPinjam);
+
+      const extractedKode = dataPinjam.map((item) => item.kodeAnggota);
+      const data = await getBayarByKodeAnggota(extractedKode);
+      const extractedIds = data.map((item) => item.id);
+
+      const arrayAngsuran = await getBayarAngsuranById(extractedIds);
+
+      const belumLunas = arrayAngsuran.some(
+        (angsuran) => angsuran.tanggalBayar === null
+      );
+      setLunas(!belumLunas);
     } catch (error) {
       console.log("Error fetching data pinjam :", error);
     }
@@ -245,7 +263,11 @@ export default function PinjamTable() {
                       <td>{pinjam.kodeAnggota}</td>
                       <td className="text-start">{pinjam.nama}</td>
                       <td className="text-start">
-                        {formatRupiah(pinjam.jumlahHutang - pinjam.jumlahBayar)}
+                        {lunas === true
+                          ? formatRupiah(0)
+                          : formatRupiah(
+                              pinjam.jumlahHutang - pinjam.jumlahBayar
+                            )}
                       </td>
                       <td className="text-center">
                         <Button
@@ -260,7 +282,7 @@ export default function PinjamTable() {
                         </Button>
                       </td>
                       <td className="text-center">
-                        {pinjam.jumlahHutang - pinjam.jumlahBayar <= 0 ? (
+                        {lunas === true ? (
                           <Button
                             variant="warning"
                             onClick={() =>
@@ -321,6 +343,7 @@ export default function PinjamTable() {
         show={showDetail}
         onHide={() => handleModalClose("detail")}
         selectedRow={selectedRow}
+        lunas={lunas}
       />
       <PinjamTambahModal
         show={showPinjam}
