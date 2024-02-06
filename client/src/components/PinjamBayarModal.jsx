@@ -142,10 +142,10 @@ export const PinjamBayarModal = (props) => {
         (total, bayar) => total + bayar.jasaUang,
         0
       );
-      const totalBayarFiltered = filteredBayarPinjam.reduce(
+      /* const totalBayarFiltered = filteredBayarPinjam.reduce(
         (total, bayar) => total + bayar.totalBayar,
         0
-      );
+      ); */
 
       const inputTagihan = {
         kodeAnggota: kodeAnggota,
