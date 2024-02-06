@@ -150,7 +150,6 @@ export const PinjamBayarModal = (props) => {
       await updateLunasAngsuran(tagihan.idPinjam);
       await postAngsuran(inputTagihan);
       await fetchedTagihan(idPinjam);
-      console.log(inputTagihan);
     } catch (error) {
       console.log("Error handle pelunasan: ", error);
     }
