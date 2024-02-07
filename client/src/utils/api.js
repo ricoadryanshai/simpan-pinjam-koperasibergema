@@ -148,6 +148,16 @@ export const getPinjamByKodeAnggota = async (kodeAnggota) => {
   }
 };
 
+export const getBayar = async () => {
+  try {
+    const res = await axios.get(`${API_ENDPOINT}/get/bayar`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
 export const getBayarByKodeAnggota = async (kodeAnggota) => {
   try {
     const res = await axios.get(`${API_ENDPOINT}/get/bayar/${kodeAnggota}`);
@@ -197,7 +207,8 @@ export const postPinjam = async (data) => {
     const response = await axios.post(`${API_ENDPOINT}/post/pinjam`, data);
     return response.data;
   } catch (error) {
-    throw error.response ? error.response.data : error.message;
+    console.error("Error insert data:", error);
+    throw error;
   }
 };
 

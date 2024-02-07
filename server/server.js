@@ -84,7 +84,6 @@ function connectToDatabase() {
 }
 
 function setupApiEndpoints(db) {
-  // Function to execute a query and return the result
   function getQueryResult(query, values) {
     return new Promise((resolve, reject) => {
       db.query(query, (err, results) => {
@@ -166,31 +165,29 @@ function setupApiEndpoints(db) {
       FROM
         tbl_pinjam
       WHERE
-        MONTH(tbl_pinjam.tanggalTransaksi) = MONTH(CURRENT_DATE())
-        AND YEAR(tbl_pinjam.tanggalTransaksi) = YEAR(CURRENT_DATE())
+        MONTH(tbl_pinjam.tanggalTransaksi) = MONTH(CURRENT_DATE()) AND YEAR(tbl_pinjam.tanggalTransaksi) = YEAR(CURRENT_DATE())
     `);
 
       const tagihanPerTahun = await getQueryResult(`
       SELECT
-        SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Pinjam' THEN angsuranPerBulan ELSE 0 END) AS tagihanPerTahun
+        ROUND(SUM(CASE WHEN tanggalBayar IS NOT null THEN totalBayar ELSE 0 END), 2) AS tagihanPerTahun
       FROM
-        tbl_pinjam
+        tbl_angsuran
       WHERE
-        YEAR(tbl_pinjam.tanggalTransaksi) = YEAR(CURRENT_DATE())
+        YEAR(tanggalBayar) = YEAR(CURRENT_DATE())
     `);
 
       const sisaTagihanPerTahun = await getQueryResult(`
       SELECT
-        (total_pinjam - total_bayar) AS sisaTagihanPerTahun
+        jumlahHutang
       FROM
         (
           SELECT
-            COALESCE(SUM(CASE WHEN jenisTransaksi = 'Pinjam' THEN angsuranPerBulan ELSE 0 END), 0) AS total_pinjam,
-            COALESCE(SUM(CASE WHEN jenisTransaksi <> 'Pinjam' THEN angsuranPerBulan ELSE 0 END), 0) AS total_bayar
+            COALESCE(SUM(CASE WHEN tanggalBayar IS NULL THEN totalBayar ELSE 0 END), 0) AS jumlahHutang
           FROM
-            tbl_pinjam
+            tbl_angsuran
           WHERE
-            YEAR(tanggalTransaksi) = YEAR(CURRENT_DATE())
+            YEAR(tanggalBayar) = YEAR(CURRENT_DATE())
         ) AS subqueryAlias;
     `);
 
@@ -201,7 +198,7 @@ function setupApiEndpoints(db) {
         jumlahSaldo: jumlahSaldo.jumlahSaldo,
         pinjamBulan: pinjamBulan.pinjamBulan,
         tagihanPerTahun: tagihanPerTahun.tagihanPerTahun,
-        sisaTagihanPerTahun: sisaTagihanPerTahun.sisaTagihanPerTahun,
+        sisaTagihanPerTahun: sisaTagihanPerTahun.jumlahHutang,
       });
     } catch (error) {
       console.error("Updating Data Error From Server-side: ", error);
@@ -458,21 +455,34 @@ function setupApiEndpoints(db) {
 
   app.get("/get/pinjam", (req, res) => {
     const sqlQuery = `
-    SELECT
-      tbl_anggota.kodeAnggota,
-      tbl_anggota.nama,
-      tbl_anggota.tanggalDaftar,
-      COALESCE(SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Pinjam' THEN tbl_pinjam.angsuranPerBulan ELSE 0 END), 0) AS jumlahHutang,
-      COALESCE(SUM(CASE WHEN tbl_pinjam.jenisTransaksi = 'Bayar' THEN tbl_pinjam.angsuranPerBulan ELSE 0 END), 0) AS jumlahBayar,
-      tbl_anggota.status
-    FROM
-      tbl_anggota
-    LEFT JOIN
-      tbl_pinjam ON tbl_anggota.kodeAnggota = tbl_pinjam.kodeAnggota
-    GROUP BY
-      tbl_anggota.kodeAnggota, tbl_anggota.nama, tbl_anggota.tanggalDaftar
-    ORDER BY
-      tbl_anggota.kodeAnggota ASC
+      SELECT
+          a.kodeAnggota,
+          a.nama,
+          a.tanggalDaftar,
+          p.jumlahHutang,
+          ROUND(p.jumlahBayar, 0) AS jumlahBayar,
+          a.status,
+          CASE
+              WHEN (p.jumlahHutang <= 0) THEN 'Lunas'
+              WHEN (p.jumlahHutang > 0) THEN 'Belum Lunas'
+              ELSE 'Belum Pinjam'
+          END AS statusAngsuran
+      FROM
+          tbl_anggota a
+      LEFT JOIN (
+          SELECT
+              kodeAnggota,
+              COALESCE(SUM(CASE WHEN tanggalBayar IS NULL THEN totalBayar ELSE 0 END), 0) AS jumlahHutang,
+              COALESCE(SUM(CASE WHEN tanggalBayar IS NOT NULL THEN totalBayar ELSE 0 END), 0) AS jumlahBayar
+          FROM
+              tbl_angsuran    
+          GROUP BY
+              kodeAnggota
+      ) p ON a.kodeAnggota = p.kodeAnggota
+      LEFT JOIN
+          tbl_angsuran q ON a.kodeAnggota = q.kodeAnggota
+      GROUP BY
+          a.kodeAnggota
   `;
 
     db.query(sqlQuery, (err, results) => {
@@ -505,6 +515,28 @@ function setupApiEndpoints(db) {
     });
   });
 
+  app.get("/get/bayar", async (req, res) => {
+    sqlQuery = `
+      SELECT
+        *
+      FROM
+        tbl_pinjam
+      WHERE
+        jenisTransaksi = 'Pinjam'
+      GROUP BY
+        kodeAnggota
+      ORDER BY
+        createdAt DESC
+    `;
+
+    try {
+      const response = await getArrayResult(sqlQuery);
+      res.status(200).json(response);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  });
   app.get("/get/bayar/:kodeAnggota", (req, res) => {
     const { kodeAnggota } = req.params;
 
@@ -534,9 +566,15 @@ function setupApiEndpoints(db) {
   app.get("/get/angsuran", async (req, res) => {
     const query = `
       SELECT
-        *
-      FROM
+        idPinjam,
+        CASE 
+          WHEN tanggalBayar IS NOT NULL THEN 'Lunas'
+          ELSE 'Belum Lunas' 
+        END AS statusAngsuran
+      FROM 
         tbl_angsuran
+      GROUP BY 
+        idPinjam
     `;
 
     try {
@@ -626,13 +664,14 @@ function setupApiEndpoints(db) {
 
       // Create an array to hold values for multiple rows insertion into tbl_angsuran
       const angsuranValues = Array.from({ length: angsuran }, () => [
+        kodeAnggota, // Using the ID from tbl_pinjam insertion
         pinjamInsertResult, // Using the ID from tbl_pinjam insertion
         uangAngsuran,
         jasaUang,
         totalBayar,
       ]);
 
-      const insertAngsuranQuery = `INSERT INTO tbl_angsuran (idPinjam, uangAngsuran, jasaUang, totalBayar) VALUES ?`;
+      const insertAngsuranQuery = `INSERT INTO tbl_angsuran (kodeAnggota, idPinjam, uangAngsuran, jasaUang, totalBayar) VALUES ?`;
 
       // Insert data into tbl_angsuran
       await new Promise((resolve, reject) => {
@@ -1099,18 +1138,33 @@ function setupApiEndpoints(db) {
         s.tanggalTransaksi,
         s.angsuranPokok AS nominalPinjam,
         s.angsuran,
-        s.angsuranPerBulan AS nominalTagihan,
-        s.angsuranJasa AS nominalJasa,
         ROUND((s.angsuranPokok / s.angsuran), 2) AS angsuranPokok,
         ROUND((s.angsuranPokok * (SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100), 2) AS angsuranJasa,
         ROUND(((s.angsuranPokok / s.angsuran) + (s.angsuranPokok * (SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100)), 2) AS angsuranPerBulan,
-        ROUND(SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.uangAngsuran ELSE 0 END), 2) AS bayarAngsuranPokok,
-        ROUND(SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.jasaUang ELSE 0 END), 2) AS bayarAngsuranJasa,
-        ROUND(SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.totalBayar ELSE 0 END), 2) AS bayarTagihan,
-        (CASE WHEN (s.angsuranPokok - ROUND(SUM(CASE WHEN (k.tanggalBayar IS NOT NULL OR k.tanggalBayar = '') AND YEAR(k.tanggalBayar) <= ? THEN k.uangAngsuran ELSE 0 END), 2)) <= 0 THEN 'Lunas' ELSE 'Belum Lunas' END) AS statusPinjaman
+        k.bayarAngsuranPokok,
+        s.bayarAngsuranJasa,
+        (k.bayarAngsuranPokok + s.bayarAngsuranJasa) AS bayarTagihan,
+        CASE
+            WHEN (k.jumlahHutang <= 0) THEN 'Lunas'
+            WHEN (k.jumlahHutang > 0) THEN 'Belum Lunas'
+            ELSE 'Belum Pinjam'
+        END AS statusPinjaman
       FROM tbl_anggota a
-      LEFT JOIN tbl_pinjam s ON a.kodeAnggota = s.kodeAnggota
-      LEFT JOIN tbl_angsuran k ON s.id = k.idPinjam
+      LEFT JOIN (
+        SELECT
+          *,
+          ROUND(SUM(CASE WHEN jenisTransaksi = 'Bayar' THEN angsuranJasa ELSE 0 END), 2) AS bayarAngsuranJasa
+        FROM tbl_pinjam
+        GROUP BY kodeAnggota
+      ) s ON a.kodeAnggota = s.kodeAnggota
+      LEFT JOIN (
+          SELECT
+              kodeAnggota,
+              ROUND(SUM(CASE WHEN (tanggalBayar IS NOT NULL OR tanggalBayar = '') AND YEAR(tanggalBayar) <= ? THEN uangAngsuran ELSE 0 END), 2) AS bayarAngsuranPokok,
+              ROUND(SUM(CASE WHEN tanggalBayar IS NULL THEN totalBayar ELSE 0 END), 2) AS jumlahHutang
+          FROM tbl_angsuran    
+          GROUP BY idPinjam
+      ) k ON a.kodeAnggota = k.kodeAnggota
       WHERE YEAR(s.tanggalTransaksi) >= ? - 1 AND YEAR(s.tanggalTransaksi) <= ?
         AND s.jenisTransaksi = 'Pinjam'
       GROUP BY s.id
@@ -1182,9 +1236,9 @@ function setupApiEndpoints(db) {
   app.get("/get/lapPembagianSHU", async (req, res) => {
     sqlQueryJasa = await getQueryResult(`
       SELECT
-        ROUND(SUM(CASE WHEN (tanggalBayar IS NOT NULL OR tanggalBayar = '') THEN jasaUang ELSE 0 END), 2) AS bayarAngsuranJasa
+        ROUND(SUM(CASE WHEN jenisTransaksi = 'Bayar' THEN angsuranJasa ELSE 0 END), 2) AS bayarAngsuranJasa
       FROM
-        tbl_angsuran
+        tbl_pinjam
   `);
 
     sqlQueryTransaksi = await getQueryResult(`
@@ -1285,10 +1339,12 @@ function setupApiEndpoints(db) {
     sqlQueryJasa = await getQueryResult(
       `
     SELECT
-      ROUND(SUM(CASE WHEN (tanggalBayar IS NOT NULL OR tanggalBayar = '') AND YEAR(tanggalBayar) <= ${year} THEN jasaUang ELSE 0 END), 2) AS bayarAngsuranJasa
-    FROM
-      tbl_angsuran
-  `
+      ROUND(SUM(CASE WHEN jenisTransaksi = 'Bayar' THEN angsuranJasa ELSE 0 END), 2) AS bayarAngsuranJasa
+    FROM tbl_pinjam
+    WHERE YEAR(tanggalTransaksi) >= ${
+      year - 1
+    } AND YEAR(tanggalTransaksi) <= ${year}
+    `
     );
 
     sqlQueryTransaksi = await getQueryResult(
@@ -1298,7 +1354,9 @@ function setupApiEndpoints(db) {
     FROM
       tbl_transaksi
     WHERE
-      YEAR(tanggalTransaksi) = ${year}
+      YEAR(tanggalTransaksi) >= ${
+        year - 1
+      } AND YEAR(tanggalTransaksi) <= ${year}
   `
     );
 

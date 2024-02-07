@@ -15,12 +15,7 @@ import "../styles/SearchBar.css";
 import { formatRupiah } from "../utils/format";
 import { PinjamTambahModal } from "./PinjamTambahModal";
 import { PinjamBayarModal } from "./PinjamBayarModal";
-import {
-  getBayarAngsuranById,
-  getBayarByKodeAnggota,
-  getKas,
-  getPinjamAnggota,
-} from "../utils/api";
+import { getKas, getPinjamAnggota } from "../utils/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleInfo,
@@ -42,24 +37,12 @@ export default function PinjamTable() {
     key: "nama",
     direction: "asc",
   });
-  const [saldoKas, setSaldoKas] = React.useState({});
-  const [lunas, setLunas] = React.useState([]);
+  const [saldoKas, setSaldoKas] = React.useState([]);
 
   const fetchedData = async () => {
     try {
       const dataPinjam = await getPinjamAnggota();
       setPinjamData(dataPinjam);
-
-      const extractedKode = dataPinjam.map((item) => item.kodeAnggota);
-      const data = await getBayarByKodeAnggota(extractedKode);
-      const extractedIds = data.map((item) => item.id);
-
-      const arrayAngsuran = await getBayarAngsuranById(extractedIds);
-
-      const belumLunas = arrayAngsuran.some(
-        (angsuran) => angsuran.tanggalBayar === null
-      );
-      setLunas(!belumLunas);
     } catch (error) {
       console.log("Error fetching data pinjam :", error);
     }
@@ -157,31 +140,47 @@ export default function PinjamTable() {
   const customSort = (data, sortConfig) => {
     const sortedData = [...data];
     sortedData.sort((a, b) => {
-      const debtA = a.jumlahHutang - a.jumlahBayar;
-      const debtB = b.jumlahHutang - b.jumlahBayar;
-
-      if (debtA > 0 && debtB > 0) {
-        return sortConfig.direction === "asc"
-          ? a.kodeAnggota.localeCompare(b.kodeAnggota)
-          : b.kodeAnggota.localeCompare(a.kodeAnggota);
+      if (
+        a.statusAngsuran === "Belum Bayar" &&
+        b.statusAngsuran === "Belum Bayar"
+      ) {
+        return a.kodeAnggota.localeCompare(b.kodeAnggota);
+      } else if (
+        a.statusAngsuran === "Belum Bayar" &&
+        b.statusAngsuran !== "Belum Bayar"
+      ) {
+        return -1;
+      } else if (
+        a.statusAngsuran === "Lunas" &&
+        b.statusAngsuran === "Belum Pinjam"
+      ) {
+        return 1;
+      } else if (a.statusAngsuran === "Lunas" && b.statusAngsuran === "Lunas") {
+        return a.kodeAnggota.localeCompare(b.kodeAnggota);
+      } else if (
+        a.statusAngsuran === "Lunas" &&
+        b.statusAngsuran === "Belum Bayar"
+      ) {
+        return -1;
+      } else if (
+        a.statusAngsuran === "Belum Pinjam" &&
+        b.statusAngsuran === "Belum Pinjam"
+      ) {
+        return a.kodeAnggota.localeCompare(b.kodeAnggota);
+      } else if (
+        a.statusAngsuran === "Belum Pinjam" &&
+        b.statusAngsuran !== "Belum Pinjam"
+      ) {
+        return 1;
+      } else {
+        return 0;
       }
-
-      if (debtA > 0 && debtB <= 0) {
-        return sortConfig.direction === "asc" ? -1 : 1;
-      }
-
-      if (debtA <= 0 && debtB > 0) {
-        return sortConfig.direction === "asc" ? 1 : -1;
-      }
-
-      if (debtA === 0 && debtB === 0) {
-        return sortConfig.direction === "asc"
-          ? a.kodeAnggota.localeCompare(b.kodeAnggota)
-          : b.kodeAnggota.localeCompare(a.kodeAnggota);
-      }
-
-      return sortConfig.direction === "asc" ? debtA - debtB : debtB - debtA;
     });
+
+    if (sortConfig.direction === "desc") {
+      sortedData.reverse();
+    }
+
     return sortedData;
   };
 
@@ -203,6 +202,7 @@ export default function PinjamTable() {
 
   React.useEffect(() => {
     fetchedData();
+    // fetchBayar();
   }, []);
 
   React.useEffect(() => {
@@ -254,6 +254,7 @@ export default function PinjamTable() {
                   if (pinjam.status === "Tidak Aktif") {
                     bg = "table-warning";
                   }
+
                   return (
                     <tr
                       key={index}
@@ -263,11 +264,9 @@ export default function PinjamTable() {
                       <td>{pinjam.kodeAnggota}</td>
                       <td className="text-start">{pinjam.nama}</td>
                       <td className="text-start">
-                        {lunas === true
+                        {pinjam.statusAngsuran === "Lunas"
                           ? formatRupiah(0)
-                          : formatRupiah(
-                              pinjam.jumlahHutang - pinjam.jumlahBayar
-                            )}
+                          : formatRupiah(pinjam.jumlahHutang)}
                       </td>
                       <td className="text-center">
                         <Button
@@ -282,7 +281,8 @@ export default function PinjamTable() {
                         </Button>
                       </td>
                       <td className="text-center">
-                        {lunas === true ? (
+                        {pinjam.statusAngsuran === "Lunas" ||
+                        pinjam.statusAngsuran === "Belum Pinjam" ? (
                           <Button
                             variant="warning"
                             onClick={() =>
@@ -299,7 +299,7 @@ export default function PinjamTable() {
                             />
                             Pinjam
                           </Button>
-                        ) : (
+                        ) : pinjam.statusAngsuran === "Belum Lunas" ? (
                           <Button
                             variant="success"
                             onClick={() => handleModalShow("bayar", pinjam)}
@@ -310,7 +310,7 @@ export default function PinjamTable() {
                             />
                             Bayar
                           </Button>
-                        )}
+                        ) : null}
                       </td>
                     </tr>
                   );
@@ -343,7 +343,6 @@ export default function PinjamTable() {
         show={showDetail}
         onHide={() => handleModalClose("detail")}
         selectedRow={selectedRow}
-        lunas={lunas}
       />
       <PinjamTambahModal
         show={showPinjam}

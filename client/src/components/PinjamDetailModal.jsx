@@ -11,7 +11,7 @@ import { PinjamPrintOut } from "./PinjamPrintOut";
 import PinjamExport from "./PinjamExport";
 
 export const PinjamDetailModal = (props) => {
-  const { show, onHide, selectedRow, lunas } = props;
+  const { show, onHide, selectedRow } = props;
 
   const [fetchData, setFetchData] = React.useState([]);
   const [input, setInput] = React.useState("");
@@ -21,7 +21,9 @@ export const PinjamDetailModal = (props) => {
   const tanggalDaftar = selectedRow?.tanggalDaftar || "";
   const jumlahHutang = selectedRow?.jumlahHutang || "";
   const jumlahBayar = selectedRow?.jumlahBayar || "";
-  const sisaHutang = lunas === true ? 0 : jumlahHutang - jumlahBayar;
+  const statusAngsuran = selectedRow?.statusAngsuran || "";
+  const sisaHutang =
+    statusAngsuran === "Lunas" ? 0 : jumlahHutang - jumlahBayar;
 
   const fetchedData = async (kodeAnggota) => {
     setFetchData(await getPinjamByKodeAnggota(kodeAnggota));

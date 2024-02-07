@@ -72,7 +72,7 @@ export const BerandaSummaryCard = () => {
             <span className="fw-bold">{formatRupiah(beranda.pinjamBulan)}</span>
           </Card.Text>
           <Card.Text>
-            Jumlah Tagihan {new Date().getFullYear()}:{" "}
+            Transaksi Pinjam {new Date().getFullYear()}:{" "}
             <span className="fw-bold">
               {formatRupiah(beranda.tagihanPerTahun)}
             </span>
