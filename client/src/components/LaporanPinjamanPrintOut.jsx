@@ -40,7 +40,7 @@ export const LaporanPinjamanPrintOut = ({
             <th className="text-center">Tanggal Pinjam</th>
             <th>Nominal Pinjaman</th>
             <th className="text-center">Angsuran</th>
-            <th>Jasa Didapat</th>
+            <th>Jasa</th>
             <th>Sudah Dibayar</th>
             <th className="text-center">Status</th>
           </tr>
@@ -55,7 +55,7 @@ export const LaporanPinjamanPrintOut = ({
               </td>
               <td>{formatRupiah(laporan.nominalPinjam)}</td>
               <td className="text-center">{laporan.angsuran}</td>
-              <td>{formatRupiah(laporan.nominalJasa)}</td>
+              <td>{formatRupiah(laporan.bayarAngsuranJasa)}</td>
               <td className="fw-bold">{formatRupiah(laporan.bayarTagihan)}</td>
               <td
                 style={{

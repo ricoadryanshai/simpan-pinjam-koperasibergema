@@ -19,11 +19,7 @@ export const PinjamDetailModal = (props) => {
   const kodeAnggota = selectedRow?.kodeAnggota || "";
   const nama = selectedRow?.nama || "";
   const tanggalDaftar = selectedRow?.tanggalDaftar || "";
-  const jumlahHutang = selectedRow?.jumlahHutang || "";
-  const jumlahBayar = selectedRow?.jumlahBayar || "";
-  const statusAngsuran = selectedRow?.statusAngsuran || "";
-  const sisaHutang =
-    statusAngsuran === "Lunas" ? 0 : jumlahHutang - jumlahBayar;
+  const sisaHutang = selectedRow?.jumlahHutang || "";
 
   const fetchedData = async (kodeAnggota) => {
     setFetchData(await getPinjamByKodeAnggota(kodeAnggota));
@@ -174,6 +170,7 @@ export const PinjamDetailModal = (props) => {
         selectedRow={selectedRow}
         fetchData={fetchData}
         componentReference={componentRef}
+        sisaHutang={sisaHutang}
       />
 
       <PinjamExport

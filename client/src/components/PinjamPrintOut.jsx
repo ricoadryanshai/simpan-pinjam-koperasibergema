@@ -7,13 +7,11 @@ export const PinjamPrintOut = ({
   componentReference,
   selectedRow,
   fetchData,
+  sisaHutang,
 }) => {
   const kodeAnggota = selectedRow?.kodeAnggota || "";
   const nama = selectedRow?.nama || "";
   const tanggalDaftar = selectedRow?.tanggalDaftar || "";
-  const jumlahHutang = selectedRow?.jumlahHutang || "";
-  const jumlahBayar = selectedRow?.jumlahBayar || "";
-  const sisaHutang = jumlahHutang - jumlahBayar;
 
   return (
     <div className="no-display print-only" ref={componentReference}>
