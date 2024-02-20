@@ -843,6 +843,36 @@ function setupApiEndpoints(db) {
     }
   });
 
+  app.post("/post/bayarangsuran", async (req, res) => {
+    const { idPinjam, uangAngsuran, jasaUang, totalBayar, tanggalBayar } =
+      req.body;
+
+    sqlQuery = `
+      INSERT INTO tbl_bayarangsuran (
+          idPinjam,
+          uangAngsuran,
+          jasaUang,
+          totalBayar,
+          tanggalBayar
+      )
+      VALUES (
+          ?,
+          ?,
+          ?,
+          ?,
+          ?
+      )
+    `;
+
+    const values = [idPinjam, uangAngsuran, jasaUang, totalBayar, tanggalBayar];
+    try {
+      await executeQueryResult(sqlQuery, values);
+      res.status(200).json({ message: "Successfully Inserted Data" });
+    } catch (error) {
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+
   // API ENDPOINT PINJAMAN <<< END
 
   // START >>> API ENDPOINT TRANSAKSI KAS
@@ -1164,7 +1194,7 @@ function setupApiEndpoints(db) {
 
     const sqlQuery = `
       SELECT
-        a.idPinjam,
+          a.idPinjam,
           c.kodeAnggota,
           c.nama,
           c.status,
@@ -1179,11 +1209,11 @@ function setupApiEndpoints(db) {
           ROUND(bayarAngsuranJasa, 2) AS bayarAngsuranJasa,
           ROUND(SUM(CASE WHEN a.tanggalBayar IS NOT NULL THEN a.uangAngsuran ELSE 0 END) + bayarAngsuranJasa, 2) AS bayarTagihan,
           (
-              CASE
-                WHEN (SUM(CASE WHEN a.tanggalBayar IS NULL THEN a.totalBayar ELSE 0 END)) <= 0 THEN 'Lunas'
-                  WHEN (SUM(CASE WHEN a.tanggalBayar IS NULL THEN a.totalBayar ELSE 0 END)) > 0 THEN 'Belum Lunas'
-            ELSE 'Belum Pinjam'
-          END
+            CASE
+              WHEN (SUM(CASE WHEN a.tanggalBayar IS NULL THEN a.totalBayar ELSE 0 END)) <= 0 THEN 'Lunas'
+              WHEN (SUM(CASE WHEN a.tanggalBayar IS NULL THEN a.totalBayar ELSE 0 END)) > 0 THEN 'Belum Lunas'
+              ELSE 'Belum Pinjam'
+            END
           ) AS statusPinjaman
       FROM tbl_angsuran a
       JOIN tbl_pinjam b ON a.idPinjam = b.id
@@ -1192,10 +1222,10 @@ function setupApiEndpoints(db) {
           SELECT
             *,
             SUM(jasaUang) AS bayarAngsuranJasa
-          FROM bayar_angsuran
+          FROM tbl_bayarangsuran
           GROUP BY idPinjam
       ) d ON a.idPinjam = d.idPinjam
-      WHERE YEAR(b.tanggalTransaksi) >= 2024 - 1 AND YEAR(b.tanggalTransaksi) <= 2024
+      WHERE YEAR(b.tanggalTransaksi) >= ? - 1 AND YEAR(b.tanggalTransaksi) <= ?
       GROUP BY a.idPinjam
       ORDER BY b.createdAt DESC
   `;
