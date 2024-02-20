@@ -7,6 +7,7 @@ import {
   getBayarByKodeAnggota,
   getPengaturan,
   postAngsuran,
+  postBayar,
   updateBayarAngsuran,
   updateLunasAngsuran,
 } from "../utils/api";
@@ -87,7 +88,9 @@ export const PinjamBayarModal = (props) => {
 
   const handleBayarClick = async (tagihan, index) => {
     try {
-      const inputTagihan = {
+      await updateBayarAngsuran(tagihan.id);
+
+      await postAngsuran({
         kodeAnggota: kodeAnggota,
         jenisTransaksi: "Bayar",
         angsuran: index,
@@ -95,11 +98,24 @@ export const PinjamBayarModal = (props) => {
         angsuranPokok: tagihan.uangAngsuran,
         angsuranJasa: tagihan.jasaUang,
         angsuranPerBulan: tagihan.totalBayar,
-      };
+      });
 
-      await updateBayarAngsuran(tagihan.id);
-      await postAngsuran(inputTagihan);
+      await postBayar({
+        idPinjam: tagihan.idPinjam,
+        uangAngsuran: tagihan.uangAngsuran,
+        jasaUang: tagihan.jasaUang,
+        totalBayar: tagihan.totalBayar,
+        tanggalBayar: formattedDate,
+      });
+
       fetchedTagihan(idPinjam);
+      // console.log({
+      //   idPinjam: tagihan.idPinjam,
+      //   uangAngsuran: tagihan.uangAngsuran,
+      //   jasaUang: tagihan.jasaUang,
+      //   totalBayar: tagihan.totalBayar,
+      //   tanggalBayar: formattedDate,
+      // });
     } catch (error) {
       console.log("Error handle pembayaran angsuran: ", error);
     }
@@ -147,20 +163,26 @@ export const PinjamBayarModal = (props) => {
         0
       ); */
 
-      const inputTagihan = {
+      await updateLunasAngsuran(tagihan.idPinjam);
+
+      await postAngsuran({
         kodeAnggota: kodeAnggota,
         jenisTransaksi: "Bayar",
         angsuran: index + 1,
         tanggalTransaksi: formattedDate,
-        angsuranPokok: totalUangAngsuran.toFixed(2),
-        angsuranJasa: totalJasaUang.toFixed(2),
-        angsuranPerBulan: parseFloat(totalUangAngsuran + totalJasaUang).toFixed(
-          2
-        ),
-      };
+        angsuranPokok: totalUangAngsuran,
+        angsuranJasa: totalJasaUang,
+        angsuranPerBulan: totalUangAngsuran + totalJasaUang,
+      });
 
-      await updateLunasAngsuran(tagihan.idPinjam);
-      await postAngsuran(inputTagihan);
+      await postBayar({
+        idPinjam: tagihan.idPinjam,
+        uangAngsuran: totalUangAngsuran,
+        jasaUang: totalJasaUang,
+        totalBayar: totalUangAngsuran + totalJasaUang,
+        tanggalBayar: formattedDate,
+      });
+
       await fetchedTagihan(idPinjam);
       // console.log(inputTagihan);
     } catch (error) {
