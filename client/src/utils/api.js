@@ -221,6 +221,18 @@ export const postAngsuran = async (data) => {
   }
 };
 
+export const postBayar = async (data) => {
+  try {
+    const response = await axios.post(
+      `${API_ENDPOINT}/post/bayarangsuran`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Internal Client Error");
+  }
+};
+
 export const updateBayarAngsuran = async (id) => {
   try {
     const response = await axios.put(`${API_ENDPOINT}/put/pinjam/${id}`);
