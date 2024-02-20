@@ -1164,42 +1164,40 @@ function setupApiEndpoints(db) {
 
     const sqlQuery = `
       SELECT
-          tbl_pinjam.id,
-          tbl_anggota.status,
-          tbl_pinjam.kodeAnggota,
-          tbl_anggota.nama,
-          tbl_pinjam.jenisTransaksi,
-          tbl_pinjam.angsuran,
-          tbl_pinjam.tanggalTransaksi,
-          tbl_pinjam.angsuranPokok AS nominalPinjam,
-          (tbl_pinjam.angsuranPokok/tbl_pinjam.angsuran) AS angsuranPokok,
-          (tbl_pinjam.angsuranPokok * ((SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100)) AS angsuranJasa,
-          ((tbl_pinjam.angsuranPokok/tbl_pinjam.angsuran) + (tbl_pinjam.angsuranPokok * ((SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100))) AS angsuranPerBulan,
-          tbl_angsuran.pokokBayar AS bayarAngsuranPokok,
-          tbl_angsuran.jasaBayar AS bayarAngsuranJasa,
-          (tbl_angsuran.pokokBayar + tbl_angsuran.jasaBayar) AS bayarTagihan,
-          tbl_angsuran.statusPinjaman
-      FROM tbl_anggota
-      LEFT JOIN tbl_pinjam ON tbl_anggota.kodeAnggota = tbl_pinjam.kodeAnggota
-      LEFT JOIN
+        a.idPinjam,
+          c.kodeAnggota,
+          c.nama,
+          c.status,
+          b.jenisTransaksi,
+          b.tanggalTransaksi,
+          ROUND(b.angsuranPokok, 2) AS nominalPinjam,
+          b.angsuran,
+          ROUND((b.angsuranPokok/b.angsuran), 2) AS angsuranPokok,
+          ROUND((b.angsuranPokok * ((SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100)), 2) AS angsuranJasa,
+          ROUND(((b.angsuranPokok/b.angsuran) + (b.angsuranPokok * ((SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100))), 2) AS angsuranPerBulan,
+          ROUND(SUM(CASE WHEN a.tanggalBayar IS NOT NULL THEN a.uangAngsuran ELSE 0 END), 2) AS bayarAngsuranPokok,
+          ROUND(bayarAngsuranJasa, 2) AS bayarAngsuranJasa,
+          ROUND(SUM(CASE WHEN a.tanggalBayar IS NOT NULL THEN a.uangAngsuran ELSE 0 END) + bayarAngsuranJasa, 2) AS bayarTagihan,
           (
-              SELECT
-                idPinjam,
-                  SUM(CASE WHEN tanggalBayar IS NOT NULL THEN uangAngsuran ELSE 0 END) AS pokokBayar,
-                  SUM(CASE WHEN tanggalBayar IS NOT NULL THEN jasaUang ELSE 0 END) AS jasaBayar,
-                (
-                      CASE
-                        WHEN (SUM(CASE WHEN tanggalBayar IS NULL THEN totalBayar ELSE 0 END)) <= 0 THEN 'Lunas'
-                        WHEN (SUM(CASE WHEN tanggalBayar IS NULL THEN totalBayar ELSE 0 END)) > 0 THEN 'Belum Lunas'
-                        ELSE 'Belum Pinjam'
-                      END
-                  ) AS statusPinjaman
-              FROM tbl_angsuran
-              GROUP BY idPinjam
-          ) tbl_angsuran ON tbl_pinjam.id = tbl_angsuran.idPinjam
-      WHERE YEAR(tbl_pinjam.tanggalTransaksi) >= ? - 1 AND YEAR(tbl_pinjam.tanggalTransaksi) <= ? AND tbl_pinjam.jenisTransaksi = 'Pinjam'
-      GROUP BY tbl_pinjam.id
-      ORDER BY tbl_pinjam.createdAt DESC
+              CASE
+                WHEN (SUM(CASE WHEN a.tanggalBayar IS NULL THEN a.totalBayar ELSE 0 END)) <= 0 THEN 'Lunas'
+                  WHEN (SUM(CASE WHEN a.tanggalBayar IS NULL THEN a.totalBayar ELSE 0 END)) > 0 THEN 'Belum Lunas'
+            ELSE 'Belum Pinjam'
+          END
+          ) AS statusPinjaman
+      FROM tbl_angsuran a
+      JOIN tbl_pinjam b ON a.idPinjam = b.id
+      JOIN tbl_anggota c ON b.kodeAnggota = c.kodeAnggota
+      JOIN (
+          SELECT
+            *,
+            SUM(jasaUang) AS bayarAngsuranJasa
+          FROM bayar_angsuran
+          GROUP BY idPinjam
+      ) d ON a.idPinjam = d.idPinjam
+      WHERE YEAR(b.tanggalTransaksi) >= 2024 - 1 AND YEAR(b.tanggalTransaksi) <= 2024
+      GROUP BY a.idPinjam
+      ORDER BY b.createdAt DESC
   `;
 
     const startYear = year;
