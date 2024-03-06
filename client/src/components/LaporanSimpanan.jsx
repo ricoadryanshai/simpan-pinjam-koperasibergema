@@ -126,12 +126,17 @@ const LaporanSimpanan = () => {
   }, 0);
 
   let totalSHUSimpanan = 0;
+  let totalSHUSimpananPengurus = 0;
   let totalSHUPinjaman = 0;
 
   const jumlahPenarikan = lapByYear.reduce((total, laporan) => {
     const penarikan = laporan.penarikan;
     return total + penarikan;
   }, 0);
+
+  const countPengurus = lapByYear.filter(
+    (laporan) => laporan.jenisAnggota === "Pengurus"
+  ).length;
 
   let totalSaldoAllRows = 0;
 
@@ -158,13 +163,11 @@ const LaporanSimpanan = () => {
         laporan.simpananPokok +
         laporan.simpananWajib +
         laporan.simpananSukarela;
-
       let pendapatanJenisKeanggotaan = null;
 
       const jenisSHU = keanggotaan.find(
         (anggota) => anggota.jenisSHU === laporan.jenisAnggota
       );
-
       if (jenisSHU) {
         const pembagianSHU =
           pendapatan.pendapatanJasa * (jenisSHU.persentaseSHU / 100);
@@ -179,23 +182,22 @@ const LaporanSimpanan = () => {
           pinjam.kodeAnggota === laporan.kodeAnggota &&
           pinjam.statusPinjaman === "Lunas"
         ) {
-          hasLunasPinjaman = true; // Set the flag if a match is found
-          return true; // Stop the iteration
+          hasLunasPinjaman = true;
+          return true;
         }
-        return false; // Continue the iteration
+        return false;
       });
 
       if (hasLunasPinjaman) {
         statusPinjam = "SHU Pinjam";
       }
 
-      let dapatSHUPinjam = 0; // Initialize with 0
+      let dapatSHUPinjam = 0;
 
       if (matchKodePinjam && matchKodePinjam.statusPinjaman === "Lunas") {
         const jenisSHUPinjam = keanggotaan.find(
           (anggota) => anggota.jenisSHU === statusPinjam
         );
-
         if (jenisSHUPinjam) {
           const pembagianSHU =
             pendapatan.pendapatanJasa * (jenisSHUPinjam.persentaseSHU / 100);
@@ -205,10 +207,18 @@ const LaporanSimpanan = () => {
 
       const persentTiapNasabah = jumlahSimpanan / jumlahSimpananAllRows;
 
-      const pendapatanSHUSimpanan =
-        pendapatanJenisKeanggotaan * persentTiapNasabah;
+      let pendapatanSHUSimpanan;
+      if (laporan.jenisAnggota === "Pengurus") {
+        pendapatanSHUSimpanan = pendapatanJenisKeanggotaan / countPengurus;
+      } else {
+        pendapatanSHUSimpanan = pendapatanJenisKeanggotaan * persentTiapNasabah;
+      }
 
       const pendapatanSHUPinjaman = dapatSHUPinjam * persentTiapNasabah;
+
+      if (laporan.jenisAnggota === "Pengurus") {
+        totalSHUSimpananPengurus += pendapatanSHUSimpanan;
+      }
       return {
         kodeAnggota: laporan.kodeAnggota,
         tanggalSimpan: `${year}-${month}-${date}`,
@@ -233,7 +243,7 @@ const LaporanSimpanan = () => {
         keterangan: `SHU Administrasi ${selectedYear}`,
       });
 
-      // // Input Modal
+      // Input Modal
       await tambahTransaksi({
         jenisTransaksi: `Transaksi Masuk`,
         tanggalTransaksi: `${year}-${month}-${date}`,
@@ -252,10 +262,11 @@ const LaporanSimpanan = () => {
 
       alert(`
         Berhasil import SHU:\n
-        SHU Simpanan: ${totalSHUSimpanan}\n
-        SHU Pinjaman: ${totalSHUPinjaman}\n
-        SHU Administrasi: ${pendapatan.pendapatanAdministrasi}\n
-        SHU Modal: ${pendapatan.pendapatanModal}\n
+        SHU Pengurus: ${formatRupiah(totalSHUSimpananPengurus)}\n
+        SHU Simpanan: ${formatRupiah(totalSHUSimpanan)}\n
+        SHU Pinjaman: ${formatRupiah(totalSHUPinjaman)}\n
+        SHU Administrasi: ${formatRupiah(pendapatan.pendapatanAdministrasi)}\n
+        SHU Modal: ${formatRupiah(pendapatan.pendapatanModal)}\n
       `);
     } catch (error) {
       console.error("Import SHU Error From Client-side:", error);
@@ -360,13 +371,11 @@ const LaporanSimpanan = () => {
                 laporan.simpananPokok +
                 laporan.simpananWajib +
                 laporan.simpananSukarela;
-
               let pendapatanJenisKeanggotaan = null;
 
               const jenisSHU = keanggotaan.find(
                 (anggota) => anggota.jenisSHU === laporan.jenisAnggota
               );
-
               if (jenisSHU) {
                 const pembagianSHU =
                   pendapatan.pendapatanJasa * (jenisSHU.persentaseSHU / 100);
@@ -381,17 +390,17 @@ const LaporanSimpanan = () => {
                   pinjam.kodeAnggota === laporan.kodeAnggota &&
                   pinjam.statusPinjaman === "Lunas"
                 ) {
-                  hasLunasPinjaman = true; // Set the flag if a match is found
-                  return true; // Stop the iteration
+                  hasLunasPinjaman = true;
+                  return true;
                 }
-                return false; // Continue the iteration
+                return false;
               });
 
               if (hasLunasPinjaman) {
                 statusPinjam = "SHU Pinjam";
               }
 
-              let dapatSHUPinjam = 0; // Initialize with 0
+              let dapatSHUPinjam = 0;
 
               if (
                 matchKodePinjam &&
@@ -400,7 +409,6 @@ const LaporanSimpanan = () => {
                 const jenisSHUPinjam = keanggotaan.find(
                   (anggota) => anggota.jenisSHU === statusPinjam
                 );
-
                 if (jenisSHUPinjam) {
                   const pembagianSHU =
                     pendapatan.pendapatanJasa *
@@ -411,8 +419,14 @@ const LaporanSimpanan = () => {
 
               const persentTiapNasabah = jumlahSimpanan / jumlahSimpananAllRows;
 
-              const pendapatanSHUSimpanan =
-                pendapatanJenisKeanggotaan * persentTiapNasabah;
+              let pendapatanSHUSimpanan;
+              if (laporan.jenisAnggota === "Pengurus") {
+                pendapatanSHUSimpanan =
+                  pendapatanJenisKeanggotaan / countPengurus;
+              } else {
+                pendapatanSHUSimpanan =
+                  pendapatanJenisKeanggotaan * persentTiapNasabah;
+              }
 
               const pendapatanSHUPinjaman = dapatSHUPinjam * persentTiapNasabah;
 
@@ -424,16 +438,13 @@ const LaporanSimpanan = () => {
                 pendapatanSHUSimpanan +
                 pendapatanSHUPinjaman -
                 laporan.penarikan;
-
               totalSaldoAllRows += totalSaldo;
 
-              let bg = "";
+              const bg =
+                laporan.status === "Tidak Aktif" ? "table-warning" : "";
 
-              if (laporan.status === "Tidak Aktif") {
-                bg = "table-warning";
-              }
               return (
-                <tr key={index} className={`${bg}`}>
+                <tr key={index} className={bg}>
                   <td className="text-center">{index + 1}</td>
                   <td className="text-center">{laporan.kodeAnggota}</td>
                   <td>{laporan.nama}</td>
