@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, Stack } from "react-bootstrap";
-import { getBeranda, getKas, getKasByYear } from "../utils/api";
+import { getBeranda, getKas } from "../utils/api";
 import { formatRupiah } from "../utils/format";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -13,7 +13,6 @@ import {
 export const BerandaSummaryCard = () => {
   const [beranda, setBeranda] = useState([]);
   const [saldoKas, setSaldoKas] = useState([]);
-  const [secondSaldoKas, setSecondSaldoKas] = useState([]);
 
   const currentMonth = new Intl.DateTimeFormat("en-US", {
     month: "long",
@@ -36,25 +35,12 @@ export const BerandaSummaryCard = () => {
     }
   };
 
-  const fetchSaldoKasByYear = async (year) => {
-    try {
-      const data = await getKasByYear(year);
-      setSecondSaldoKas(data);
-    } catch (error) {
-      console.error("Error fetching data saldo kas: ", error);
-    }
-  };
-
   useEffect(() => {
     fetchData();
   }, []);
 
   useEffect(() => {
     fetchSaldoKas();
-  }, []);
-
-  useEffect(() => {
-    fetchSaldoKasByYear(new Date().getFullYear());
   }, []);
   return (
     <>
@@ -125,6 +111,14 @@ export const BerandaSummaryCard = () => {
             Jumlah Anggota Terdaftar:{" "}
             <span className="fw-bold">{beranda.jumlahAnggota}</span>
           </Card.Text>
+          <Card.Text>
+            Jumlah Anggota Aktif:{" "}
+            <span className="fw-bold">{beranda.jumlahAktif}</span>
+          </Card.Text>
+          <Card.Text>
+            Jumlah Anggota Tidak Aktif:{" "}
+            <span className="fw-bold">{beranda.jumlahTidakAktif}</span>
+          </Card.Text>
           <FontAwesomeIcon icon={faUsers} className="floating-icon" />
         </Card>
 
@@ -141,9 +135,13 @@ export const BerandaSummaryCard = () => {
             <span className="fw-bold">{formatRupiah(saldoKas.saldoKas)}</span>
           </Card.Text>
           <Card.Text>
-            Saldo Kas Tahun Ini:{" "}
+            Profit Kas Tahun {new Date().getFullYear()}:{" "}
+            <span className="fw-bold">{formatRupiah(beranda.profitTahun)}</span>
+          </Card.Text>
+          <Card.Text>
+            Kebutuhan Kas Tahun {new Date().getFullYear()}:{" "}
             <span className="fw-bold">
-              {formatRupiah(secondSaldoKas.saldoKas)}
+              {formatRupiah(beranda.pengeluaranTahun)}
             </span>
           </Card.Text>
           <FontAwesomeIcon icon={faMoneyBill} className="floating-icon" />
