@@ -263,7 +263,9 @@ const LaporanSimpanan = () => {
       alert(`
         Berhasil import SHU:\n
         SHU Pengurus: ${formatRupiah(totalSHUSimpananPengurus)}\n
-        SHU Simpanan: ${formatRupiah(totalSHUSimpanan)}\n
+        SHU Simpanan: ${formatRupiah(
+          totalSHUSimpanan - totalSHUSimpananPengurus
+        )}\n
         SHU Pinjaman: ${formatRupiah(totalSHUPinjaman)}\n
         SHU Administrasi: ${formatRupiah(pendapatan.pendapatanAdministrasi)}\n
         SHU Modal: ${formatRupiah(pendapatan.pendapatanModal)}\n
