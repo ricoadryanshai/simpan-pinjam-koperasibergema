@@ -8,7 +8,6 @@ import {
   Pinjaman,
   Laporan,
   Transaksi,
-  Login,
   PengaturanSimpan,
   PengaturanSHU,
 } from "./pages/index";
@@ -19,8 +18,8 @@ function App() {
       <Router basename="/kpgansel">
         <Header />
         <Routes>
+          {/* <Route path="/" element={<Login />} /> */}
           <Route path="/" element={<Beranda />} />
-          <Route path="/login" element={<Login />} />
           <Route path="/anggota" element={<Anggota />} />
           <Route path="/simpanan" element={<Simpanan />} />
           <Route path="/pinjaman" element={<Pinjaman />} />

@@ -1,3 +1,7 @@
-Set WshShell = CreateObject("WScript.Shell")
-WshShell.Run "cmd /c nodemon C:\xampp\htdocs\simpan-pinjam-koperasibergema-master\server\server.js", 0
-Set WshShell = Nothing
+Set objShell = WScript.CreateObject("WScript.Shell")
+
+strCommand = "cmd /c cd C:\WEB APLIKASI KOPERASI 2024\web-app-koperasibergema\server && npm start"
+
+objShell.Run strCommand, 0, False
+
+Set objShell = Nothing
