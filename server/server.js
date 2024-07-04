@@ -1127,39 +1127,79 @@ function setupApiEndpoints(db) {
     const year = req.params.year;
 
     const sqlQuery = `
-      SELECT 
-          a.kodeAnggota, 
-          a.nama,
-          a.jenisAnggota,
-          YEAR(s.tanggalSimpan) AS tahunSimpan,
-          (
-            SELECT
-              (SUM(CASE WHEN (jenisSimpan != 'Ambil Simpanan' AND YEAR(tanggalSimpan) = ? - 1) THEN saldo ELSE 0 END) -
-                SUM(CASE WHEN (jenisSimpan = 'Ambil Simpanan' AND YEAR(tanggalSimpan) = ? - 1) THEN saldo ELSE 0 END))
-            FROM
-              tbl_simpan
-            WHERE
-              YEAR(tanggalSimpan) = ? - 1
-            AND tbl_simpan.kodeAnggota = a.kodeAnggota
-          ) AS saldoSimpanSebelumnya,
-          a.status,
-          SUM(CASE WHEN (s.jenisSimpan = 'Simpanan Pokok' AND YEAR(s.tanggalSimpan) = ?) THEN s.saldo ELSE 0 END) AS simpananPokok,
-          SUM(CASE WHEN (s.jenisSimpan = 'Simpanan Wajib' AND YEAR(s.tanggalSimpan) = ?) THEN s.saldo ELSE 0 END) AS simpananWajib,
-          SUM(CASE WHEN (s.jenisSimpan = 'Simpanan Sukarela' AND YEAR(s.tanggalSimpan) = ?) THEN s.saldo ELSE 0 END) AS simpananSukarela,
-          SUM(CASE WHEN (s.jenisSimpan = 'Ambil Simpanan' AND YEAR(s.tanggalSimpan) = ?) THEN s.saldo ELSE 0 END) AS penarikan
-      FROM
-          tbl_anggota a
-      LEFT JOIN
-          tbl_simpan s ON a.kodeAnggota = s.kodeAnggota
-      LEFT JOIN
-          tbl_keanggotaan k ON a.jenisAnggota = k.jenisSHU
+    WITH
+        LoanStatus AS(
+        SELECT
+            a.kodeAnggota,
+            a.idPinjam,
+            CASE
+              WHEN SUM(CASE WHEN a.tanggalBayar IS NULL THEN a.totalBayar ELSE 0 END) <= 0 THEN 'Lunas'
+              WHEN SUM(CASE WHEN a.tanggalBayar IS NULL THEN a.totalBayar ELSE 0 END) > 0 THEN 'Belum Lunas'
+            ELSE 'Belum Pinjam'
+      END AS statusPinjaman
+      FROM tbl_angsuran a
+      WHERE YEAR(updatedAt) BETWEEN ${year - 1} AND ${year}
       GROUP BY
+          a.idPinjam,
           a.kodeAnggota
-      ORDER BY
-          a.kodeAnggota
+    )
+
+    SELECT
+        a.kodeAnggota,
+        a.nama,
+        a.jenisAnggota,
+        YEAR(s.tanggalSimpan) AS tahunSimpan,
+        (
+            SELECT
+                SUM(CASE WHEN jenisSimpan != 'Ambil Simpanan' AND YEAR(tanggalSimpan) = ${
+                  year - 1
+                } THEN saldo ELSE 0 END) - 
+                SUM(CASE WHEN jenisSimpan = 'Ambil Simpanan' AND YEAR(tanggalSimpan) = ${
+                  year - 1
+                } THEN saldo ELSE 0 END)
+            FROM tbl_simpan s2
+            WHERE YEAR(s2.tanggalSimpan) = ${
+              year - 1
+            } AND s2.kodeAnggota = a.kodeAnggota
+        ) AS saldoSimpanSebelumnya,
+        a.status,
+        SUM(CASE WHEN s.jenisSimpan = 'Simpanan Pokok' AND YEAR(s.tanggalSimpan) = ${year} THEN s.saldo ELSE 0 END) AS simpananPokok,
+        SUM(CASE WHEN s.jenisSimpan = 'Simpanan Wajib' AND YEAR(s.tanggalSimpan) = ${year} THEN s.saldo ELSE 0 END) AS simpananWajib,
+        SUM(CASE WHEN s.jenisSimpan = 'Simpanan Sukarela' AND YEAR(s.tanggalSimpan) = ${year} THEN s.saldo ELSE 0 END) AS simpananSukarela,
+        SUM(CASE WHEN s.jenisSimpan = 'Ambil Simpanan' AND YEAR(s.tanggalSimpan) = ${year} THEN s.saldo ELSE 0 END) AS penarikan,
+        COALESCE(l.angsuranJasa, 0) AS bayarAngsuranJasa,
+        CASE WHEN SUM(CASE WHEN ls.statusPinjaman = 'Lunas' THEN 1 ELSE 0 END) > 0 THEN 'GET' ELSE 'NOT GET' END AS shuPinjam
+    FROM tbl_anggota a
+    LEFT JOIN tbl_simpan s ON a.kodeAnggota = s.kodeAnggota
+    LEFT JOIN tbl_keanggotaan k ON a.jenisAnggota = k.jenisSHU
+    LEFT JOIN (
+        SELECT
+            d.kodeAnggota,
+            COALESCE(ROUND(SUM(CASE WHEN c.tanggalBayar IS NOT NULL THEN c.jasaUang ELSE 0 END), 2), 0) AS angsuranJasa
+        FROM (SELECT DISTINCT kodeAnggota FROM tbl_angsuran) AS d
+        LEFT JOIN tbl_angsuran AS c ON c.kodeAnggota = d.kodeAnggota AND YEAR(c.updatedAt) BETWEEN ${
+          year - 1
+        } AND ${year}
+        GROUP BY d.kodeAnggota
+    ) l ON a.kodeAnggota = l.kodeAnggota
+    LEFT JOIN LoanStatus ls ON a.kodeAnggota = ls.kodeAnggota
+    GROUP BY a.kodeAnggota
+    ORDER BY a.kodeAnggota
   `;
 
-    const values = [year, year, year, year, year, year, year, year];
+    const values = [
+      year,
+      year,
+      year,
+      year,
+      year,
+      year,
+      year,
+      year,
+      year,
+      year,
+      year,
+    ];
 
     try {
       const results = await getArrayResult(sqlQuery, values);
@@ -1206,7 +1246,10 @@ function setupApiEndpoints(db) {
           ROUND((b.angsuranPokok * ((SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100)), 2) AS angsuranJasa,
           ROUND(((b.angsuranPokok/b.angsuran) + (b.angsuranPokok * ((SELECT bungaAngsuran FROM tbl_pengaturan LIMIT 1) / 100))), 2) AS angsuranPerBulan,
           ROUND(SUM(CASE WHEN a.tanggalBayar IS NOT NULL THEN a.uangAngsuran ELSE 0 END), 2) AS bayarAngsuranPokok,
-          ROUND(bayarAngsuranJasa, 2) AS bayarAngsuranJasa,
+          CASE
+            WHEN ROUND(bayarAngsuranJasa, 2) IS NULL THEN 0
+            ELSE ROUND(bayarAngsuranJasa, 2)
+          END AS bayarAngsuranJasa,
           ROUND(SUM(CASE WHEN a.tanggalBayar IS NOT NULL THEN a.uangAngsuran ELSE 0 END) + bayarAngsuranJasa, 2) AS bayarTagihan,
           (
             CASE
@@ -1218,7 +1261,7 @@ function setupApiEndpoints(db) {
       FROM tbl_angsuran a
       JOIN tbl_pinjam b ON a.idPinjam = b.id
       JOIN tbl_anggota c ON b.kodeAnggota = c.kodeAnggota
-      JOIN (
+      LEFT JOIN (
           SELECT
             *,
             SUM(jasaUang) AS bayarAngsuranJasa
@@ -1227,7 +1270,7 @@ function setupApiEndpoints(db) {
       ) d ON a.idPinjam = d.idPinjam
       WHERE YEAR(b.tanggalTransaksi) >= ? - 1 AND YEAR(b.tanggalTransaksi) <= ?
       GROUP BY a.idPinjam
-      ORDER BY b.createdAt DESC
+      ORDER BY b.tanggalTransaksi DESC, b.createdAt DESC
   `;
 
     const startYear = year;
@@ -1293,69 +1336,32 @@ function setupApiEndpoints(db) {
   });
 
   app.get("/get/lapPembagianSHU", async (req, res) => {
-    sqlQueryJasa = await getQueryResult(`
-      SELECT
-        ROUND(SUM(CASE WHEN jenisTransaksi = 'Bayar' THEN angsuranJasa ELSE 0 END), 2) AS bayarAngsuranJasa
-      FROM
-        tbl_pinjam
-  `);
-
-    sqlQueryTransaksi = await getQueryResult(`
-      SELECT
-        SUM(CASE WHEN jenisTransaksi = 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END) AS totalTransaksiKeluar
-      FROM
-        tbl_transaksi
-  `);
-
-    sqlQueryPengurus = await getQueryResult(`
-      SELECT
-        persentaseSHU
-      FROM
-        tbl_pembagian_shu
-      WHERE id = 1
-    `);
-
-    sqlQueryAnggota = await getQueryResult(`
-      SELECT
-        persentaseSHU
-      FROM
-        tbl_pembagian_shu
-      WHERE id = 6
-    `);
-
-    sqlQueryPinjam = await getQueryResult(`
-      SELECT
-        persentaseSHU
-      FROM
-        tbl_pembagian_shu
-      WHERE id = 2
-    `);
-
-    sqlQueryAdministrasi = await getQueryResult(`
-      SELECT
-        persentaseSHU
-      FROM
-        tbl_pembagian_shu
-      WHERE id = 3
-    `);
-
-    sqlQueryModal = await getQueryResult(`
-      SELECT
-        persentaseSHU
-      FROM
-        tbl_pembagian_shu
-      WHERE id = 4
-    `);
-
-    sqlQueryNonAnggota = await getQueryResult(`
-      SELECT
-        persentaseSHU
-      FROM
-        tbl_pembagian_shu
-      WHERE id = 5
-    `);
-
     try {
+      const sqlQueryJasa = await getQueryResult(`
+      SELECT
+        ROUND(SUM(CASE WHEN tanggalBayar IS NOT NULL AND tanggalBayar <> '' THEN jasaUang ELSE 0 END), 2) AS bayarAngsuranJasa
+      FROM tbl_angsuran
+    `);
+
+      const sqlQueryTransaksi = await getQueryResult(`
+      SELECT ROUND(SUM(CASE WHEN jenisTransaksi = 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END), 2) AS totalTransaksiKeluar
+      FROM tbl_transaksi
+    `);
+
+      const sqlQuerySHU = async (id) =>
+        await getQueryResult(`
+      SELECT persentaseSHU
+      FROM tbl_pembagian_shu
+      WHERE id = ${id}
+    `);
+
+      const sqlQueryPengurus = await sqlQuerySHU(1);
+      const sqlQueryPinjam = await sqlQuerySHU(2);
+      const sqlQueryAdministrasi = await sqlQuerySHU(3);
+      const sqlQueryModal = await sqlQuerySHU(4);
+      const sqlQueryNonAnggota = await sqlQuerySHU(5);
+      const sqlQueryAnggota = await sqlQuerySHU(6);
+
       const persentaseAnggota = sqlQueryAnggota.persentaseSHU;
       const persentasePengurus = sqlQueryPengurus.persentaseSHU;
       const persentasePinjam = sqlQueryPinjam.persentaseSHU;
@@ -1395,80 +1401,33 @@ function setupApiEndpoints(db) {
   app.get("/get/lapPembagianSHU/:year", async (req, res) => {
     const { year } = req.params;
 
-    sqlQueryJasa = await getQueryResult(
-      `
-    SELECT
-      ROUND(SUM(angsuranJasa), 2) AS bayarAngsuranJasa
-    FROM tbl_pinjam
-    WHERE YEAR(tanggalTransaksi) >= ${
-      year - 1
-    } AND YEAR(tanggalTransaksi) <= ${year}
-      AND jenisTransaksi = 'Bayar'
-    `
-    );
-
-    sqlQueryTransaksi = await getQueryResult(
-      `
-    SELECT
-      SUM(CASE WHEN jenisTransaksi = 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END) AS totalTransaksiKeluar
-    FROM
-      tbl_transaksi
-    WHERE
-      YEAR(tanggalTransaksi) >= ${
-        year - 1
-      } AND YEAR(tanggalTransaksi) <= ${year}
-  `
-    );
-
-    sqlQueryPengurus = await getQueryResult(`
-      SELECT
-        persentaseSHU
-      FROM
-        tbl_pembagian_shu
-      WHERE id = 1
-    `);
-
-    sqlQueryAnggota = await getQueryResult(`
-      SELECT
-        persentaseSHU
-      FROM
-        tbl_pembagian_shu
-      WHERE id = 6
-    `);
-
-    sqlQueryPinjam = await getQueryResult(`
-      SELECT
-        persentaseSHU
-      FROM
-        tbl_pembagian_shu
-      WHERE id = 2
-    `);
-
-    sqlQueryAdministrasi = await getQueryResult(`
-      SELECT
-        persentaseSHU
-      FROM
-        tbl_pembagian_shu
-      WHERE id = 3
-    `);
-
-    sqlQueryModal = await getQueryResult(`
-      SELECT
-        persentaseSHU
-      FROM
-        tbl_pembagian_shu
-      WHERE id = 4
-    `);
-
-    sqlQueryNonAnggota = await getQueryResult(`
-      SELECT
-        persentaseSHU
-      FROM
-        tbl_pembagian_shu
-      WHERE id = 5
-    `);
-
     try {
+      const sqlQueryJasa = await getQueryResult(`
+      SELECT ROUND(SUM(CASE WHEN tanggalBayar IS NOT NULL AND tanggalBayar <> '' THEN jasaUang ELSE 0 END), 2) AS bayarAngsuranJasa
+      FROM tbl_angsuran
+      WHERE YEAR(createdAt) BETWEEN ${year - 1} AND ${year}
+    `);
+
+      const sqlQueryTransaksi = await getQueryResult(`
+      SELECT ROUND(SUM(CASE WHEN jenisTransaksi = 'Transaksi Keluar' THEN nominalTransaksi ELSE 0 END), 2) AS totalTransaksiKeluar
+      FROM tbl_transaksi
+      WHERE YEAR(tanggalTransaksi) BETWEEN ${year - 1} AND ${year}
+    `);
+
+      const sqlQuerySHU = async (id) =>
+        await getQueryResult(`
+      SELECT persentaseSHU
+      FROM tbl_pembagian_shu
+      WHERE id = ${id}
+    `);
+
+      const sqlQueryPengurus = await sqlQuerySHU(1);
+      const sqlQueryPinjam = await sqlQuerySHU(2);
+      const sqlQueryAdministrasi = await sqlQuerySHU(3);
+      const sqlQueryModal = await sqlQuerySHU(4);
+      const sqlQueryNonAnggota = await sqlQuerySHU(5);
+      const sqlQueryAnggota = await sqlQuerySHU(6);
+
       const persentaseAnggota = sqlQueryAnggota.persentaseSHU;
       const persentasePengurus = sqlQueryPengurus.persentaseSHU;
       const persentasePinjam = sqlQueryPinjam.persentaseSHU;
@@ -1478,6 +1437,7 @@ function setupApiEndpoints(db) {
 
       const totalPendapatan =
         sqlQueryJasa.bayarAngsuranJasa - sqlQueryTransaksi.totalTransaksiKeluar;
+
       const pembagianAnggota = totalPendapatan * (persentaseAnggota / 100);
       const pembagianPengurus = totalPendapatan * (persentasePengurus / 100);
       const pembagianPinjam = totalPendapatan * (persentasePinjam / 100);

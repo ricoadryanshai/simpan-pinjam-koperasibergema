@@ -62,6 +62,10 @@ export const LaporanPinjaman = () => {
     }
   }, [selectedYear]);
 
+  const totalPinjaman = lapByYear.reduce((total, laporan) => {
+    const jumlah = laporan.nominalPinjam;
+    return total + jumlah;
+  }, 0);
   const totalAngsuranPokok = lapByYear.reduce((total, laporan) => {
     const jumlah = laporan.bayarAngsuranPokok;
     return total + jumlah;
@@ -158,43 +162,49 @@ export const LaporanPinjaman = () => {
               </tr>
             </thead>
             <tbody className="align-middle">
-              {lapByYear.map((laporan, index) => (
-                <tr key={index}>
-                  <td className="text-center">{index + 1}</td>
-                  <td>{laporan.nama}</td>
-                  <td className="text-center">
-                    {formatDate(laporan.tanggalTransaksi)}
-                  </td>
-                  <td>{formatRupiah(laporan.nominalPinjam)}</td>
-                  <td>{laporan.angsuran}</td>
-                  <td>{formatRupiah(laporan.angsuranPokok)}</td>
-                  <td>{formatRupiah(laporan.angsuranJasa)}</td>
-                  <td>{formatRupiah(laporan.angsuranPerBulan)}</td>
-                  <td className="fw-bold border-start">
-                    {formatRupiah(laporan.bayarAngsuranPokok)}
-                  </td>
-                  <td className="fw-bold">
-                    {formatRupiah(laporan.bayarAngsuranJasa)}
-                  </td>
-                  <td className="fw-bold">
-                    {formatRupiah(laporan.bayarTagihan)}
-                  </td>
-                  <td
-                    style={{
-                      textAlign: "center",
-                      fontWeight: "bold",
-                      color:
-                        laporan.statusPinjaman === "Lunas" ? "green" : "red",
-                    }}
-                  >
-                    {laporan.statusPinjaman}
-                  </td>
-                </tr>
-              ))}
+              {lapByYear.map((laporan, index) => {
+                return (
+                  <tr key={index}>
+                    <td className="text-center">{index + 1}</td>
+                    <td>{laporan.nama}</td>
+                    <td className="text-center">
+                      {formatDate(laporan.tanggalTransaksi)}
+                    </td>
+                    <td>{formatRupiah(laporan.nominalPinjam)}</td>
+                    <td>{laporan.angsuran}</td>
+                    <td>{formatRupiah(laporan.angsuranPokok)}</td>
+                    <td>{formatRupiah(laporan.angsuranJasa)}</td>
+                    <td>{formatRupiah(laporan.angsuranPerBulan)}</td>
+                    <td className="fw-bold border-start">
+                      {formatRupiah(laporan.bayarAngsuranPokok)}
+                    </td>
+                    <td className="fw-bold">
+                      {formatRupiah(laporan.bayarAngsuranJasa)}
+                    </td>
+                    <td className="fw-bold">
+                      {formatRupiah(laporan.bayarTagihan)}
+                    </td>
+                    <td
+                      style={{
+                        textAlign: "center",
+                        fontWeight: "bold",
+                        color:
+                          laporan.statusPinjaman === "Lunas" ? "green" : "red",
+                      }}
+                    >
+                      {laporan.statusPinjaman}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
             <tfoot className="table-light">
               <tr>
-                <td colSpan={8} className="text-center fw-bold">
+                <td colSpan={3} className="text-center fw-bold">
+                  Jumlah Bayar Angsuran
+                </td>
+                <td className="fw-bold">{formatRupiah(totalPinjaman)}</td>
+                <td colSpan={4} className="text-center fw-bold">
                   Jumlah Bayar Angsuran
                 </td>
                 <td className="fw-bold">{formatRupiah(totalAngsuranPokok)}</td>

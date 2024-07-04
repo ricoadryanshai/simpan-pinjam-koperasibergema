@@ -249,38 +249,46 @@ export default function TransaksiKas() {
                 </tr>
               </thead>
               <tbody>
-                {currentEntries.map((transaksi, index) => (
-                  <tr className="text-center align-middle" key={index}>
-                    <td>{index + startIndex}</td>
-                    <td>{formatDate(transaksi.tanggalTransaksi)}</td>
-                    <td>{transaksi.jenisTransaksi}</td>
-                    <td className="text-start">{transaksi.keterangan}</td>
-                    <td className="text-start">
-                      {formatRupiah(parseFloat(transaksi.nominalTransaksi))}
-                    </td>
-                    <td className="no-print">
-                      <Button
-                        variant="warning"
-                        onClick={() => handleModalShow("edit", transaksi)}
-                      >
-                        <FontAwesomeIcon
-                          icon={faPenToSquare}
-                          className="mx-1"
-                        />
-                        Edit
-                      </Button>
-                    </td>
-                    <td className="no-print">
-                      <Button
-                        variant="danger"
-                        onClick={() => handleModalShow("delete", transaksi)}
-                      >
-                        <FontAwesomeIcon icon={faTrashCan} className="mx-1" />
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                {currentEntries.map((transaksi, index) => {
+                  const color =
+                    transaksi.jenisTransaksi === "Transaksi Masuk"
+                      ? "green"
+                      : "red";
+                  return (
+                    <tr className="text-center align-middle" key={index}>
+                      <td>{index + startIndex}</td>
+                      <td>{formatDate(transaksi.tanggalTransaksi)}</td>
+                      <td style={{ color: color }}>
+                        {transaksi.jenisTransaksi}
+                      </td>
+                      <td className="text-start">{transaksi.keterangan}</td>
+                      <td className="text-start">
+                        {formatRupiah(parseFloat(transaksi.nominalTransaksi))}
+                      </td>
+                      <td className="no-print">
+                        <Button
+                          variant="warning"
+                          onClick={() => handleModalShow("edit", transaksi)}
+                        >
+                          <FontAwesomeIcon
+                            icon={faPenToSquare}
+                            className="mx-1"
+                          />
+                          Edit
+                        </Button>
+                      </td>
+                      <td className="no-print">
+                        <Button
+                          variant="danger"
+                          onClick={() => handleModalShow("delete", transaksi)}
+                        >
+                          <FontAwesomeIcon icon={faTrashCan} className="mx-1" />
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </Table>
           </Container>

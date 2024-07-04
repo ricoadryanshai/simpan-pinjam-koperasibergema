@@ -9,10 +9,11 @@ const LaporanSimpananExport = ({
   totalSaldoAllRows,
   keanggotaan,
   pendapatan,
-  kodePinjam,
   totalSHUSimpanan,
   totalSHUPinjaman,
   jumlahPenarikan,
+  jumlahAngsuranAllRows,
+  countPengurus,
 }) => {
   return (
     <table className="no-display" ref={tableReference}>
@@ -58,45 +59,22 @@ const LaporanSimpananExport = ({
             pendapatanJenisKeanggotaan = pembagianSHU;
           }
 
-          let statusPinjam = "";
-          let hasLunasPinjaman = false;
-
-          const matchKodePinjam = kodePinjam.find((pinjam) => {
-            if (
-              pinjam.kodeAnggota === laporan.kodeAnggota &&
-              pinjam.statusPinjaman === "Lunas"
-            ) {
-              hasLunasPinjaman = true; // Set the flag if a match is found
-              return true; // Stop the iteration
-            }
-            return false; // Continue the iteration
-          });
-
-          if (hasLunasPinjaman) {
-            statusPinjam = "SHU Pinjam";
-          }
-
-          let dapatSHUPinjam = 0; // Initialize with 0
-
-          if (matchKodePinjam && matchKodePinjam.statusPinjaman === "Lunas") {
-            const jenisSHUPinjam = keanggotaan.find(
-              (anggota) => anggota.jenisSHU === statusPinjam
-            );
-
-            if (jenisSHUPinjam) {
-              const pembagianSHU =
-                pendapatan.pendapatanJasa *
-                (jenisSHUPinjam.persentaseSHU / 100);
-              dapatSHUPinjam = pembagianSHU;
-            }
-          }
-
           const persentTiapNasabah = jumlahSimpanan / jumlahSimpananAllRows;
+          const persentSHUPinjaman =
+            laporan.bayarAngsuranJasa !== 0
+              ? laporan.bayarAngsuranJasa / jumlahAngsuranAllRows
+              : 0;
 
-          const pendapatanSHUSimpanan =
-            pendapatanJenisKeanggotaan * persentTiapNasabah;
+          let pendapatanSHUSimpanan;
+          if (laporan.jenisAnggota === "Pengurus") {
+            pendapatanSHUSimpanan = pendapatanJenisKeanggotaan / countPengurus;
+          } else {
+            pendapatanSHUSimpanan =
+              pendapatanJenisKeanggotaan * persentTiapNasabah;
+          }
 
-          const pendapatanSHUPinjaman = dapatSHUPinjam * persentTiapNasabah;
+          const pendapatanSHUPinjaman =
+            persentSHUPinjaman * pendapatan.pendapatanPinjam;
 
           const totalSaldo =
             jumlahSimpanan +

@@ -1,7 +1,6 @@
 import React from "react";
 import { Card, Table, Stack, Form, Button } from "react-bootstrap";
 import {
-  getLapAngsuranByYear,
   getLapPendapatanByYear,
   getLapSimpanan,
   getLapSimpananByYear,
@@ -29,32 +28,31 @@ const LaporanSimpanan = () => {
   const [selectedYear, setSelectedYear] = React.useState("");
   const [uniqueYears, setUniqueYears] = React.useState([]);
   const [pendapatan, setPendapatan] = React.useState({});
-  const [kodePinjam, setKodePinjam] = React.useState([]);
 
   const fetchPengaturanPersen = async () => {
     try {
       const data = await getSHU();
       setKeanggotaan(data);
     } catch (error) {
-      console.error("Fetching Keanggotaan Error From Client-side:", error);
+      console.error("Error fetching keanggotaan:", error);
     }
   };
 
-  const fetchedData = async () => {
+  const fetchData = async () => {
     try {
       const data = await getLapSimpanan();
       setLapSimpanan(data);
     } catch (error) {
-      console.log("Error fetching laporan simpanan: ", error);
+      console.error("Error fetching laporan simpanan:", error);
     }
   };
 
-  const fetchedDataByYear = async (year) => {
+  const fetchDataByYear = async (year) => {
     try {
       const data = await getLapSimpananByYear(year);
       setLapByYear(data);
     } catch (error) {
-      console.log("Error fetching laporan simpanan berdasarkan tahun: ", error);
+      console.error("Error fetching laporan simpanan by year:", error);
     }
   };
 
@@ -63,215 +61,224 @@ const LaporanSimpanan = () => {
       const data = await getLapPendapatanByYear(year);
       setPendapatan(data);
     } catch (error) {
-      console.error("Fetching Error Pendapatan From useEffect:", error);
-    }
-  };
-
-  const fetchKodeAnggotaPinjam = async (year) => {
-    try {
-      const data = await getLapAngsuranByYear(year);
-      setKodePinjam(data);
-    } catch (error) {
-      console.error(
-        "Fetching Kode Anggota Table Pinjam Error From Handle-side:",
-        error
-      );
+      console.error("Error fetching pendapatan by year:", error);
     }
   };
 
   React.useEffect(() => {
     fetchPengaturanPersen();
+    fetchData();
   }, []);
 
   React.useEffect(() => {
-    fetchedData();
-  }, []);
-
-  React.useEffect(() => {
-    if (selectedYear !== "") {
-      fetchedDataByYear(selectedYear);
-    }
-  }, [selectedYear]);
-
-  React.useEffect(() => {
-    if (selectedYear !== "") {
+    if (selectedYear) {
+      fetchDataByYear(selectedYear);
       fetchPendapatanByYear(selectedYear);
     }
   }, [selectedYear]);
 
   React.useEffect(() => {
-    if (selectedYear !== "") {
-      fetchKodeAnggotaPinjam(selectedYear);
-    }
-  }, [selectedYear]);
-
-  React.useEffect(() => {
     if (lapSimpanan.length > 0) {
-      // Mendapatkan nilai unik dari properti tahunSimpan
-      const uniqueYears = Array.from(
+      const years = Array.from(
         new Set(lapSimpanan.map((item) => item.tahunSimpan))
       );
-      // Mengatur nilai-nilai unik tersebut sebagai pilihan dropdown
-      setUniqueYears(uniqueYears);
+      setUniqueYears(years);
     }
   }, [lapSimpanan]);
 
+  let totalSHUSimpanan = 0;
+  let totalSHUPinjaman = 0;
+  let totalSHUSimpananPengurus = 0;
+  let totalSaldoAllRows = 0;
+  let totalAmountLunas = 0;
+
   const jumlahSimpananAllRows = lapByYear.reduce((total, laporan) => {
-    const simpanan =
+    return (
+      total +
       laporan.saldoSimpanSebelumnya +
       laporan.simpananPokok +
       laporan.simpananWajib +
-      laporan.simpananSukarela;
-    return total + simpanan;
+      laporan.simpananSukarela
+    );
   }, 0);
 
-  let totalSHUSimpanan = 0;
-  let totalSHUSimpananPengurus = 0;
-  let totalSHUPinjaman = 0;
+  const jumlahAngsuranAllRows = lapByYear.reduce((total, laporan) => {
+    return total + laporan.bayarAngsuranJasa;
+  }, 0);
+
+  const getCount = lapByYear.reduce((count, laporan) => {
+    return count + (laporan.shuPinjam === "GET" ? 1 : 0);
+  }, 0);
 
   const jumlahPenarikan = lapByYear.reduce((total, laporan) => {
-    const penarikan = laporan.penarikan;
-    return total + penarikan;
+    return total + laporan.penarikan;
   }, 0);
 
   const countPengurus = lapByYear.filter(
     (laporan) => laporan.jenisAnggota === "Pengurus"
   ).length;
 
-  let totalSaldoAllRows = 0;
+  let jumlahSimpananAnggota = lapByYear
+    .filter((laporan) => laporan.jenisAnggota !== "Pengurus")
+    .reduce((total, laporan) => {
+      const jumlahSimpanan =
+        laporan.saldoSimpanSebelumnya +
+        laporan.simpananPokok +
+        laporan.simpananWajib +
+        laporan.simpananSukarela;
+
+      return total + jumlahSimpanan;
+    }, 0);
 
   const handleYearChange = (e) => {
     setSelectedYear(e.target.value);
   };
 
   const componentRef = React.useRef();
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-  });
+  const handlePrint = useReactToPrint({ content: () => componentRef.current });
 
   const tableRef = React.useRef(null);
   const { onDownload } = useDownloadExcel({
     currentTableRef: tableRef.current,
-    filename: `Laporan_Simpanan_Tahun_${selectedYear ? selectedYear : "YYYY"}`,
+    filename: `Laporan_Simpanan_Tahun_${selectedYear || "YYYY"}`,
     sheet: "Laporan Simpanan",
   });
 
   const handleImportButton = async () => {
-    const objectData = lapByYear.map((laporan) => {
-      const jumlahSimpanan =
-        laporan.saldoSimpanSebelumnya +
-        laporan.simpananPokok +
-        laporan.simpananWajib +
-        laporan.simpananSukarela;
-      let pendapatanJenisKeanggotaan = null;
+    const simpanData = lapByYear
+      .map((laporan) => {
+        // Calculate total savings for each member
+        const jumlahSimpanan =
+          laporan.saldoSimpanSebelumnya +
+          laporan.simpananPokok +
+          laporan.simpananWajib +
+          laporan.simpananSukarela;
 
-      const jenisSHU = keanggotaan.find(
-        (anggota) => anggota.jenisSHU === laporan.jenisAnggota
-      );
-      if (jenisSHU) {
-        const pembagianSHU =
-          pendapatan.pendapatanJasa * (jenisSHU.persentaseSHU / 100);
-        pendapatanJenisKeanggotaan = pembagianSHU;
-      }
+        // Calculate the savings SHU percentage
+        const persentSHUSimpanan =
+          jumlahSimpanan !== 0 ? jumlahSimpanan / jumlahSimpananAnggota : 0;
 
-      let statusPinjam = "";
-      let hasLunasPinjaman = false;
-
-      const matchKodePinjam = kodePinjam.find((pinjam) => {
-        if (
-          pinjam.kodeAnggota === laporan.kodeAnggota &&
-          pinjam.statusPinjaman === "Lunas"
-        ) {
-          hasLunasPinjaman = true;
-          return true;
+        // Determine SHU income from savings
+        let pendapatanSHUSimpanan;
+        if (laporan.jenisAnggota === "Pengurus") {
+          pendapatanSHUSimpanan = pendapatan.pendapatanPengurus / countPengurus;
+        } else {
+          pendapatanSHUSimpanan =
+            pendapatan.pendapatanAnggota * persentSHUSimpanan;
         }
-        return false;
+
+        return {
+          kodeAnggota: laporan.kodeAnggota,
+          tanggalSimpan: `${year}-${month}-${date}`,
+          jenisSimpan: `SHU Simpanan ${selectedYear}`,
+          saldo: pendapatanSHUSimpanan,
+          pendapatanSHUSimpanan: pendapatanSHUSimpanan,
+        };
+      })
+      .filter((data) => data.pendapatanSHUSimpanan > 0);
+
+    const pinjamData = lapByYear
+      .filter((laporan) => laporan.shuPinjam !== "NOT GET")
+      .map((laporan) => {
+        // Calculate the loan SHU percentage
+        const persentSHUPinjaman =
+          laporan.bayarAngsuranJasa !== 0
+            ? laporan.bayarAngsuranJasa / jumlahAngsuranAllRows
+            : 0;
+
+        // Calculate SHU income from loans
+        const pendapatanSHUPinjaman =
+          persentSHUPinjaman * pendapatan.pendapatanPinjam;
+
+        return {
+          kodeAnggota: laporan.kodeAnggota,
+          tanggalSimpan: `${year}-${month}-${date}`,
+          jenisSimpan: `SHU Pinjaman ${selectedYear}`,
+          saldo: pendapatanSHUPinjaman,
+        };
       });
 
-      if (hasLunasPinjaman) {
-        statusPinjam = "SHU Pinjam";
-      }
-
-      let dapatSHUPinjam = 0;
-
-      if (matchKodePinjam && matchKodePinjam.statusPinjaman === "Lunas") {
-        const jenisSHUPinjam = keanggotaan.find(
-          (anggota) => anggota.jenisSHU === statusPinjam
-        );
-        if (jenisSHUPinjam) {
-          const pembagianSHU =
-            pendapatan.pendapatanJasa * (jenisSHUPinjam.persentaseSHU / 100);
-          dapatSHUPinjam = pembagianSHU;
-        }
-      }
-
-      const persentTiapNasabah = jumlahSimpanan / jumlahSimpananAllRows;
-
-      let pendapatanSHUSimpanan;
-      if (laporan.jenisAnggota === "Pengurus") {
-        pendapatanSHUSimpanan = pendapatanJenisKeanggotaan / countPengurus;
-      } else {
-        pendapatanSHUSimpanan = pendapatanJenisKeanggotaan * persentTiapNasabah;
-      }
-
-      const pendapatanSHUPinjaman = dapatSHUPinjam * persentTiapNasabah;
-
-      if (laporan.jenisAnggota === "Pengurus") {
-        totalSHUSimpananPengurus += pendapatanSHUSimpanan;
-      }
-      return {
-        kodeAnggota: laporan.kodeAnggota,
-        tanggalSimpan: `${year}-${month}-${date}`,
-        jenisSimpan: `SHU ${selectedYear}`,
-        saldo: pendapatanSHUSimpanan + pendapatanSHUPinjaman,
-      };
-    });
-
-    const transformedData = {
-      kodeAnggota: objectData.map((data) => data.kodeAnggota),
-      tanggalSimpan: objectData.map((data) => data.tanggalSimpan),
-      jenisSimpan: objectData.map((data) => data.jenisSimpan),
-      saldo: objectData.map((data) => data.saldo),
+    const transformedSimpanData = {
+      kodeAnggota: simpanData.map((data) => data.kodeAnggota),
+      tanggalSimpan: simpanData.map((data) => data.tanggalSimpan),
+      jenisSimpan: simpanData.map((data) => data.jenisSimpan),
+      saldo: simpanData.map((data) => data.saldo),
+    };
+    const transformedPinjamData = {
+      kodeAnggota: pinjamData.map((data) => data.kodeAnggota),
+      tanggalSimpan: pinjamData.map((data) => data.tanggalSimpan),
+      jenisSimpan: pinjamData.map((data) => data.jenisSimpan),
+      saldo: pinjamData.map((data) => data.saldo),
     };
 
     try {
-      // Input Administrasi
       await tambahTransaksi({
         jenisTransaksi: `Transaksi Masuk`,
         tanggalTransaksi: `${year}-${month}-${date}`,
         nominalTransaksi: pendapatan.pendapatanAdministrasi,
         keterangan: `SHU Administrasi ${selectedYear}`,
       });
-
-      // Input Modal
       await tambahTransaksi({
         jenisTransaksi: `Transaksi Masuk`,
         tanggalTransaksi: `${year}-${month}-${date}`,
         nominalTransaksi: pendapatan.pendapatanModal,
         keterangan: `SHU Penyerahan Modal ${selectedYear}`,
       });
-
-      transformedData.kodeAnggota.map(async (kodeAnggota, index) => {
-        await tambahSimpan({
-          kodeAnggota,
-          tanggalSimpan: transformedData.tanggalSimpan[index],
-          jenisSimpan: transformedData.jenisSimpan[index],
-          saldo: transformedData.saldo[index],
-        });
+      await tambahTransaksi({
+        jenisTransaksi: `Transaksi Keluar`,
+        tanggalTransaksi: `${year}-${month}-${date}`,
+        nominalTransaksi: pendapatan.pendapatanAdministrasi,
+        keterangan: `SHU Administrasi ${selectedYear}`,
+      });
+      await tambahTransaksi({
+        jenisTransaksi: `Transaksi Keluar`,
+        tanggalTransaksi: `${year}-${month}-${date}`,
+        nominalTransaksi: pendapatan.pendapatanModal,
+        keterangan: `SHU Penyerahan Modal ${selectedYear}`,
+      });
+      await tambahTransaksi({
+        jenisTransaksi: `Transaksi Keluar`,
+        tanggalTransaksi: `${year}-${month}-${date}`,
+        nominalTransaksi: totalAmountLunas,
+        keterangan: `Alokasi SHU Pinjaman ${selectedYear} ke nasabah`,
+      });
+      await tambahTransaksi({
+        jenisTransaksi: `Transaksi Keluar`,
+        tanggalTransaksi: `${year}-${month}-${date}`,
+        nominalTransaksi: totalSHUSimpanan,
+        keterangan: `Alokasi SHU Simpanan ${selectedYear} ke nasabah`,
       });
 
+      transformedSimpanData.kodeAnggota.map(async (kodeAnggota, index) => {
+        await tambahSimpan({
+          kodeAnggota,
+          tanggalSimpan: transformedSimpanData.tanggalSimpan[index],
+          jenisSimpan: transformedSimpanData.jenisSimpan[index],
+          saldo: transformedSimpanData.saldo[index],
+        });
+      });
+      transformedPinjamData.kodeAnggota.map(async (kodeAnggota, index) => {
+        await tambahSimpan({
+          kodeAnggota,
+          tanggalSimpan: transformedPinjamData.tanggalSimpan[index],
+          jenisSimpan: transformedPinjamData.jenisSimpan[index],
+          saldo: transformedPinjamData.saldo[index],
+        });
+      });
       alert(`
-        Berhasil import SHU:\n
-        SHU Pengurus: ${formatRupiah(totalSHUSimpananPengurus)}\n
-        SHU Simpanan: ${formatRupiah(
-          totalSHUSimpanan - totalSHUSimpananPengurus
-        )}\n
-        SHU Pinjaman: ${formatRupiah(totalSHUPinjaman)}\n
-        SHU Administrasi: ${formatRupiah(pendapatan.pendapatanAdministrasi)}\n
-        SHU Modal: ${formatRupiah(pendapatan.pendapatanModal)}\n
-      `);
+          Berhasil import SHU:\n
+          SHU Pengurus: ${formatRupiah(totalSHUSimpananPengurus)}\n
+          SHU Anggota: ${formatRupiah(
+            totalSHUSimpanan - totalSHUSimpananPengurus
+          )}\n
+          SHU Pinjaman: ${formatRupiah(
+            totalAmountLunas
+          )} (${getCount} Nasabah Dapat)\n
+          SHU Administrasi: ${formatRupiah(pendapatan.pendapatanAdministrasi)}\n
+          SHU Modal: ${formatRupiah(pendapatan.pendapatanModal)}\n
+        `);
     } catch (error) {
-      console.error("Import SHU Error From Client-side:", error);
+      console.error("Error importing SHU:", error);
     }
   };
   return (
@@ -368,83 +375,75 @@ const LaporanSimpanan = () => {
           </thead>
           <tbody className="align-middle">
             {lapByYear.map((laporan, index) => {
+              // Calculate total savings for each member
               const jumlahSimpanan =
                 laporan.saldoSimpanSebelumnya +
                 laporan.simpananPokok +
                 laporan.simpananWajib +
                 laporan.simpananSukarela;
-              let pendapatanJenisKeanggotaan = null;
 
-              const jenisSHU = keanggotaan.find(
-                (anggota) => anggota.jenisSHU === laporan.jenisAnggota
-              );
-              if (jenisSHU) {
-                const pembagianSHU =
-                  pendapatan.pendapatanJasa * (jenisSHU.persentaseSHU / 100);
-                pendapatanJenisKeanggotaan = pembagianSHU;
-              }
+              // Calculate the savings SHU percentage
+              const persentSHUSimpanan =
+                jumlahSimpanan !== 0
+                  ? jumlahSimpanan / jumlahSimpananAnggota
+                  : 0;
 
-              let statusPinjam = "";
-              let hasLunasPinjaman = false;
+              // Calculate the loan SHU percentage
+              const persentSHUPinjaman =
+                laporan.bayarAngsuranJasa !== 0
+                  ? laporan.bayarAngsuranJasa / jumlahAngsuranAllRows
+                  : 0;
 
-              const matchKodePinjam = kodePinjam.find((pinjam) => {
-                if (
-                  pinjam.kodeAnggota === laporan.kodeAnggota &&
-                  pinjam.statusPinjaman === "Lunas"
-                ) {
-                  hasLunasPinjaman = true;
-                  return true;
-                }
-                return false;
-              });
-
-              if (hasLunasPinjaman) {
-                statusPinjam = "SHU Pinjam";
-              }
-
-              let dapatSHUPinjam = 0;
-
-              if (
-                matchKodePinjam &&
-                matchKodePinjam.statusPinjaman === "Lunas"
-              ) {
-                const jenisSHUPinjam = keanggotaan.find(
-                  (anggota) => anggota.jenisSHU === statusPinjam
-                );
-                if (jenisSHUPinjam) {
-                  const pembagianSHU =
-                    pendapatan.pendapatanJasa *
-                    (jenisSHUPinjam.persentaseSHU / 100);
-                  dapatSHUPinjam = pembagianSHU;
-                }
-              }
-
-              const persentTiapNasabah = jumlahSimpanan / jumlahSimpananAllRows;
-
+              // Determine SHU income from savings
               let pendapatanSHUSimpanan;
               if (laporan.jenisAnggota === "Pengurus") {
                 pendapatanSHUSimpanan =
-                  pendapatanJenisKeanggotaan / countPengurus;
+                  pendapatan.pendapatanPengurus / countPengurus;
               } else {
                 pendapatanSHUSimpanan =
-                  pendapatanJenisKeanggotaan * persentTiapNasabah;
+                  pendapatan.pendapatanAnggota * persentSHUSimpanan;
               }
 
-              const pendapatanSHUPinjaman = dapatSHUPinjam * persentTiapNasabah;
+              // Calculate SHU income from loans
+              const pendapatanSHUPinjaman =
+                persentSHUPinjaman * pendapatan.pendapatanPinjam;
 
+              // Accumulate total SHU income
               totalSHUSimpanan += pendapatanSHUSimpanan;
               totalSHUPinjaman += pendapatanSHUPinjaman;
 
-              const totalSaldo =
-                jumlahSimpanan +
-                pendapatanSHUSimpanan +
-                pendapatanSHUPinjaman -
-                laporan.penarikan;
+              // Calculate total balance
+              let totalSaldo;
+              if (laporan.shuPinjam === "GET") {
+                totalSaldo =
+                  jumlahSimpanan +
+                  pendapatanSHUSimpanan +
+                  pendapatanSHUPinjaman -
+                  laporan.penarikan;
+              } else {
+                totalSaldo =
+                  jumlahSimpanan + pendapatanSHUSimpanan - laporan.penarikan;
+              }
+
+              // Accumulate total balance for all rows
               totalSaldoAllRows += totalSaldo;
 
+              // Accumulate SHU income for 'Pengurus' members
+              if (laporan.jenisAnggota === "Pengurus") {
+                totalSHUSimpananPengurus += pendapatanSHUSimpanan;
+              }
+
+              // Determine row background color based on member status
               const bg =
                 laporan.status === "Tidak Aktif" ? "table-warning" : "";
 
+              // Determine text color for SHU loan status
+              const statusShuPinjam =
+                laporan.shuPinjam === "GET" ? "green" : "red";
+
+              // Accumulate total loan SHU amount if status is 'GET'
+              totalAmountLunas +=
+                laporan.shuPinjam === "GET" ? pendapatanSHUPinjaman : 0;
               return (
                 <tr key={index} className={bg}>
                   <td className="text-center">{index + 1}</td>
@@ -456,7 +455,9 @@ const LaporanSimpanan = () => {
                   <td>{formatRupiah(laporan.simpananSukarela)}</td>
                   <td>{formatRupiah(jumlahSimpanan)}</td>
                   <td>{formatRupiah(pendapatanSHUSimpanan)}</td>
-                  <td>{formatRupiah(pendapatanSHUPinjaman)}</td>
+                  <td style={{ color: statusShuPinjam }}>
+                    {formatRupiah(pendapatanSHUPinjaman)}
+                  </td>
                   <td>{formatRupiah(laporan.penarikan)}</td>
                   <td className="fw-bold">{formatRupiah(totalSaldo)}</td>
                 </tr>
@@ -486,10 +487,11 @@ const LaporanSimpanan = () => {
         totalSaldoAllRows={totalSaldoAllRows}
         keanggotaan={keanggotaan}
         pendapatan={pendapatan}
-        kodePinjam={kodePinjam}
         totalSHUSimpanan={totalSHUSimpanan}
         totalSHUPinjaman={totalSHUPinjaman}
         jumlahPenarikan={jumlahPenarikan}
+        jumlahAngsuranAllRows={jumlahAngsuranAllRows}
+        countPengurus={countPengurus}
       />
 
       <LaporanSimpananExport
@@ -500,10 +502,11 @@ const LaporanSimpanan = () => {
         totalSaldoAllRows={totalSaldoAllRows}
         keanggotaan={keanggotaan}
         pendapatan={pendapatan}
-        kodePinjam={kodePinjam}
         totalSHUSimpanan={totalSHUSimpanan}
         totalSHUPinjaman={totalSHUPinjaman}
         jumlahPenarikan={jumlahPenarikan}
+        jumlahAngsuranAllRows={jumlahAngsuranAllRows}
+        countPengurus={countPengurus}
       />
     </>
   );
